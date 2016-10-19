@@ -29,7 +29,10 @@ void proxyServer::startThread(abstractActor &actor, uint16_t port) {
 	while (true) {
 		int32_t type;
 		int32_t command;
-		read(connection, &type, sizeof(type));
+		ssize_t nbRead = read(connection, &type, sizeof(type));
+		if (0 == nbRead)
+			return;
+		if (-1 == nbRead) { /* do something */ }
 		switch (ntohl(type))
 		{
 			case postType::Async:
@@ -38,12 +41,12 @@ void proxyServer::startThread(abstractActor &actor, uint16_t port) {
 				break;
 			case postType::Sync: {
 				read(connection, &command, sizeof(command));
-				const abstractActor::actorReturnCode rc = actor.postSync(ntohl(command));
+				const uint32_t rc = htonl(static_cast<uint32_t>(actor.postSync(ntohl(command))));
 				write(connection, &rc, sizeof(rc)); //check rc: what happen if write fails?
 				break;
 			}
 			case postType::Restart:
-				actor.restart(); //check rc ?
+				actor.restart();
 				break;
 
 			default:
