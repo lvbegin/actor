@@ -8,14 +8,19 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
+static void writeNbBytes(int fd, const void *buffer, size_t count);
+
 proxyClient::proxyClient() : fd(-1) { }
 proxyClient::~proxyClient() {
 	if (-1 != fd)
 		close(fd);
 }
+
 #include <iostream>
 #include <cstdio>
 #include <cstring>
+
+
 void proxyClient::start(std::string host, uint16_t port) {
 	if (-1 != fd)
 		throw std::runtime_error("proxyClient: already started");
@@ -38,22 +43,33 @@ void proxyClient::start(std::string host, uint16_t port) {
 abstractActor::actorReturnCode proxyClient::postSync(int i) {
 	const uint32_t type = htonl(postType::Sync);
 	const uint32_t command = htonl(i);
-	if (-1 == write(fd, &type, sizeof(type)))
-		return abstractActor::actorReturnCode::error;
-	if (-1 == write(fd, &command, sizeof(command)))
-		return abstractActor::actorReturnCode::error;
-	//need to read back
-	return abstractActor::actorReturnCode::ok;
+	writeNbBytes(fd, &type, sizeof(type));
+	writeNbBytes(fd, &command, sizeof(command));
+
+	abstractActor::actorReturnCode rc;
+	if (-1 == read(fd, &rc, sizeof(rc)))
+		throw std::runtime_error("proxyClient: cannot read return code");
+	return rc;
 }
 void proxyClient::post(int i) {
 	const uint32_t type = htonl(postType::Async);
 	const uint32_t command = htonl(i);
-	if (sizeof(type) != write(fd, &type, sizeof(type)))
-		return ;
-	write(fd, &command, sizeof(command));
+	writeNbBytes(fd, &type, sizeof(type));
+	writeNbBytes(fd, &command, sizeof(command));
 }
 
 void proxyClient::restart() {
 	const uint32_t type = htonl(postType::Restart);
-	write(fd, &type, sizeof(type));
+	writeNbBytes(fd, &type, sizeof(type));
+}
+
+static void writeNbBytes(int fd, const void *buffer, size_t count)
+{
+	const char *ptr = static_cast<const char *>(buffer);
+	for (size_t nbTotalWritten = 0; nbTotalWritten < count; ) {
+		const ssize_t nbWritten = write(fd, ptr + nbTotalWritten, count - nbTotalWritten);
+		if (-1 == nbWritten && !(EINTR == errno))
+			throw std::runtime_error("send bytes to proxy server failed");
+		nbTotalWritten += nbWritten;
+	}
 }
