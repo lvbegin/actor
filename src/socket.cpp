@@ -55,7 +55,7 @@ void Socket::accept(void) {
 	close(sock);
 }
 
-void Socket::writeBytes(int fd, const void *buffer, size_t count) {
+void Socket::writeBytes(const void *buffer, size_t count) {
 	const char *ptr = static_cast<const char *>(buffer);
 	for (size_t nbTotalWritten = 0; nbTotalWritten < count; ) {
 		const ssize_t nbWritten = write(fd, ptr + nbTotalWritten, count - nbTotalWritten);
@@ -65,7 +65,7 @@ void Socket::writeBytes(int fd, const void *buffer, size_t count) {
 	}
 }
 
-void Socket::readBytes(int fd, void *buffer, size_t count) {
+void Socket::readBytes(void *buffer, size_t count) {
 	char *ptr = static_cast<char *>(buffer);
 	for (size_t nbTotalRead = 0; nbTotalRead < count; ) {
 		const ssize_t nbRead = read(fd, ptr + nbTotalRead, count - nbTotalRead);

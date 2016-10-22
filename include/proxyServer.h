@@ -11,9 +11,8 @@ enum postType : uint32_t { Sync, Async, Restart, } ;
 
 class proxyServer {
 public:
-	proxyServer();
+	proxyServer(abstractActor &actor, uint16_t port);
 	~proxyServer();
-	void start(abstractActor &actor, uint16_t port);
 
 private:
 	std::thread t;

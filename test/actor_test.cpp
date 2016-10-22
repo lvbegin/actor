@@ -22,8 +22,7 @@ static int basicActorTest(void) {
 
 void executeSeverProxy(uint16_t port) {
 	Actor a([](int i) { /* do something */ return Actor::actorReturnCode::ok; });
-	proxyServer server;
-	server.start(a, port);
+	proxyServer server(a, port);
 }
 
 static int proxyTest(void) {
@@ -42,8 +41,7 @@ static int proxyRestartTest(void) {
 	static const uint16_t port = 4003;
 	static const int command = 0x33;
 	Actor a([](int i) { /* do something */ return Actor::actorReturnCode::ok; });
-	proxyServer server;
-	server.start(a, port);
+	proxyServer server(a, port);
 	sleep(2);
 	proxyClient client;
 	client.start("localhost", port);

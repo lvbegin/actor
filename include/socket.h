@@ -11,8 +11,8 @@ public:
 	Socket(std::string host, uint16_t port);
 	~Socket();
 	void establishConnection(void);
-	void writeBytes(int fd, const void *buffer, size_t count);
-	void readBytes(int fd, void *buffer, size_t count);
+	void writeBytes(const void *buffer, size_t count);
+	void readBytes(void *buffer, size_t count);
 private:
 	void connectHost(void);
 	void accept(void);
