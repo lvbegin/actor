@@ -7,7 +7,7 @@ Actor::~Actor() {
 		thread.join();
 };
 
-std::future<Actor::actorReturnCode> Actor::putMessage(int i) {
+std::future<actorReturnCode> Actor::putMessage(int i) {
 	std::unique_lock<std::mutex> l(mutexQueue);
 
 	struct message  *m = new message(i);
@@ -16,7 +16,7 @@ std::future<Actor::actorReturnCode> Actor::putMessage(int i) {
 	return m->promise.get_future();
 }
 
-Actor::actorReturnCode Actor::postSync(int i) { return putMessage(i).get(); }
+actorReturnCode Actor::postSync(int i) { return putMessage(i).get(); }
 
 void Actor::post(int i) { putMessage(i); }
 

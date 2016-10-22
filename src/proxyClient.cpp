@@ -9,10 +9,10 @@ void proxyClient::start(std::string host, uint16_t port) {
 	s->establishConnection();
 }
 
-abstractActor::actorReturnCode proxyClient::postSync(int i) {
+actorReturnCode proxyClient::postSync(int i) {
 	s->writeInt(postType::Sync);
 	s->writeInt(i);
-	return static_cast<abstractActor::actorReturnCode>(s->readInt());
+	return static_cast<actorReturnCode>(s->readInt());
 }
 void proxyClient::post(int i) {
 	s->writeInt(postType::Async);

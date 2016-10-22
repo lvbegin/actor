@@ -9,10 +9,10 @@
 
 
 static int basicActorTest(void) {
-	Actor a([](int i) { /* do something */ return Actor::actorReturnCode::ok; });
+	Actor a([](int i) { /* do something */ return actorReturnCode::ok; });
 	sleep(2);
 	auto val = a.postSync(1);
-	if (Actor::actorReturnCode::ok != val) {
+	if (actorReturnCode::ok != val) {
 		std::cout << "post failure" << std::endl;
 		return 1;
 	}
@@ -21,7 +21,7 @@ static int basicActorTest(void) {
 }
 
 void executeSeverProxy(uint16_t port) {
-	Actor a([](int i) { /* do something */ return Actor::actorReturnCode::ok; });
+	Actor a([](int i) { /* do something */ return actorReturnCode::ok; });
 	proxyServer server(a, port);
 }
 
@@ -40,15 +40,15 @@ static int proxyTest(void) {
 static int proxyRestartTest(void) {
 	static const uint16_t port = 4003;
 	static const int command = 0x33;
-	Actor a([](int i) { /* do something */ return Actor::actorReturnCode::ok; });
+	Actor a([](int i) { /* do something */ return actorReturnCode::ok; });
 	proxyServer server(a, port);
 	sleep(2);
 	proxyClient client;
 	client.start("localhost", port);
-	int NbError = (abstractActor::actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
+	int NbError = (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
 	client.restart();
-	NbError += (abstractActor::actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
-	NbError +=  (abstractActor::actorReturnCode::shutdown == client.postSync(abstractActor::COMMAND_SHUTDOWN)) ? 0 : 1;
+	NbError += (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
+	NbError +=  (actorReturnCode::shutdown == client.postSync(abstractActor::COMMAND_SHUTDOWN)) ? 0 : 1;
 	return NbError;
 }
 
