@@ -7,9 +7,8 @@
 
 class proxyClient : public abstractActor {
 public:
-	proxyClient();
+	proxyClient(std::string host, uint16_t port);
 	~proxyClient();
-	void start(std::string host, uint16_t port);
 	actorReturnCode postSync(int i);
 	void post(int i);
 	void restart(void);

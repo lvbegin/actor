@@ -1,13 +1,11 @@
 #include <proxyClient.h>
 #include <proxyServer.h>
 
-proxyClient::proxyClient() = default;
-proxyClient::~proxyClient() = default;
-
-void proxyClient::start(std::string host, uint16_t port) {
+proxyClient::proxyClient(std::string host, uint16_t port) {
 	s.reset(new Socket(host, port));
 	s->establishConnection();
 }
+proxyClient::~proxyClient() = default;
 
 actorReturnCode proxyClient::postSync(int i) {
 	s->writeInt(postType::Sync);

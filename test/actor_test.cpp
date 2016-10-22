@@ -29,8 +29,7 @@ static int proxyTest(void) {
 	static const uint16_t port = 4005;
 	std::thread t(executeSeverProxy, port);
 	sleep(2);
-	proxyClient client;
-	client.start("localhost", port);
+	proxyClient client("localhost", port);
 	client.post(abstractActor::COMMAND_SHUTDOWN);
 	t.join();
 	return 0;
@@ -43,8 +42,7 @@ static int proxyRestartTest(void) {
 	Actor a([](int i) { /* do something */ return actorReturnCode::ok; });
 	proxyServer server(a, port);
 	sleep(2);
-	proxyClient client;
-	client.start("localhost", port);
+	proxyClient client("localhost", port);
 	int NbError = (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
 	client.restart();
 	NbError += (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
