@@ -34,8 +34,7 @@ std::unique_ptr<struct Actor::message> Actor::getMessage(void) {
 void Actor::actorBody(std::function<actorReturnCode(int)> body) {
 	while (true) {
 		std::unique_ptr<struct Actor::message> message(getMessage());
-		if (COMMAND_SHUTDOWN == message->command)
-		{
+		if (COMMAND_SHUTDOWN == message->command) {
 			message->promise.set_value(actorReturnCode::shutdown);
 			return;
 		}
@@ -51,7 +50,6 @@ void Actor::actorBody(std::function<actorReturnCode(int)> body) {
 			//notify parent.
 			return;
 		}
-
 	}
 }
 
