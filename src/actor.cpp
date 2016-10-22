@@ -1,6 +1,5 @@
 #include <actor.h>
 #include <memory>
-#include <valgrind/drd.h>
 
 Actor::Actor(std::function<actorReturnCode(int)> body)  : body(body), thread([&body, this]() { actorBody(body); }) { }
 
