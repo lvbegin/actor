@@ -1,5 +1,4 @@
 #include <actor.h>
-#include <memory>
 
 Actor::Actor(std::function<actorReturnCode(int)> body)  : body(body), thread([&body, this]() { actorBody(body); }) { }
 
