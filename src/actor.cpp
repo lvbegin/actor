@@ -10,7 +10,7 @@ Actor::~Actor() {
 };
 
 std::future<Actor::actorReturnCode> Actor::putMessage(int i) {
-	std::unique_lock<std::mutex> l(m);
+	std::unique_lock<std::mutex> l(mutexQueue);
 
 	struct message  *m = new message(i);
 	q.push(m);
@@ -23,7 +23,7 @@ Actor::actorReturnCode Actor::postSync(int i) { return putMessage(i).get(); }
 void Actor::post(int i) { putMessage(i); }
 
 std::unique_ptr<struct Actor::message> Actor::getMessage(void) {
-	std::unique_lock<std::mutex> l(m);
+	std::unique_lock<std::mutex> l(mutexQueue);
 
 	condition.wait(l, [this]() { return !q.empty();});
 	std::unique_ptr<struct message> message(q.front());
