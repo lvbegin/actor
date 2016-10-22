@@ -1,15 +1,6 @@
 #include <proxyServer.h>
 #include <socket.h>
 
-#include <stdexcept>
-#include <memory>
-#include <unistd.h>
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-
-
 proxyServer::proxyServer(abstractActor &actor, uint16_t port) : t([&actor, port]() {  startThread(actor, port); }){ }
 proxyServer::~proxyServer() { t.join(); };
 
@@ -30,7 +21,6 @@ void proxyServer::startThread(abstractActor &actor, uint16_t port) {
 			case postType::Restart:
 				actor.restart();
 				continue;
-
 			default:
 				continue;
 		}
