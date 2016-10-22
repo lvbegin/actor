@@ -32,7 +32,7 @@ void proxyServer::startThread(abstractActor &actor, uint16_t port) {
 			}
 			case postType::Restart:
 				actor.restart();
-				break;
+				continue;
 
 			default:
 				continue;
