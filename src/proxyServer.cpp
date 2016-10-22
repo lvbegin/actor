@@ -23,11 +23,10 @@ void proxyServer::startThread(abstractActor &actor, uint16_t port) {
 				command = s->readInt();
 				actor.post(command);
 				break;
-			case postType::Sync: {
+			case postType::Sync:
 				command = s->readInt();
 				s->writeInt(static_cast<uint32_t>(actor.postSync(command)));
 				break;
-			}
 			case postType::Restart:
 				actor.restart();
 				continue;
