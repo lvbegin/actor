@@ -31,6 +31,4 @@ void proxyClient::post(int i) {
 	s->writeInt(i);
 }
 
-void proxyClient::restart() {
-	s->writeInt(postType::Restart);
-}
+void proxyClient::restart() { s->writeInt(postType::Restart); }
