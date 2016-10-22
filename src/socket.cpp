@@ -56,8 +56,14 @@ void Socket::accept(void) {
 }
 
 void Socket::writeInt(uint32_t hostValue) {
-	uint32_t sentValue = htonl(hostValue);
+	const uint32_t sentValue = htonl(hostValue);
 	writeBytes(&sentValue, sizeof(sentValue));
+}
+
+uint32_t Socket::readInt(void) {
+	uint32_t value;
+	readBytes(&value, sizeof(value));
+	return ntohl(value);
 }
 
 void Socket::writeBytes(const void *buffer, size_t count) {

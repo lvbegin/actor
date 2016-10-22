@@ -24,10 +24,7 @@ void proxyClient::start(std::string host, uint16_t port) {
 abstractActor::actorReturnCode proxyClient::postSync(int i) {
 	s->writeInt(postType::Sync);
 	s->writeInt(i);
-
-	abstractActor::actorReturnCode rc;
-	s->readBytes(&rc, sizeof(rc));
-	return rc;
+	return static_cast<abstractActor::actorReturnCode>(s->readInt());
 }
 void proxyClient::post(int i) {
 	s->writeInt(postType::Async);

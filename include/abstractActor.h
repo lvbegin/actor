@@ -10,7 +10,7 @@ public:
 	virtual actorReturnCode postSync(int i) = 0;
 	virtual void post(int i) = 0;
 	virtual void restart(void) = 0;
-	static const int COMMAND_SHUTDOWN = 0;
+	static const uint32_t COMMAND_SHUTDOWN = 0;
 protected:
 	abstractActor() { };
 

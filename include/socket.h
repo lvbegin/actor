@@ -12,6 +12,7 @@ public:
 	~Socket();
 	void establishConnection(void);
 	void writeInt(uint32_t hostValue);
+	uint32_t readInt(void);
 	void writeBytes(const void *buffer, size_t count);
 	void readBytes(void *buffer, size_t count);
 private:
