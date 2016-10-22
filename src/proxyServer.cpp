@@ -17,10 +17,8 @@ void proxyServer::startThread(abstractActor &actor, uint16_t port) {
 	auto s = std::make_unique<Socket>(port);
 	s->establishConnection();
 	while (true) {
-		uint32_t type;
 		uint32_t command;
-		s->readBytes(&type, sizeof(type));
-		switch (ntohl(type)) {
+		switch (s->readInt()) {
 			case postType::Async:
 				command = s->readInt();
 				actor.post(command);
