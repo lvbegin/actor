@@ -21,25 +21,19 @@ void proxyClient::start(std::string host, uint16_t port) {
 	s->establishConnection();
 }
 
-
 abstractActor::actorReturnCode proxyClient::postSync(int i) {
-	const uint32_t type = htonl(postType::Sync);
-	const uint32_t command = htonl(i);
-	s->writeBytes(&type, sizeof(type));
-	s->writeBytes(&command, sizeof(command));
+	s->writeInt(postType::Sync);
+	s->writeInt(i);
 
 	abstractActor::actorReturnCode rc;
 	s->readBytes(&rc, sizeof(rc));
 	return rc;
 }
 void proxyClient::post(int i) {
-	const uint32_t type = htonl(postType::Async);
-	const uint32_t command = htonl(i);
-	s->writeBytes(&type, sizeof(type));
-	s->writeBytes(&command, sizeof(command));
+	s->writeInt(postType::Async);
+	s->writeInt(i);
 }
 
 void proxyClient::restart() {
-	const uint32_t type = htonl(postType::Restart);
-	s->writeBytes(&type, sizeof(type));
+	s->writeInt(postType::Restart);
 }

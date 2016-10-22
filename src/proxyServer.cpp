@@ -27,8 +27,7 @@ void proxyServer::startThread(abstractActor &actor, uint16_t port) {
 				break;
 			case postType::Sync: {
 				s->readBytes(&command, sizeof(command));
-				const uint32_t rc = htonl(static_cast<uint32_t>(actor.postSync(ntohl(command))));
-				s->writeBytes(&rc, sizeof(rc));
+				s->writeInt(static_cast<uint32_t>(actor.postSync(ntohl(command))));
 				break;
 			}
 			case postType::Restart:

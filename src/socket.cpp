@@ -55,6 +55,11 @@ void Socket::accept(void) {
 	close(sock);
 }
 
+void Socket::writeInt(uint32_t hostValue) {
+	uint32_t sentValue = htonl(hostValue);
+	writeBytes(&sentValue, sizeof(sentValue));
+}
+
 void Socket::writeBytes(const void *buffer, size_t count) {
 	const char *ptr = static_cast<const char *>(buffer);
 	for (size_t nbTotalWritten = 0; nbTotalWritten < count; ) {
