@@ -3,8 +3,6 @@
 
 #include <abstractActor.h>
 #include <socket.h>
-#include <cstdint>
-#include <string>
 #include <memory>
 
 class proxyClient : public abstractActor {
