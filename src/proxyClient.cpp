@@ -1,20 +1,8 @@
 #include <proxyClient.h>
 #include <proxyServer.h>
 
-#include <stdexcept>
-#include <unistd.h>
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-
 proxyClient::proxyClient() = default;
 proxyClient::~proxyClient() = default;
-
-#include <iostream>
-#include <cstdio>
-#include <cstring>
-
 
 void proxyClient::start(std::string host, uint16_t port) {
 	s.reset(new Socket(host, port));
