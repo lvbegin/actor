@@ -10,6 +10,7 @@
 
 #include <abstractActor.h>
 #include <socket.h>
+#include <sharedMap.h>
 
 class ActorRegistry {
 public:
@@ -20,9 +21,8 @@ public:
 	void unregisterActor(std::string name);
 private:
 	std::vector<Socket> others;
-	std::map<std::string, std::unique_ptr<abstractActor>> actors;
+	SharedMap<std::string, std::unique_ptr<abstractActor>> actors;
 	std::mutex othersMutex;
-	std::mutex actorsMutex;
 	std::thread t;
 
 	void registryBody(Socket &s);
