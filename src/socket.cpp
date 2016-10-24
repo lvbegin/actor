@@ -8,34 +8,50 @@
 
 #include <unistd.h>
 
+static int getConnection(int sockfd);
 static int serverSocket(uint16_t port);
-static int getConnection(int sockFd);
 
+Socket::Socket(uint16_t port) : acceptFd(-1), connectionFd(-1), type(socketType::Server), port(port) { }
 
-Socket::Socket(uint16_t port) : fd(-1), type(socketType::Server), port(port) { }
+Socket::Socket(std::string host, uint16_t port) : acceptFd(-1), connectionFd(-1), type(socketType::Client), port(port), host(host) { }
 
-Socket::Socket(std::string host, uint16_t port) : fd(-1), type(socketType::Client), port(port), host(host) { }
+Socket::Socket(uint16_t port, int fd) : acceptFd(-1), connectionFd(fd), type(socketType::Server), port(port) { }
 
 Socket::~Socket() {
-	if (-1 != fd)
-		close(fd);
+	if (-1 != acceptFd)
+		close(acceptFd);
+	if (-1 != connectionFd)
+		close(connectionFd);
 }
+
 void Socket::establishConnection(void) {
 	switch (type) {
 	case socketType::Client:
 		connectHost();
 		break;
 	case socketType::Server:
-		accept();
+		acceptHost();
+		close(acceptFd);
+		acceptFd = -1;
 		break;
 	default:
 		throw std::runtime_error("Socket: unexpected case.");
 	}
 }
 
+#include <iostream>
+Socket Socket::getNextConnection(void) {
+	if (socketType::Server != type)
+		throw std::runtime_error("Socket: implemented only for server socket");
+	acceptHost();
+	Socket s(port, connectionFd);
+	connectionFd = -1;
+	return s;
+}
+
 void Socket::connectHost(void) {
-	fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (-1 == fd)
+	connectionFd = socket(AF_INET, SOCK_STREAM, 0);
+	if (-1 == connectionFd)
 		throw std::runtime_error("Socket: socket creation failed");
 	sockaddr_in sin;
 	hostent *he = gethostbyname(host.c_str());
@@ -45,14 +61,13 @@ void Socket::connectHost(void) {
 	printf(" %d %d %d %d\n", ((char *)&sin.sin_addr.s_addr)[0], ((char *)&sin.sin_addr.s_addr)[1], ((char *)&sin.sin_addr.s_addr)[2], ((char *)&sin.sin_addr.s_addr)[3]);
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(port);
-	if (-1 == connect(fd, reinterpret_cast<sockaddr*>(&sin), sizeof(sin)))
+	if (-1 == connect(connectionFd, reinterpret_cast<sockaddr*>(&sin), sizeof(sin)))
 		throw std::runtime_error("Socket: cannot connect");
 }
 
-void Socket::accept(void) {
-	const int sock = serverSocket(port);
-	fd = getConnection(sock);
-	close(sock);
+void Socket::acceptHost(void) {
+	acceptFd = (-1 == acceptFd) ? serverSocket(port) : acceptFd;
+	connectionFd = getConnection(acceptFd);
 }
 
 void Socket::writeInt(uint32_t hostValue) {
@@ -69,7 +84,7 @@ uint32_t Socket::readInt(void) {
 void Socket::writeBytes(const void *buffer, size_t count) {
 	const char *ptr = static_cast<const char *>(buffer);
 	for (size_t nbTotalWritten = 0; nbTotalWritten < count; ) {
-		const ssize_t nbWritten = write(fd, ptr + nbTotalWritten, count - nbTotalWritten);
+		const ssize_t nbWritten = write(connectionFd, ptr + nbTotalWritten, count - nbTotalWritten);
 		if (-1 == nbWritten && !(EINTR == errno))
 			throw std::runtime_error("Socket: send bytes failed");
 		nbTotalWritten += nbWritten;
@@ -79,7 +94,7 @@ void Socket::writeBytes(const void *buffer, size_t count) {
 void Socket::readBytes(void *buffer, size_t count) {
 	char *ptr = static_cast<char *>(buffer);
 	for (size_t nbTotalRead = 0; nbTotalRead < count; ) {
-		const ssize_t nbRead = read(fd, ptr + nbTotalRead, count - nbTotalRead);
+		const ssize_t nbRead = read(connectionFd, ptr + nbTotalRead, count - nbTotalRead);
 		if (0 >= nbRead)
 			throw std::runtime_error("Socket: read bytes failed");
 		nbTotalRead += nbRead;

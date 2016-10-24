@@ -1,6 +1,7 @@
 #include <actor.h>
 #include <proxyClient.h>
 #include <proxyServer.h>
+#include <actorRegistry.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -35,7 +36,6 @@ static int proxyTest(void) {
 	return 0;
 }
 
-
 static int proxyRestartTest(void) {
 	static const uint16_t port = 4003;
 	static const int command = 0x33;
@@ -50,10 +50,41 @@ static int proxyRestartTest(void) {
 	return NbError;
 }
 
+static int registryConnectTest(void) {
+	static const uint16_t port = 6004;
+	ActorRegistry registry(port);
+	sleep(1);
+	Socket("localhost", port).establishConnection();
+
+	return 0;
+}
+
+class ActorTest : public abstractActor {
+public:
+	ActorTest() = default;
+	virtual ~ActorTest() = default;
+	virtual actorReturnCode postSync(int i) {return actorReturnCode::ok; };
+	virtual void post(int i) {};
+	virtual void restart(void) {};
+};
+
+static int registryAddActorTest(void) {
+	static const uint16_t port = 6004;
+	ActorRegistry registry(port);
+	abstractActor *a = new ActorTest();
+
+	registry.registerActor("my actor", *a);
+	sleep(1);
+	Socket("localhost", port).establishConnection();
+	a->post(abstractActor::COMMAND_SHUTDOWN);
+	return 0;
+}
 
 int main() {
 	int nbFailure = basicActorTest();
 	nbFailure += proxyTest();
 	nbFailure += proxyRestartTest();
+	nbFailure += registryConnectTest();
+	nbFailure += registryAddActorTest();
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
