@@ -12,27 +12,23 @@ static void threadBody(uint16_t port, std::function<void(Socket &s)> body) {
 	body(*s);
 }
 
-ActorRegistry::~ActorRegistry() {
-	t.join();
-}
+ActorRegistry::~ActorRegistry() { t.join(); }
 
 void ActorRegistry::registryBody(Socket &s) {
-
 	auto connection = s.getNextConnection();
-	others.push_back(connection);
+	others.insert("dummyName", connection); //LOLO: should receive first the name
 }
 
-void ActorRegistry::addReference(std::string host, uint16_t port) {
+void ActorRegistry::addReference(std::string registryName, std::string host, uint16_t port) {
 	Socket s(host, port);
 	s.establishConnection();
-	std::unique_lock<std::mutex> l(othersMutex);
-	others.push_back(s);
+	others.insert(registryName, s);
 }
+
+void ActorRegistry::removeReference(std::string registryName) { others.erase(registryName); }
 
 void ActorRegistry::registerActor(std::string name, abstractActor &actor) {
 	actors.insert(name, std::move(std::unique_ptr<abstractActor>(&actor)));
 }
 
-void ActorRegistry::unregisterActor(std::string name) {
-	actors.erase(name);
-}
+void ActorRegistry::unregisterActor(std::string name) { actors.erase(name); }

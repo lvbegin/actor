@@ -94,6 +94,19 @@ static int registryAddActorAndRemoveTest(void) {
 	return 0;
 }
 
+static int registryAddReferenceTest(void) {
+	static const uint16_t port1 = 6004;
+	static const uint16_t port2 = 6005;
+	ActorRegistry registry1(port1);
+	ActorRegistry registry2(port2);
+	sleep(1);
+	registry1.addReference("another registry", "localhost", port2);
+
+	sleep(1);
+	Socket("localhost", port1).establishConnection();
+	return 0;
+}
+
 int main() {
 	int nbFailure = basicActorTest();
 	nbFailure += proxyTest();
@@ -101,5 +114,6 @@ int main() {
 	nbFailure += registryConnectTest();
 	nbFailure += registryAddActorTest();
 	nbFailure += registryAddActorAndRemoveTest();
+	nbFailure += registryAddReferenceTest();
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
