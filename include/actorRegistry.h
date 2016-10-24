@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <mutex>
 
 #include <abstractActor.h>
 #include <socket.h>
@@ -19,6 +20,8 @@ public:
 private:
 	std::vector<Socket> others;
 	std::map<std::string, std::unique_ptr<abstractActor>> actors;
+	std::mutex othersMutex;
+	std::mutex actorsMutex;
 	std::thread t;
 
 	void registryBody(Socket &s);

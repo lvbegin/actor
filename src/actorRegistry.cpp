@@ -17,17 +17,20 @@ ActorRegistry::~ActorRegistry() {
 }
 
 void ActorRegistry::registryBody(Socket &s) {
-		auto connection = s.getNextConnection();
-		others.push_back(connection);
+
+	auto connection = s.getNextConnection();
+	others.push_back(connection);
 }
 
 void ActorRegistry::addReference(std::string host, uint16_t port) {
 	Socket s(host, port);
 	s.establishConnection();
+	std::unique_lock<std::mutex> l(othersMutex);
 	others.push_back(s);
 }
 
 void ActorRegistry::registerActor(std::string name, abstractActor &actor) {
+	std::unique_lock<std::mutex> l(actorsMutex);
 	if (actors.end() != actors.find(name))
 		throw std::runtime_error("actorRegistry: actor already exist");
 	actors[name] = std::unique_ptr<abstractActor>(&actor);
