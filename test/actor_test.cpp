@@ -87,6 +87,8 @@ static int registryAddActorAndRemoveTest(void) {
 	registry.registerActor("my actor", *a);
 	registry.unregisterActor("my actor");
 	registry.unregisterActor("my actor");
+	a = new ActorTest();
+	registry.registerActor("my actor", *a);
 	sleep(1);
 	Socket("localhost", port).establishConnection();
 	return 0;
