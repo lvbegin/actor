@@ -35,3 +35,8 @@ void ActorRegistry::registerActor(std::string name, abstractActor &actor) {
 		throw std::runtime_error("actorRegistry: actor already exist");
 	actors[name] = std::unique_ptr<abstractActor>(&actor);
 }
+
+void ActorRegistry::unregisterActor(std::string name) {
+	std::unique_lock<std::mutex> l(actorsMutex);
+	actors.erase(name);
+}

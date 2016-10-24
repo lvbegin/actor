@@ -76,7 +76,19 @@ static int registryAddActorTest(void) {
 	registry.registerActor("my actor", *a);
 	sleep(1);
 	Socket("localhost", port).establishConnection();
-	a->post(abstractActor::COMMAND_SHUTDOWN);
+	return 0;
+}
+
+static int registryAddActorAndRemoveTest(void) {
+	static const uint16_t port = 6004;
+	ActorRegistry registry(port);
+	abstractActor *a = new ActorTest();
+
+	registry.registerActor("my actor", *a);
+	registry.unregisterActor("my actor");
+	registry.unregisterActor("my actor");
+	sleep(1);
+	Socket("localhost", port).establishConnection();
 	return 0;
 }
 
@@ -86,5 +98,6 @@ int main() {
 	nbFailure += proxyRestartTest();
 	nbFailure += registryConnectTest();
 	nbFailure += registryAddActorTest();
+	nbFailure += registryAddActorAndRemoveTest();
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

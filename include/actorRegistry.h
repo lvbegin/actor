@@ -17,6 +17,7 @@ public:
 	~ActorRegistry();
 	void addReference(std::string host, uint16_t port);
 	void registerActor(std::string name, abstractActor &actor);
+	void unregisterActor(std::string name);
 private:
 	std::vector<Socket> others;
 	std::map<std::string, std::unique_ptr<abstractActor>> actors;
