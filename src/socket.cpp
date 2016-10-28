@@ -17,6 +17,20 @@ Socket::Socket(std::string host, uint16_t port) : acceptFd(-1), connectionFd(-1)
 
 Socket::Socket(uint16_t port, int fd) : acceptFd(-1), connectionFd(fd), type(socketType::Server), port(port) { }
 
+Socket::Socket(Socket&& s) { *this = std::move(s); }
+
+Socket &Socket::operator=(Socket&& s) {
+	this->acceptFd = s.acceptFd;
+	this->connectionFd = s.connectionFd;
+	this->type = s.type;
+	this->port = s.port;
+	this->host = s.host;
+	s.acceptFd = -1;
+	s.connectionFd = -1;
+	return *this;
+}
+
+
 Socket::~Socket() {
 	if (-1 != acceptFd)
 		close(acceptFd);

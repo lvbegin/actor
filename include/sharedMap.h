@@ -7,11 +7,15 @@
 template<typename K, typename T>
 class SharedMap {
 public:
-	void insert(K key, T value) {
+	SharedMap() = default;
+	~SharedMap() = default;
+
+	template <typename L, typename M>
+	void insert(L&& key, M &&value) {
 		std::unique_lock<std::mutex> l(mutex);
 		if (map.end() != map.find(key))
 			throw std::runtime_error("actorRegistry: actor already exist");
-		map.insert(std::pair<K, T>(key, std::move(value)));
+		map.insert(std::make_pair(std::forward<L>(key), std::forward<M>(value)));
 	}
 	void erase(K key) {
 		std::unique_lock<std::mutex> l(mutex);

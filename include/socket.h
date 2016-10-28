@@ -9,6 +9,13 @@ class Socket {
 public:
 	Socket(uint16_t port);
 	Socket(std::string host, uint16_t port);
+
+	Socket(const Socket &s) = delete;
+	Socket &operator=(const Socket &s) = delete;
+
+	Socket(Socket&& s);
+	Socket &operator=(Socket&& s);
+
 	~Socket();
 	void establishConnection(void);
 	Socket getNextConnection(void);
