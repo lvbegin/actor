@@ -22,9 +22,8 @@ public:
 	Connection acceptOneConnection(void);
 private:
 	static int listenOnSocket(uint16_t port);
-
+	void closeSocket(void);
 	int acceptFd;
-	uint16_t port;
 };
 
 #endif

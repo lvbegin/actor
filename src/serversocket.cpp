@@ -8,20 +8,25 @@
 
 #include <unistd.h>
 
-ServerSocket::ServerSocket(uint16_t port) : acceptFd(listenOnSocket(port)), port(port) { }
+ServerSocket::ServerSocket(uint16_t port) : acceptFd(listenOnSocket(port)) { }
 
 ServerSocket::ServerSocket(ServerSocket&& s) { *this = std::move(s); }
 
 ServerSocket &ServerSocket::operator=(ServerSocket&& s) {
-	this->acceptFd = s.acceptFd;
-	this->port = s.port;
-	s.acceptFd = -1;
+	closeSocket();
+	std::swap(this->acceptFd,s.acceptFd);
 	return *this;
 }
 
 ServerSocket::~ServerSocket() {
-	if (-1 != acceptFd)
-		close(acceptFd);
+	closeSocket();
+}
+
+void ServerSocket::closeSocket(void) {
+	if (-1 == acceptFd)
+		return ;
+	close(acceptFd);
+	acceptFd = -1;
 }
 
 Connection ServerSocket::getConnection(int port) { return ServerSocket(port).acceptOneConnection(); }
