@@ -2,7 +2,7 @@
 #include <proxyClient.h>
 #include <proxyServer.h>
 #include <actorRegistry.h>
-
+#include <clientSocket.h>
 #include <cstdlib>
 #include <iostream>
 
@@ -54,7 +54,7 @@ static int registryConnectTest(void) {
 	static const uint16_t port = 6004;
 	ActorRegistry registry(port);
 	sleep(1);
-	Socket("localhost", port).connectHost();
+	ClientSocket::connectHost("localhost", port);
 
 	return 0;
 }
@@ -75,7 +75,7 @@ static int registryAddActorTest(void) {
 
 	registry.registerActor("my actor", *a);
 	sleep(1);
-	Socket("localhost", port).connectHost();
+	ClientSocket::connectHost("localhost", port);
 	return 0;
 }
 
@@ -90,7 +90,7 @@ static int registryAddActorAndRemoveTest(void) {
 	a = new ActorTest();
 	registry.registerActor("my actor", *a);
 	sleep(1);
-	Socket("localhost", port).connectHost();
+	ClientSocket::connectHost("localhost", port);
 	return 0;
 }
 
@@ -103,7 +103,7 @@ static int registryAddReferenceTest(void) {
 	registry1.addReference("another registry", "localhost", port2);
 
 	sleep(1);
-	Socket("localhost", port1).connectHost();
+	ClientSocket::connectHost("localhost", port1);
 	return 0;
 }
 

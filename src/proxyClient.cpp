@@ -1,8 +1,8 @@
 #include <proxyClient.h>
 #include <proxyServer.h>
-#include <socket.h>
+#include <clientSocket.h>
 
-proxyClient::proxyClient(std::string host, uint16_t port) : connection(Socket(host, port).connectHost()) { }
+proxyClient::proxyClient(std::string host, uint16_t port) : connection(ClientSocket::connectHost(host, port)) { }
 proxyClient::~proxyClient() = default;
 
 actorReturnCode proxyClient::postSync(int i) {
@@ -10,6 +10,7 @@ actorReturnCode proxyClient::postSync(int i) {
 	connection.writeInt(i);
 	return static_cast<actorReturnCode>(connection.readInt());
 }
+
 void proxyClient::post(int i) {
 	connection.writeInt(postType::Async);
 	connection.writeInt(i);

@@ -6,7 +6,7 @@
 #include <memory>
 
 #include <abstractActor.h>
-#include <socket.h>
+#include <serverSocket.h>
 #include <sharedMap.h>
 
 class ActorRegistry {
@@ -18,11 +18,11 @@ public:
 	void registerActor(std::string name, abstractActor &actor);
 	void unregisterActor(std::string name);
 private:
-	SharedMap<std::string, Socket> others;
+	SharedMap<std::string, Connection> others;
 	SharedMap<std::string, std::unique_ptr<abstractActor>> actors;
 	std::thread t;
 
-	void registryBody(Socket &s);
+	void registryBody(ServerSocket &s);
 };
 
 #endif
