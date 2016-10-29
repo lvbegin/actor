@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <unistd.h>
+#include <string>
 
 class Connection {
 public:
@@ -13,6 +14,8 @@ public:
 	Connection(Connection &&connection);
 	void writeInt(uint32_t hostValue);
 	uint32_t readInt(void);
+	void writeString(std::string hostValue);
+	std::string readString(void);
 	void writeBytes(const void *buffer, size_t count);
 	void readBytes(void *buffer, size_t count);
 private:

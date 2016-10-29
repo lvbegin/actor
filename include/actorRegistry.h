@@ -11,13 +11,14 @@
 
 class ActorRegistry {
 public:
-	ActorRegistry(uint16_t port);
+	ActorRegistry(std::string name, uint16_t port);
 	~ActorRegistry();
 	void addReference(std::string registryName, std::string host, uint16_t port);
 	void removeReference(std::string registryName);
 	void registerActor(std::string name, abstractActor &actor);
 	void unregisterActor(std::string name);
 private:
+	std::string name;
 	SharedMap<std::string, Connection> others;
 	SharedMap<std::string, std::unique_ptr<abstractActor>> actors;
 	std::thread t;

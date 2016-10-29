@@ -23,6 +23,22 @@ uint32_t Connection::readInt(void) {
 	return ntohl(value);
 }
 
+void Connection::writeString(std::string hostValue) {
+	const size_t nbBytesToWrite = hostValue.size() + 1;
+	writeInt(nbBytesToWrite); //check max size
+	writeBytes(hostValue.c_str(), nbBytesToWrite);
+}
+
+std::string Connection::readString(void) {
+	const size_t size = readInt();
+	char string[size]; //check max size
+	readBytes(string, size);
+	if (0 != string[size-1])
+		throw std::runtime_error("Connection: non NULL-terminated string value");
+	return std::string(string);
+}
+
+
 void Connection::writeBytes(const void *buffer, size_t count) {
 	if (-1 == fd)
 		throw std::runtime_error("Connection: invalid writeByte");

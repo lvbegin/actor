@@ -5,7 +5,8 @@
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body);
 
-ActorRegistry::ActorRegistry(uint16_t port) : t([this, port]() {  threadBody(port, [this](ServerSocket &s) { registryBody(s); }); }) { }
+ActorRegistry::ActorRegistry(std::string name, uint16_t port) : name(name),
+					t([this, port]() {  threadBody(port, [this](ServerSocket &s) { registryBody(s); }); }) { }
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body) {
 	auto s = std::make_unique<ServerSocket>(port);
@@ -15,11 +16,15 @@ static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body)
 ActorRegistry::~ActorRegistry() { t.join(); }
 
 void ActorRegistry::registryBody(ServerSocket &s) {
-	others.insert(std::string("dummyName"), s.acceptOneConnection()); //LOLO: should receive first the name
+	auto connection = s.acceptOneConnection();
+	auto name = connection.readString();
+	others.insert(std::move(name), std::move(connection)); //LOLO: should receive first the name
 }
 
 void ActorRegistry::addReference(std::string registryName, std::string host, uint16_t port) {
-	others.insert(registryName, ClientSocket::openHostConnection(host, port));
+	auto connection = ClientSocket::openHostConnection(host, port);
+	connection.writeString(name);
+	others.insert(registryName, std::move(connection));
 }
 
 void ActorRegistry::removeReference(std::string registryName) { others.erase(registryName); }

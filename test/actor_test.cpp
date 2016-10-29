@@ -10,6 +10,7 @@
 
 
 static int basicActorTest(void) {
+	std::cout << "basicActorTest" << std::endl;
 	Actor a([](int i) { /* do something */ return actorReturnCode::ok; });
 	sleep(2);
 	auto val = a.postSync(1);
@@ -27,6 +28,7 @@ void executeSeverProxy(uint16_t port) {
 }
 
 static int proxyTest(void) {
+	std::cout << "proxyTest" << std::endl;
 	static const uint16_t port = 4005;
 	std::thread t(executeSeverProxy, port);
 	sleep(2);
@@ -37,6 +39,7 @@ static int proxyTest(void) {
 }
 
 static int proxyRestartTest(void) {
+	std::cout << "proxyRestartTest" << std::endl;
 	static const uint16_t port = 4003;
 	static const int command = 0x33;
 	Actor a([](int i) { /* do something */ return actorReturnCode::ok; });
@@ -51,10 +54,12 @@ static int proxyRestartTest(void) {
 }
 
 static int registryConnectTest(void) {
-	static const uint16_t port = 6004;
-	ActorRegistry registry(port);
+	std::cout << "registryConnectTest" << std::endl;
+	static const uint16_t port = 6000;
+	ActorRegistry registry(std::string("name"), port);
 	sleep(1);
-	ClientSocket::openHostConnection("localhost", port);
+	Connection c = ClientSocket::openHostConnection("localhost", port);
+	c.writeString(std::string("dummy name"));
 
 	return 0;
 }
@@ -69,19 +74,22 @@ public:
 };
 
 static int registryAddActorTest(void) {
-	static const uint16_t port = 6004;
-	ActorRegistry registry(port);
+	std::cout << "registryAddAtorTest" << std::endl;
+	static const uint16_t port = 6000;
+	ActorRegistry registry(std::string("name"), port);
 	abstractActor *a = new ActorTest();
 
 	registry.registerActor("my actor", *a);
 	sleep(1);
-	ClientSocket::openHostConnection("localhost", port);
+	Connection c = ClientSocket::openHostConnection("localhost", port);
+	c.writeString(std::string("dummy name"));
 	return 0;
 }
 
 static int registryAddActorAndRemoveTest(void) {
-	static const uint16_t port = 6004;
-	ActorRegistry registry(port);
+	std::cout << "registryAddActorAndRemoveTest" << std::endl;
+	static const uint16_t port = 6000;
+	ActorRegistry registry(std::string("name"), port);
 	abstractActor *a = new ActorTest();
 
 	registry.registerActor("my actor", *a);
@@ -90,20 +98,23 @@ static int registryAddActorAndRemoveTest(void) {
 	a = new ActorTest();
 	registry.registerActor("my actor", *a);
 	sleep(1);
-	ClientSocket::openHostConnection("localhost", port);
+	Connection c = ClientSocket::openHostConnection("localhost", port);
+	c.writeString(std::string("dummy name"));
 	return 0;
 }
 
 static int registryAddReferenceTest(void) {
-	static const uint16_t port1 = 6004;
-	static const uint16_t port2 = 6005;
-	ActorRegistry registry1(port1);
-	ActorRegistry registry2(port2);
+	std::cout << "registryAddReferenceTest" << std::endl;
+	static const uint16_t port1 = 6001;
+	static const uint16_t port2 = 6002;
+	ActorRegistry registry1(std::string("name1"), port1);
+	ActorRegistry registry2(std::string("name2"), port2);
 	sleep(1);
 	registry1.addReference("another registry", "localhost", port2);
 
 	sleep(1);
-	ClientSocket::openHostConnection("localhost", port1);
+	Connection c = ClientSocket::openHostConnection("localhost", port1);
+	c.writeString(std::string("dummy name"));
 	return 0;
 }
 
