@@ -12,9 +12,6 @@ public:
 	~ClientSocket() = delete;
 
 	static Connection openHostConnection(std::string host, uint16_t port);
-private:
-	uint16_t port;
-	std::string host;
 };
 
 
