@@ -1,20 +1,18 @@
 #include <proxyClient.h>
 #include <proxyServer.h>
+#include <socket.h>
 
-proxyClient::proxyClient(std::string host, uint16_t port) {
-	s.reset(new Socket(host, port));
-	s->establishConnection();
-}
+proxyClient::proxyClient(std::string host, uint16_t port) : connection(Socket(host, port).connectHost()) { }
 proxyClient::~proxyClient() = default;
 
 actorReturnCode proxyClient::postSync(int i) {
-	s->writeInt(postType::Sync);
-	s->writeInt(i);
-	return static_cast<actorReturnCode>(s->readInt());
+	connection.writeInt(postType::Sync);
+	connection.writeInt(i);
+	return static_cast<actorReturnCode>(connection.readInt());
 }
 void proxyClient::post(int i) {
-	s->writeInt(postType::Async);
-	s->writeInt(i);
+	connection.writeInt(postType::Async);
+	connection.writeInt(i);
 }
 
-void proxyClient::restart() { s->writeInt(postType::Restart); }
+void proxyClient::restart() { connection.writeInt(postType::Restart); }

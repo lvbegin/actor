@@ -6,7 +6,8 @@ proxyServer::~proxyServer() { t.join(); };
 
 void proxyServer::startThread(abstractActor &actor, uint16_t port) {
 	auto s = std::make_unique<Socket>(port);
-	s->establishConnection();
+	s->acceptHost(); //close the accept socket.
+
 	while (true) {
 		uint32_t command;
 		switch (s->readInt()) {

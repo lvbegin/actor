@@ -38,21 +38,6 @@ Socket::~Socket() {
 		close(connectionFd);
 }
 
-void Socket::establishConnection(void) {
-	switch (type) {
-	case socketType::Client:
-		connectHost();
-		break;
-	case socketType::Server:
-		acceptHost();
-		close(acceptFd);
-		acceptFd = -1;
-		break;
-	default:
-		throw std::runtime_error("Socket: unexpected case.");
-	}
-}
-
 #include <iostream>
 Socket Socket::getNextConnection(void) {
 	if (socketType::Server != type)
@@ -63,9 +48,9 @@ Socket Socket::getNextConnection(void) {
 	return s;
 }
 
-void Socket::connectHost(void) {
-	connectionFd = socket(AF_INET, SOCK_STREAM, 0);
-	if (-1 == connectionFd)
+Connection Socket::connectHost(void) {
+	int fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (-1 == fd)
 		throw std::runtime_error("Socket: socket creation failed");
 	sockaddr_in sin;
 	hostent *he = gethostbyname(host.c_str());
@@ -75,8 +60,9 @@ void Socket::connectHost(void) {
 	printf(" %d %d %d %d\n", ((char *)&sin.sin_addr.s_addr)[0], ((char *)&sin.sin_addr.s_addr)[1], ((char *)&sin.sin_addr.s_addr)[2], ((char *)&sin.sin_addr.s_addr)[3]);
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(port);
-	if (-1 == connect(connectionFd, reinterpret_cast<sockaddr*>(&sin), sizeof(sin)))
+	if (-1 == connect(fd, reinterpret_cast<sockaddr*>(&sin), sizeof(sin)))
 		throw std::runtime_error("Socket: cannot connect");
+	return Connection(fd);
 }
 
 void Socket::acceptHost(void) {

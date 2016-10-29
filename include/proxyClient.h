@@ -2,8 +2,8 @@
 #define PROXY_CLIENT_H__
 
 #include <abstractActor.h>
-#include <socket.h>
-#include <memory>
+#include <connection.h>
+#include <string>
 
 class proxyClient : public abstractActor {
 public:
@@ -13,7 +13,7 @@ public:
 	void post(int i);
 	void restart(void);
 private:
-	std::unique_ptr<Socket> s;
+	Connection connection;
 };
 
 #endif

@@ -1,0 +1,22 @@
+#ifndef CONNECTION_H__
+#define CONNECTION_H__
+
+#include <cstdint>
+#include <unistd.h>
+
+class Connection {
+public:
+	Connection(int fd);
+	~Connection();
+	Connection(const Connection &connection) = delete;
+	Connection &operator=(const Connection &connection) = delete;
+	Connection(Connection &&connection);
+	void writeInt(uint32_t hostValue);
+	uint32_t readInt(void);
+	void writeBytes(const void *buffer, size_t count);
+	void readBytes(void *buffer, size_t count);
+private:
+	int fd;
+};
+
+#endif

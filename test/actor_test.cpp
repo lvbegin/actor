@@ -54,7 +54,7 @@ static int registryConnectTest(void) {
 	static const uint16_t port = 6004;
 	ActorRegistry registry(port);
 	sleep(1);
-	Socket("localhost", port).establishConnection();
+	Socket("localhost", port).connectHost();
 
 	return 0;
 }
@@ -75,7 +75,7 @@ static int registryAddActorTest(void) {
 
 	registry.registerActor("my actor", *a);
 	sleep(1);
-	Socket("localhost", port).establishConnection();
+	Socket("localhost", port).connectHost();
 	return 0;
 }
 
@@ -90,7 +90,7 @@ static int registryAddActorAndRemoveTest(void) {
 	a = new ActorTest();
 	registry.registerActor("my actor", *a);
 	sleep(1);
-	Socket("localhost", port).establishConnection();
+	Socket("localhost", port).connectHost();
 	return 0;
 }
 
@@ -103,7 +103,7 @@ static int registryAddReferenceTest(void) {
 	registry1.addReference("another registry", "localhost", port2);
 
 	sleep(1);
-	Socket("localhost", port1).establishConnection();
+	Socket("localhost", port1).connectHost();
 	return 0;
 }
 

@@ -22,7 +22,7 @@ void ActorRegistry::registryBody(Socket &s) {
 
 void ActorRegistry::addReference(std::string registryName, std::string host, uint16_t port) {
 	Socket s(host, port);
-	s.establishConnection();
+	s.connectHost();
 	others.insert(registryName, std::move(s));
 }
 

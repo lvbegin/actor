@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <string>
 
+#include <connection.h>
+
 class Socket {
 public:
 	Socket(uint16_t port);
@@ -17,7 +19,8 @@ public:
 	Socket &operator=(Socket&& s);
 
 	~Socket();
-	void establishConnection(void);
+	Connection connectHost(void);
+	void acceptHost(void);
 	Socket getNextConnection(void);
 	void writeInt(uint32_t hostValue);
 	uint32_t readInt(void);
@@ -25,8 +28,6 @@ public:
 	void readBytes(void *buffer, size_t count);
 private:
 	Socket(uint16_t port, int fd);
-	void connectHost(void);
-	void acceptHost(void);
 	enum class socketType {Client, Server, };
 	int acceptFd;
 	int connectionFd;
