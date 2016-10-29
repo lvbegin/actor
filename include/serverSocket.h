@@ -19,11 +19,9 @@ public:
 	ServerSocket &operator=(ServerSocket&& s);
 
 	~ServerSocket();
-	Connection getNextConnection(void);
+	Connection acceptOneConnection(void);
 private:
-	int acceptHost(void);
-	static int acceptOneConnection(int sockfd);
-	static int serverSocket(uint16_t port);
+	static int listenOnSocket(uint16_t port);
 
 	int acceptFd;
 	uint16_t port;

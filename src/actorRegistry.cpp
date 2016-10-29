@@ -15,14 +15,11 @@ static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body)
 ActorRegistry::~ActorRegistry() { t.join(); }
 
 void ActorRegistry::registryBody(ServerSocket &s) {
-	Connection connection = s.getNextConnection();
-	std::string name = "dummyName";
-	others.insert(name, std::move(connection)); //LOLO: should receive first the name
+	others.insert(std::string("dummyName"), s.acceptOneConnection()); //LOLO: should receive first the name
 }
 
 void ActorRegistry::addReference(std::string registryName, std::string host, uint16_t port) {
-	Connection c = ClientSocket::connectHost(host, port);
-	others.insert(registryName, std::move(c));
+	others.insert(registryName, ClientSocket::openHostConnection(host, port));
 }
 
 void ActorRegistry::removeReference(std::string registryName) { others.erase(registryName); }

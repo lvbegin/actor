@@ -10,12 +10,7 @@ Connection::~Connection() {
 		close(fd);
 }
 
-#include <iostream>
-Connection::Connection(Connection &&connection) : fd(-1) {
-	std::swap(fd, connection.fd);
-
-	std::cout << "fd = " << fd << " connection.fd = " << connection.fd << std::endl;
-}
+Connection::Connection(Connection &&connection) : fd(-1) { std::swap(fd, connection.fd); }
 
 void Connection::writeInt(uint32_t hostValue) {
 	const uint32_t sentValue = htonl(hostValue);

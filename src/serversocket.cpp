@@ -8,7 +8,7 @@
 
 #include <unistd.h>
 
-ServerSocket::ServerSocket(uint16_t port) : acceptFd(-1), port(port) { }
+ServerSocket::ServerSocket(uint16_t port) : acceptFd(listenOnSocket(port)), port(port) { }
 
 ServerSocket::ServerSocket(ServerSocket&& s) { *this = std::move(s); }
 
@@ -24,26 +24,18 @@ ServerSocket::~ServerSocket() {
 		close(acceptFd);
 }
 
-Connection ServerSocket::getNextConnection(void) { return Connection(acceptHost()); }
+Connection ServerSocket::getConnection(int port) { return ServerSocket(port).acceptOneConnection(); }
 
-Connection ServerSocket::getConnection(int port) { return ServerSocket(port).getNextConnection(); }
-
-int ServerSocket::acceptHost(void) {
-	acceptFd = (-1 == acceptFd) ? serverSocket(port) : acceptFd;
-	return acceptOneConnection(acceptFd);
-}
-
-int ServerSocket::acceptOneConnection(int sockfd) {
+Connection ServerSocket::acceptOneConnection(void) {
 	struct sockaddr_in client_addr { };
 	socklen_t client_len = sizeof(client_addr);
-	const int newsockfd = accept(sockfd, (struct sockaddr *)&client_addr, &client_len);
+	const int newsockfd = accept(acceptFd, (struct sockaddr *)&client_addr, &client_len);
 	if (-1 == newsockfd)
 		throw std::runtime_error("ServerSocket: accept failed");
-	close(sockfd);
-	return newsockfd;
+	return Connection(newsockfd);
 }
 
-int ServerSocket::serverSocket(uint16_t port) {
+int ServerSocket::listenOnSocket(uint16_t port) {
 	struct sockaddr_in serv_addr { };
 	const int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == sockfd)

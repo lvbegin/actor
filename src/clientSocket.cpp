@@ -8,7 +8,7 @@
 
 #include <memory.h>
 
-Connection ClientSocket::connectHost(std::string host, uint16_t port) {
+Connection ClientSocket::openHostConnection(std::string host, uint16_t port) {
 	int fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == fd)
 		throw std::runtime_error("ClientSocket: socket creation failed");

@@ -2,7 +2,7 @@
 #include <proxyServer.h>
 #include <clientSocket.h>
 
-proxyClient::proxyClient(std::string host, uint16_t port) : connection(ClientSocket::connectHost(host, port)) { }
+proxyClient::proxyClient(std::string host, uint16_t port) : connection(ClientSocket::openHostConnection(host, port)) { }
 proxyClient::~proxyClient() = default;
 
 actorReturnCode proxyClient::postSync(int i) {
