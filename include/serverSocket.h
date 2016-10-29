@@ -22,6 +22,9 @@ public:
 	Connection getNextConnection(void);
 private:
 	int acceptHost(void);
+	static int acceptOneConnection(int sockfd);
+	static int serverSocket(uint16_t port);
+
 	int acceptFd;
 	uint16_t port;
 };
