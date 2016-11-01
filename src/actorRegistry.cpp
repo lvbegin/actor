@@ -18,13 +18,13 @@ ActorRegistry::~ActorRegistry() { t.join(); }
 void ActorRegistry::registryBody(ServerSocket &s) {
 	auto connection = s.acceptOneConnection();
 	auto name = connection.readString();
-	others.insert(std::move(name), std::move(connection)); //LOLO: should receive first the name
+	others.insert(std::move(name), std::move(connection));
 }
 
 void ActorRegistry::addReference(std::string registryName, std::string host, uint16_t port) {
 	auto connection = ClientSocket::openHostConnection(host, port);
 	connection.writeString(name);
-	others.insert(registryName, std::move(connection));
+	others.insert(std::move(registryName), std::move(connection));
 }
 
 void ActorRegistry::removeReference(std::string registryName) { others.erase(registryName); }
