@@ -137,6 +137,26 @@ static int registeryAddActorAndFindItBackTest() {
 	return (a == b) ? 0 : 1;
 }
 
+static int registeryFindUnknownActorTest() {
+	std::cout << "registeryFindUnknownActorTest" << std::endl;
+
+	static const std::string actorName("my actor");
+	static const uint16_t port = 6001;
+	ActorRegistry registry(std::string("name1"), port);
+
+	Actor *a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
+	registry.registerActor(std::string(actorName), *a);
+
+	AbstractActor *b = registry.getActor<AbstractActor>(std::string("wrong name"));
+	a->post(Actor::COMMAND_SHUTDOWN);
+	sleep(1);
+	Connection c = ClientSocket::openHostConnection("localhost", port);
+	c.writeString(std::string("dummy name"));
+
+	return (nullptr == b) ? 0 : 1;
+}
+
+
 int main() {
 	int nbFailure = basicActorTest();
 	nbFailure += proxyTest();
@@ -146,7 +166,7 @@ int main() {
 	nbFailure += registryAddActorAndRemoveTest();
 	nbFailure += registryAddReferenceTest();
 	nbFailure += registeryAddActorAndFindItBackTest();
-	std::cout << nbFailure << std::endl;
+	nbFailure += registeryFindUnknownActorTest();
 	std::cout << ((nbFailure) ? "Failure" : "Success") << std::endl;
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
