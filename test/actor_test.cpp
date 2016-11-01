@@ -134,7 +134,7 @@ static int registeryAddActorAndFindItBackTest() {
 	Connection c = ClientSocket::openHostConnection("localhost", port);
 	c.writeString(std::string("dummy name"));
 
-	return (nullptr != b) ? 0 : 1;
+	return (a == b) ? 0 : 1;
 }
 
 int main() {
