@@ -1,8 +1,7 @@
 #ifndef ACTOR_H__
 #define ACTOR_H__
 
-#include <abstractActor.h>
-
+#include <AbstractActor.h>
 #include <functional>
 #include <thread>
 #include <future>
@@ -10,10 +9,13 @@
 #include <condition_variable>
 #include <queue>
 
-class Actor : public abstractActor {
+class Actor : public AbstractActor {
 public:
 	Actor(std::function<actorReturnCode(int)> body);
 	~Actor();
+
+	Actor(const Actor &a) = delete;
+	Actor &operator=(const Actor &a) = delete;
 	actorReturnCode postSync(int i);
 	void post(int i);
 	void restart(void);

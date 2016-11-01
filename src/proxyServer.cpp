@@ -1,10 +1,10 @@
 #include <proxyServer.h>
 #include <serverSocket.h>
 
-proxyServer::proxyServer(abstractActor &actor, uint16_t port) : t([&actor, port]() {  startThread(actor, port); }){ }
+proxyServer::proxyServer(AbstractActor &actor, uint16_t port) : t([&actor, port]() {  startThread(actor, port); }){ }
 proxyServer::~proxyServer() { t.join(); };
 
-void proxyServer::startThread(abstractActor &actor, uint16_t port) {
+void proxyServer::startThread(AbstractActor &actor, uint16_t port) {
 	auto connection = ServerSocket::getConnection(port);
 	while (true) {
 		uint32_t command;
@@ -23,7 +23,7 @@ void proxyServer::startThread(abstractActor &actor, uint16_t port) {
 			default:
 				continue;
 		}
-		if (abstractActor::COMMAND_SHUTDOWN == command)
+		if (AbstractActor::COMMAND_SHUTDOWN == command)
 			return;
 	}
 }

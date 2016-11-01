@@ -33,7 +33,7 @@ static int proxyTest(void) {
 	std::thread t(executeSeverProxy, port);
 	sleep(2);
 	proxyClient client("localhost", port);
-	client.post(abstractActor::COMMAND_SHUTDOWN);
+	client.post(AbstractActor::COMMAND_SHUTDOWN);
 	t.join();
 	return 0;
 }
@@ -49,7 +49,7 @@ static int proxyRestartTest(void) {
 	int NbError = (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
 	client.restart();
 	NbError += (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
-	NbError +=  (actorReturnCode::shutdown == client.postSync(abstractActor::COMMAND_SHUTDOWN)) ? 0 : 1;
+	NbError +=  (actorReturnCode::shutdown == client.postSync(AbstractActor::COMMAND_SHUTDOWN)) ? 0 : 1;
 	return NbError;
 }
 
@@ -64,7 +64,7 @@ static int registryConnectTest(void) {
 	return 0;
 }
 
-class ActorTest : public abstractActor {
+class ActorTest : public AbstractActor {
 public:
 	ActorTest() = default;
 	virtual ~ActorTest() = default;
@@ -77,7 +77,7 @@ static int registryAddActorTest(void) {
 	std::cout << "registryAddAtorTest" << std::endl;
 	static const uint16_t port = 6000;
 	ActorRegistry registry(std::string("name"), port);
-	abstractActor *a = new ActorTest();
+	AbstractActor *a = new ActorTest();
 
 	registry.registerActor("my actor", *a);
 	sleep(1);
@@ -90,7 +90,7 @@ static int registryAddActorAndRemoveTest(void) {
 	std::cout << "registryAddActorAndRemoveTest" << std::endl;
 	static const uint16_t port = 6000;
 	ActorRegistry registry(std::string("name"), port);
-	abstractActor *a = new ActorTest();
+	AbstractActor *a = new ActorTest();
 
 	registry.registerActor("my actor", *a);
 	registry.unregisterActor("my actor");
@@ -118,6 +118,25 @@ static int registryAddReferenceTest(void) {
 	return 0;
 }
 
+static int registeryAddActorAndFindItBackTest() {
+	std::cout << "registeryAddActorAndFindItBackTest" << std::endl;
+
+	static const std::string actorName("my actor");
+	static const uint16_t port = 6001;
+	ActorRegistry registry(std::string("name1"), port);
+
+	Actor *a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
+	registry.registerActor(std::string(actorName), *a);
+
+	AbstractActor *b = registry.getActor<AbstractActor>(actorName);
+	a->post(Actor::COMMAND_SHUTDOWN);
+	sleep(1);
+	Connection c = ClientSocket::openHostConnection("localhost", port);
+	c.writeString(std::string("dummy name"));
+
+	return (nullptr != b) ? 0 : 1;
+}
+
 int main() {
 	int nbFailure = basicActorTest();
 	nbFailure += proxyTest();
@@ -126,5 +145,8 @@ int main() {
 	nbFailure += registryAddActorTest();
 	nbFailure += registryAddActorAndRemoveTest();
 	nbFailure += registryAddReferenceTest();
+	nbFailure += registeryAddActorAndFindItBackTest();
+	std::cout << nbFailure << std::endl;
+	std::cout << ((nbFailure) ? "Failure" : "Success") << std::endl;
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

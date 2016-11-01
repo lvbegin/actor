@@ -6,7 +6,7 @@
 Connection::Connection(int fd) : fd(fd) { }
 
 Connection::~Connection() {
-	if (-1 == fd)
+	if (-1 != fd)
 		close(fd);
 }
 

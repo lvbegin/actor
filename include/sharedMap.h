@@ -21,6 +21,16 @@ public:
 		std::unique_lock<std::mutex> l(mutex);
 		map.erase(key);
 	}
+
+	typename std::map<K, T>::iterator find (K key) {
+		std::unique_lock<std::mutex> l(mutex);
+		return map.find(key);
+	}
+
+	typename std::map<K, T>::iterator end() { //should be simplified
+		return map.end();
+	}
+
 private:
 	std::map<K, T> map;
 	std::mutex mutex;

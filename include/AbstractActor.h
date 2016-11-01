@@ -5,15 +5,15 @@
 
 enum class actorReturnCode  : uint32_t { ok, shutdown, error, };
 
-class abstractActor {
+class AbstractActor {
 public:
-	virtual ~abstractActor() { }
+	virtual ~AbstractActor() { }
 	virtual actorReturnCode postSync(int i) = 0;
 	virtual void post(int i) = 0;
 	virtual void restart(void) = 0;
 	static const uint32_t COMMAND_SHUTDOWN = 0;
 protected:
-	abstractActor() { };
+	AbstractActor() { };
 
 };
 

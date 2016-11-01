@@ -29,8 +29,8 @@ void ActorRegistry::addReference(std::string registryName, std::string host, uin
 
 void ActorRegistry::removeReference(std::string registryName) { others.erase(registryName); }
 
-void ActorRegistry::registerActor(std::string name, abstractActor &actor) {
-	actors.insert(name, std::move(std::unique_ptr<abstractActor>(&actor)));
+void ActorRegistry::registerActor(std::string name, AbstractActor &actor) {
+	actors.insert(name, std::move(std::unique_ptr<AbstractActor>(&actor)));
 }
 
 void ActorRegistry::unregisterActor(std::string name) { actors.erase(name); }

@@ -1,11 +1,11 @@
 #ifndef PROXY_CLIENT_H__
 #define PROXY_CLIENT_H__
 
-#include <abstractActor.h>
+#include <AbstractActor.h>
 #include <connection.h>
 #include <string>
 
-class proxyClient : public abstractActor {
+class proxyClient : public AbstractActor {
 public:
 	proxyClient(std::string host, uint16_t port);
 	~proxyClient();
