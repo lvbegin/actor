@@ -18,8 +18,10 @@ public:
 	std::string readString(void);
 	void writeBytes(const void *buffer, size_t count);
 	void readBytes(void *buffer, size_t count);
+	void readBytes(void *buffer, size_t count, int timeout);
 private:
 	int fd;
+	fd_set set;
 };
 
 #endif
