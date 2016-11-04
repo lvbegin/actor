@@ -64,11 +64,11 @@ void Connection::readBytes(void *buffer, size_t count, int timeoutInSeconds) {
 		case -1:
 			throw std::runtime_error("Connection: error while waiting for read.");
 		default:
-			readBytes(buffer, count);
+			readBytesNonBlocking(buffer, count);
 	}
 }
 
-void Connection::readBytes(void *buffer, size_t count) {
+void Connection::readBytesNonBlocking(void *buffer, size_t count) {
 	static const int timeoutOnRead = 60;
 	if (-1 == fd)
 		throw std::runtime_error("Connection: invalid writeByte");

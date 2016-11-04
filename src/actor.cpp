@@ -3,6 +3,7 @@
 Actor::Actor(std::function<actorReturnCode(int)> body)  : body(body), thread([&body, this]() { actorBody(body); }) { }
 
 Actor::~Actor() {
+	post(COMMAND_SHUTDOWN);
 	if (thread.joinable())
 		thread.join();
 };

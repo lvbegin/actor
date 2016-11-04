@@ -18,7 +18,6 @@ static int basicActorTest(void) {
 		std::cout << "post failure" << std::endl;
 		return 1;
 	}
-	a.post(Actor::COMMAND_SHUTDOWN);
 	return 0;
 }
 
@@ -129,7 +128,6 @@ static int registeryAddActorAndFindItBackTest() {
 	registry.registerActor(std::string(actorName), *a);
 
 	AbstractActor *b = registry.getActor<AbstractActor>(actorName);
-	a->post(Actor::COMMAND_SHUTDOWN);
 	sleep(1);
 	Connection c = ClientSocket::openHostConnection("localhost", port);
 	c.writeString(std::string("dummy name"));
@@ -148,7 +146,6 @@ static int registeryFindUnknownActorTest() {
 	registry.registerActor(std::string(actorName), *a);
 
 	AbstractActor *b = registry.getActor<AbstractActor>(std::string("wrong name"));
-	a->post(Actor::COMMAND_SHUTDOWN);
 	sleep(1);
 	Connection c = ClientSocket::openHostConnection("localhost", port);
 	c.writeString(std::string("dummy name"));

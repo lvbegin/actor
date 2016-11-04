@@ -30,6 +30,7 @@ private:
 	SharedMap<std::string, Connection> others;
 	SharedMap<std::string, std::unique_ptr<AbstractActor>> actors;
 	std::thread t;
+	bool terminated;
 
 	void registryBody(ServerSocket &s);
 };

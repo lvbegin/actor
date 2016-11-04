@@ -17,9 +17,10 @@ public:
 	void writeString(std::string hostValue);
 	std::string readString(void);
 	void writeBytes(const void *buffer, size_t count);
-	void readBytes(void *buffer, size_t count);
-	void readBytes(void *buffer, size_t count, int timeout);
+	void readBytes(void *buffer, size_t count, int timeout = 5);
 private:
+	void readBytesNonBlocking(void *buffer, size_t count);
+
 	int fd;
 	fd_set set;
 };

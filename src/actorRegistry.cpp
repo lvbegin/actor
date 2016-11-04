@@ -6,19 +6,31 @@
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body);
 
 ActorRegistry::ActorRegistry(std::string name, uint16_t port) : name(name),
-					t([this, port]() {  threadBody(port, [this](ServerSocket &s) { registryBody(s); }); }) { }
+					t([this, port]() {  threadBody(port, [this](ServerSocket &s) { registryBody(s); }); }),
+					terminated(false) { }
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body) {
 	auto s = std::make_unique<ServerSocket>(port);
 	body(*s);
 }
 
-ActorRegistry::~ActorRegistry() { t.join(); }
+ActorRegistry::~ActorRegistry() {
+	terminated = true;
+	t.join();
+}
 
 void ActorRegistry::registryBody(ServerSocket &s) {
 	auto connection = s.acceptOneConnection();
-	auto name = connection.readString();
-	others.insert(std::move(name), std::move(connection));
+	while (true) {
+		try {
+		 auto name = connection.readString();
+		 others.insert(std::move(name), std::move(connection));
+		}
+		catch (std::exception e) {
+			if (terminated)
+				return;
+		}
+	}
 }
 
 void ActorRegistry::addReference(std::string registryName, std::string host, uint16_t port) {
