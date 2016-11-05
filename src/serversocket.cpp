@@ -1,10 +1,12 @@
+#include <serverSocket.h>
+#include <exception.h>
+
 #include <stdexcept>
 #include <cstring>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <serverSocket.h>
 
 #include <unistd.h>
 
@@ -40,15 +42,15 @@ Connection ServerSocket::acceptOneConnection(void) {
 	FD_SET(acceptFd, &set);
 	switch(select(acceptFd + 1, &set, NULL, NULL, &timeout)) {
 		case 0:
-			throw std::runtime_error("Connection: timeout on read");
+			THROW(std::runtime_error, "timeout on read.");
 		case -1:
-			throw std::runtime_error("Connection: error while waiting for read.");
+			THROW(std::runtime_error, "error while waiting for read.");
 		default:
 			break;
 	}
 	const int newsockfd = accept(acceptFd, (struct sockaddr *)&client_addr, &client_len);
 	if (-1 == newsockfd)
-		throw std::runtime_error("ServerSocket: accept failed");
+		THROW(std::runtime_error, "accept failed.");
 	return Connection(newsockfd);
 }
 
@@ -56,16 +58,16 @@ int ServerSocket::listenOnSocket(uint16_t port) {
 	struct sockaddr_in serv_addr { };
 	const int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == sockfd)
-		throw std::runtime_error("ServerSocket: cannot create socket");
+		THROW(std::runtime_error, "cannot create socket.");
 	int enable = 1;
 	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-		throw std::runtime_error("ServerSocket: setsockopt(SO_REUSEADDR) failed");
+		THROW(std::runtime_error, "setsockopt(SO_REUSEADDR) failed.");
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
 	serv_addr.sin_port = htons(port);
 	if (bind(sockfd, reinterpret_cast<struct sockaddr *> (&serv_addr), sizeof(serv_addr)) < 0)
-		throw std::runtime_error("ServerSocket: cannot bind socker");
+		THROW(std::runtime_error, "cannot bind socket.");
 	if (-1 == listen(sockfd,5))
-		throw std::runtime_error("ServerSocket: cannot listen");
+		THROW(std::runtime_error, "cannot listen.");
 	return sockfd;
 }

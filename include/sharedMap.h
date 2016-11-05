@@ -1,6 +1,8 @@
 #ifndef SHARED_MAP_H__
 #define SHARED_MAP_H__
 
+#include <exception.h>
+
 #include <map>
 #include <mutex>
 
@@ -14,7 +16,7 @@ public:
 	void insert(L&& key, M &&value) {
 		std::unique_lock<std::mutex> l(mutex);
 		if (map.end() != map.find(key))
-			throw std::runtime_error("actorRegistry: actor already exist");
+			THROW(std::runtime_error, "actor already exist.");
 		map.insert(std::make_pair(std::forward<L>(key), std::forward<M>(value)));
 	}
 	void erase(K key) {
