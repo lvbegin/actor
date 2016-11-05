@@ -17,18 +17,17 @@ public:
 	void removeReference(std::string registryName);
 	void registerActor(std::string name, AbstractActor &actor);
 	void unregisterActor(std::string name);
-	template<typename V>
-	V * getActor(std::string name) {
-		auto actor = actors.find(name);
-		if (actors.end() == actor)
-			return nullptr;
-		else
-			return actor->second.get();
+	std::shared_ptr<AbstractActor>  getActor(std::string name) {
+		try {
+			return actors.find(name);
+		} catch (std::out_of_range e) {
+			return std::shared_ptr<AbstractActor>();
+		}
 	}
 private:
 	std::string name;
 	SharedMap<std::string, Connection> others;
-	SharedMap<std::string, std::unique_ptr<AbstractActor>> actors;
+	SharedMap<std::string, std::shared_ptr<AbstractActor>> actors;
 	std::thread t;
 	bool terminated;
 

@@ -24,13 +24,12 @@ public:
 		map.erase(key);
 	}
 
-	typename std::map<K, T>::iterator find (K key) {
+	T find (K key) {
 		std::unique_lock<std::mutex> l(mutex);
-		return map.find(key);
-	}
-
-	typename std::map<K, T>::iterator end() { //should be simplified
-		return map.end();
+		auto it = map.find(key);
+		if (map.end() == it)
+			THROW(std::out_of_range, "element not found.");
+		return it->second;
 	}
 
 private:

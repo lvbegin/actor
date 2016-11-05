@@ -127,12 +127,12 @@ static int registeryAddActorAndFindItBackTest() {
 	Actor *a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
 	registry.registerActor(std::string(actorName), *a);
 
-	AbstractActor *b = registry.getActor<AbstractActor>(actorName);
+	std::shared_ptr<AbstractActor> b = registry.getActor(actorName);
 	sleep(1);
 	Connection c = ClientSocket::openHostConnection("localhost", port);
 	c.writeString(std::string("dummy name"));
 
-	return (a == b) ? 0 : 1;
+	return (a == b.get()) ? 0 : 1;
 }
 
 static int registeryFindUnknownActorTest() {
@@ -145,12 +145,12 @@ static int registeryFindUnknownActorTest() {
 	Actor *a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
 	registry.registerActor(std::string(actorName), *a);
 
-	AbstractActor *b = registry.getActor<AbstractActor>(std::string("wrong name"));
+	std::shared_ptr<AbstractActor> b = registry.getActor(std::string("wrong name"));
 	sleep(1);
 	Connection c = ClientSocket::openHostConnection("localhost", port);
 	c.writeString(std::string("dummy name"));
 
-	return (nullptr == b) ? 0 : 1;
+	return (nullptr == b.get()) ? 0 : 1;
 }
 
 
