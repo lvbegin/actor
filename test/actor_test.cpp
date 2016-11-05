@@ -79,9 +79,6 @@ static int registryAddActorTest(void) {
 	AbstractActor *a = new ActorTest();
 
 	registry.registerActor("my actor", *a);
-	sleep(1);
-	Connection c = ClientSocket::openHostConnection("localhost", port);
-	c.writeString(std::string("dummy name"));
 	return 0;
 }
 
@@ -93,12 +90,9 @@ static int registryAddActorAndRemoveTest(void) {
 
 	registry.registerActor("my actor", *a);
 	registry.unregisterActor("my actor");
-	registry.unregisterActor("my actor");
+	registry.unregisterActor("my actor"); //LOLO: should throw an exception...
 	a = new ActorTest();
 	registry.registerActor("my actor", *a);
-	sleep(1);
-	Connection c = ClientSocket::openHostConnection("localhost", port);
-	c.writeString(std::string("dummy name"));
 	return 0;
 }
 
@@ -110,10 +104,6 @@ static int registryAddReferenceTest(void) {
 	ActorRegistry registry2(std::string("name2"), port2);
 	sleep(1);
 	registry1.addReference("another registry", "localhost", port2);
-
-	sleep(1);
-	Connection c = ClientSocket::openHostConnection("localhost", port1);
-	c.writeString(std::string("dummy name"));
 	return 0;
 }
 
@@ -128,10 +118,6 @@ static int registeryAddActorAndFindItBackTest() {
 	registry.registerActor(std::string(actorName), *a);
 
 	std::shared_ptr<AbstractActor> b = registry.getActor(actorName);
-	sleep(1);
-	Connection c = ClientSocket::openHostConnection("localhost", port);
-	c.writeString(std::string("dummy name"));
-
 	return (a == b.get()) ? 0 : 1;
 }
 
@@ -146,10 +132,6 @@ static int registeryFindUnknownActorTest() {
 	registry.registerActor(std::string(actorName), *a);
 
 	std::shared_ptr<AbstractActor> b = registry.getActor(std::string("wrong name"));
-	sleep(1);
-	Connection c = ClientSocket::openHostConnection("localhost", port);
-	c.writeString(std::string("dummy name"));
-
 	return (nullptr == b.get()) ? 0 : 1;
 }
 
