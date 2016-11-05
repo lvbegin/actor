@@ -29,6 +29,7 @@ private:
 	std::future<actorReturnCode> putMessage(int i);
 	void actorBody(std::function<actorReturnCode(int)> body);
 	std::unique_ptr<message> getMessage(void);
+	void stopThread(void);
 	std::mutex mutexQueue;
 	std::condition_variable condition;
 	std::function<actorReturnCode(int)> body;

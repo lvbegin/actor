@@ -2,11 +2,7 @@
 
 Actor::Actor(std::function<actorReturnCode(int)> body)  : body(body), thread([&body, this]() { actorBody(body); }) { }
 
-Actor::~Actor() {
-	post(COMMAND_SHUTDOWN);
-	if (thread.joinable())
-		thread.join();
-};
+Actor::~Actor() { stopThread(); };
 
 std::future<actorReturnCode> Actor::putMessage(int i) {
 	std::unique_lock<std::mutex> l(mutexQueue);
@@ -53,8 +49,12 @@ void Actor::actorBody(std::function<actorReturnCode(int)> body) {
 }
 
 void Actor::restart(void) {
+	stopThread();
+	thread = std::thread([this]() { actorBody(body); });
+}
+
+void Actor::stopThread(void) {
 	post(COMMAND_SHUTDOWN);
 	if (thread.joinable())
 		thread.join();
-	thread = std::thread([this]() { actorBody(body); });
 }
