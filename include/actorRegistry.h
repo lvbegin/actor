@@ -9,6 +9,8 @@
 #include <serverSocket.h>
 #include <sharedMap.h>
 
+using actorPtr = std::shared_ptr<AbstractActor>;
+
 class ActorRegistry {
 public:
 	ActorRegistry(std::string name, uint16_t port);
@@ -17,13 +19,7 @@ public:
 	void removeReference(std::string registryName);
 	void registerActor(std::string name, AbstractActor &actor);
 	void unregisterActor(std::string name);
-	std::shared_ptr<AbstractActor>  getActor(std::string name) {
-		try {
-			return actors.find(name);
-		} catch (std::out_of_range e) {
-			return std::shared_ptr<AbstractActor>();
-		}
-	}
+	actorPtr  getActor(std::string name);
 private:
 	std::string name;
 	SharedMap<std::string, Connection> others;

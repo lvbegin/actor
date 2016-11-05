@@ -44,3 +44,11 @@ void ActorRegistry::registerActor(std::string name, AbstractActor &actor) {
 }
 
 void ActorRegistry::unregisterActor(std::string name) { actors.erase(name); }
+
+actorPtr  ActorRegistry::getActor(std::string name) {
+	try {
+		return actors.find(name);
+	} catch (std::out_of_range e) {
+		return std::shared_ptr<AbstractActor>();
+	}
+}
