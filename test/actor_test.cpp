@@ -90,7 +90,10 @@ static int registryAddActorAndRemoveTest(void) {
 
 	registry.registerActor("my actor", *a);
 	registry.unregisterActor("my actor");
-	registry.unregisterActor("my actor"); //LOLO: should throw an exception...
+	try {
+	    registry.unregisterActor("my actor");
+	    return 1;
+	} catch (std::runtime_error e) { }
 	a = new ActorTest();
 	registry.registerActor("my actor", *a);
 	return 0;
