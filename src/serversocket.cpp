@@ -1,5 +1,6 @@
 #include <serverSocket.h>
 #include <exception.h>
+#include <descriptorWait.h>
 
 #include <stdexcept>
 #include <cstring>
@@ -10,13 +11,17 @@
 
 #include <unistd.h>
 
-ServerSocket::ServerSocket(uint16_t port) : acceptFd(listenOnSocket(port)) { }
+ServerSocket::ServerSocket(uint16_t port) : acceptFd(listenOnSocket(port)) {
+	FD_ZERO(&set);
+	FD_SET(acceptFd, &set);
+}
 
 ServerSocket::ServerSocket(ServerSocket&& s) { *this = std::move(s); }
 
 ServerSocket &ServerSocket::operator=(ServerSocket&& s) {
 	closeSocket();
 	std::swap(this->acceptFd,s.acceptFd);
+	std::swap(this->set,s.set);
 	return *this;
 }
 
@@ -33,21 +38,10 @@ void ServerSocket::closeSocket(void) {
 
 Connection ServerSocket::getConnection(int port) { return ServerSocket(port).acceptOneConnection(); }
 
-Connection ServerSocket::acceptOneConnection(void) {
+Connection ServerSocket::acceptOneConnection(int timeout) {
 	struct sockaddr_in client_addr { };
 	socklen_t client_len = sizeof(client_addr);
-	struct timeval timeout { 5, 0 };
-	fd_set set;
-	FD_ZERO(&set);
-	FD_SET(acceptFd, &set);
-	switch(select(acceptFd + 1, &set, NULL, NULL, &timeout)) {
-		case 0:
-			THROW(std::runtime_error, "timeout on read.");
-		case -1:
-			THROW(std::runtime_error, "error while waiting for read.");
-		default:
-			break;
-	}
+	waitForRead<std::runtime_error, std::runtime_error>(acceptFd, &set, timeout);
 	const int newsockfd = accept(acceptFd, (struct sockaddr *)&client_addr, &client_len);
 	if (-1 == newsockfd)
 		THROW(std::runtime_error, "accept failed.");

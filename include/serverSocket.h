@@ -19,11 +19,12 @@ public:
 	ServerSocket &operator=(ServerSocket&& s);
 
 	~ServerSocket();
-	Connection acceptOneConnection(void);
+	Connection acceptOneConnection(int timeout = 2);
 private:
 	static int listenOnSocket(uint16_t port);
 	void closeSocket(void);
 	int acceptFd;
+	fd_set set;
 };
 
 #endif
