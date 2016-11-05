@@ -25,9 +25,7 @@ ServerSocket &ServerSocket::operator=(ServerSocket&& s) {
 	return *this;
 }
 
-ServerSocket::~ServerSocket() {
-	closeSocket();
-}
+ServerSocket::~ServerSocket() { closeSocket(); }
 
 void ServerSocket::closeSocket(void) {
 	if (-1 == acceptFd)
