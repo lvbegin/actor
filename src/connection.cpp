@@ -1,4 +1,5 @@
 #include <connection.h>
+#include <descriptorWait.h>
 
 #include <stdexcept>
 #include <arpa/inet.h>
@@ -35,7 +36,7 @@ void Connection::writeString(std::string hostValue) {
 std::string Connection::readString(void) {
 	const size_t size = readInt();
 	char string[size]; //check max size
-	readBytes(string, size);
+	readBytesNonBlocking(string, size);
 	if (0 != string[size-1])
 		throw std::runtime_error("Connection: non NULL-terminated string value");
 	return std::string(string);
@@ -55,37 +56,21 @@ void Connection::writeBytes(const void *buffer, size_t count) {
 }
 
 void Connection::readBytes(void *buffer, size_t count, int timeoutInSeconds) {
-	if (-1 == fd)
-		throw std::runtime_error("Connection: invalid writeByte");
-	struct timeval timeout { timeoutInSeconds, 0 };
-	switch(select(fd + 1, &set, NULL, NULL, &timeout)) {
-		case 0:
-			throw std::runtime_error("Connection: timeout on read");
-		case -1:
-			throw std::runtime_error("Connection: error while waiting for read.");
-		default:
-			readBytesNonBlocking(buffer, count);
-	}
+	waitForRead<std::runtime_error, std::runtime_error>(fd, &set, timeoutInSeconds);
+	readBytesNonBlocking(buffer, count);
 }
 
 void Connection::readBytesNonBlocking(void *buffer, size_t count) {
 	static const int timeoutOnRead = 60;
 	if (-1 == fd)
-		throw std::runtime_error("Connection: invalid writeByte");
+		throw std::runtime_error("Connection: invalid fd in readBytesNonBlocking");
 	char *ptr = static_cast<char *>(buffer);
 	struct timeval timeout { timeoutOnRead, 0 };
 	for (size_t nbTotalRead = 0; nbTotalRead < count; ) {
-		switch (select(fd + 1, &set, NULL, NULL, &timeout)) {
-			case 0:
-				throw std::runtime_error("Connection: reading failed");
-			case -1:
-				throw std::runtime_error("Connection: error while reading.");
-			default: {
-				const ssize_t nbRead = read(fd, ptr + nbTotalRead, count - nbTotalRead);
-				if (0 >= nbRead)
-					throw std::runtime_error("Connection: read bytes failed");
-				nbTotalRead += nbRead;
-			}
-		}
+		waitForRead<std::runtime_error, std::runtime_error>(fd, &set, &timeout);
+		const ssize_t nbRead = read(fd, ptr + nbTotalRead, count - nbTotalRead);
+		if (0 >= nbRead)
+			throw std::runtime_error("Connection: read bytes failed");
+		nbTotalRead += nbRead;
 	}
 }

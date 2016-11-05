@@ -34,6 +34,18 @@ Connection ServerSocket::getConnection(int port) { return ServerSocket(port).acc
 Connection ServerSocket::acceptOneConnection(void) {
 	struct sockaddr_in client_addr { };
 	socklen_t client_len = sizeof(client_addr);
+	struct timeval timeout { 5, 0 };
+	fd_set set;
+	FD_ZERO(&set);
+	FD_SET(acceptFd, &set);
+	switch(select(acceptFd + 1, &set, NULL, NULL, &timeout)) {
+		case 0:
+			throw std::runtime_error("Connection: timeout on read");
+		case -1:
+			throw std::runtime_error("Connection: error while waiting for read.");
+		default:
+			break;
+	}
 	const int newsockfd = accept(acceptFd, (struct sockaddr *)&client_addr, &client_len);
 	if (-1 == newsockfd)
 		throw std::runtime_error("ServerSocket: accept failed");

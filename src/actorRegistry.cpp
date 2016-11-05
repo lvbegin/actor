@@ -20,17 +20,15 @@ ActorRegistry::~ActorRegistry() {
 }
 
 void ActorRegistry::registryBody(ServerSocket &s) {
-	auto connection = s.acceptOneConnection();
-	while (true) {
+	while (!terminated) {
 		try {
-		 auto name = connection.readString();
-		 others.insert(std::move(name), std::move(connection));
+			auto connection = s.acceptOneConnection();
+			auto name = connection.readString();
+			others.insert(std::move(name), std::move(connection));
 		}
-		catch (std::exception e) {
-			if (terminated)
-				return;
-		}
+		catch (std::exception e) { }
 	}
+	return ;
 }
 
 void ActorRegistry::addReference(std::string registryName, std::string host, uint16_t port) {

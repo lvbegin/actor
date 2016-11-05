@@ -54,7 +54,7 @@ static int proxyRestartTest(void) {
 
 static int registryConnectTest(void) {
 	std::cout << "registryConnectTest" << std::endl;
-	static const uint16_t port = 6000;
+	static const uint16_t port = 6001;
 	ActorRegistry registry(std::string("name"), port);
 	sleep(1);
 	Connection c = ClientSocket::openHostConnection("localhost", port);
@@ -74,7 +74,7 @@ public:
 
 static int registryAddActorTest(void) {
 	std::cout << "registryAddAtorTest" << std::endl;
-	static const uint16_t port = 6000;
+	static const uint16_t port = 6001;
 	ActorRegistry registry(std::string("name"), port);
 	AbstractActor *a = new ActorTest();
 
@@ -87,7 +87,7 @@ static int registryAddActorTest(void) {
 
 static int registryAddActorAndRemoveTest(void) {
 	std::cout << "registryAddActorAndRemoveTest" << std::endl;
-	static const uint16_t port = 6000;
+	static const uint16_t port = 6001;
 	ActorRegistry registry(std::string("name"), port);
 	AbstractActor *a = new ActorTest();
 
