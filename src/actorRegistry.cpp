@@ -25,6 +25,14 @@ void ActorRegistry::registryBody(ServerSocket &s) {
 			auto connection = s.acceptOneConnection();
 			auto name = connection.readString();
 			others.insert(std::move(name), std::move(connection));
+			//this is for simplification
+//			auto name = connection.readString();
+//			auto actor = actors.getActor(name);
+//			if (nullptr == actor.get())
+//				connection.writeInt(0);
+//			else {
+//
+//			}
 		}
 		catch (std::exception e) { }
 	}

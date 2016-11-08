@@ -23,12 +23,13 @@ static int basicActorTest(void) {
 
 void executeSeverProxy(uint16_t port) {
 	Actor a([](int i) { /* do something */ return actorReturnCode::ok; });
-	proxyServer server(a, port);
+	proxyServer server(a, ServerSocket::getConnection(port));
 }
+
 
 static int proxyTest(void) {
 	std::cout << "proxyTest" << std::endl;
-	static const uint16_t port = 4005;
+	static const uint16_t port = 4010;
 	std::thread t(executeSeverProxy, port);
 	sleep(2);
 	proxyClient client("localhost", port);
@@ -41,14 +42,14 @@ static int proxyRestartTest(void) {
 	std::cout << "proxyRestartTest" << std::endl;
 	static const uint16_t port = 4003;
 	static const int command = 0x33;
-	Actor a([](int i) { /* do something */ return actorReturnCode::ok; });
-	proxyServer server(a, port);
+	std::thread t(executeSeverProxy, port);
 	sleep(2);
 	proxyClient client("localhost", port);
 	int NbError = (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
 	client.restart();
 	NbError += (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
 	NbError +=  (actorReturnCode::shutdown == client.postSync(AbstractActor::COMMAND_SHUTDOWN)) ? 0 : 1;
+	t.join();
 	return NbError;
 }
 
@@ -138,6 +139,23 @@ static int registeryFindUnknownActorTest() {
 	return (nullptr == b.get()) ? 0 : 1;
 }
 
+static int findActorFromOtherRegistryTest() {
+#if 0
+	std::cout << "findActorFromOtherRegistryTest" << std::endl;
+
+	static const uint16_t port1 = 6001;
+	static const uint16_t port2 = 6002;
+	static const std::string actorName("actor name");
+	Actor a([](int i) { /* do something */ return actorReturnCode::ok; });
+	ActorRegistry registry1(std::string("name1"), port1);
+	ActorRegistry registry2(std::string("name2"), port2);
+	sleep(1);
+	registry1.addReference("another registry", "localhost", port2);
+	registry2.registerActor(actorName, a);
+	auto actor = registry2.getActor(actorName);
+#endif
+	return 0;
+}
 
 int main() {
 	int nbFailure = basicActorTest();
@@ -149,6 +167,7 @@ int main() {
 	nbFailure += registryAddReferenceTest();
 	nbFailure += registeryAddActorAndFindItBackTest();
 	nbFailure += registeryFindUnknownActorTest();
+	nbFailure += findActorFromOtherRegistryTest();
 	std::cout << ((nbFailure) ? "Failure" : "Success") << std::endl;
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

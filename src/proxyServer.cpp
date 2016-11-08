@@ -1,11 +1,14 @@
 #include <proxyServer.h>
 #include <serverSocket.h>
 
-proxyServer::proxyServer(AbstractActor &actor, uint16_t port) : t([&actor, port]() {  startThread(actor, port); }){ }
+#include <arpa/inet.h>
+
+proxyServer::proxyServer(AbstractActor &actor, Connection connection) : connection(std::move(connection)),
+t([&actor, this]() {  startThread(actor); }){ }
+
 proxyServer::~proxyServer() { t.join(); };
 
-void proxyServer::startThread(AbstractActor &actor, uint16_t port) {
-	auto connection = ServerSocket::getConnection(port);
+void proxyServer::startThread(AbstractActor &actor) {
 	while (true) {
 		uint32_t command;
 		switch (connection.readInt()) {
