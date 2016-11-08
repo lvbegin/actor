@@ -142,21 +142,22 @@ static int registeryFindUnknownActorTest() {
 }
 
 static int findActorFromOtherRegistryTest() {
-#if 0
+#if 1
 	std::cout << "findActorFromOtherRegistryTest" << std::endl;
-
+	static const std::string name1("name1");
+	static const std::string name2("name2");
+	static const std::string actorName("my actor");
 	static const uint16_t port1 = 6001;
 	static const uint16_t port2 = 6002;
-	static const std::string actorName("actor name");
-	Actor a([](int i) { /* do something */ return actorReturnCode::ok; });
-	ActorRegistry registry1(std::string("name1"), port1);
-	ActorRegistry registry2(std::string("name2"), port2);
+	ActorRegistry registry1(name1, port1);
+	ActorRegistry registry2(name2, port2);
 	sleep(1);
-	registry1.addReference("another registry", "localhost", port2); //should return the name of the other registry
-	registry2.registerActor(actorName, a);
+	std::string name = registry1.addReference("localhost", port2);
+	Actor *a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
+	registry2.registerActor(actorName, *a);
 	auto actor = registry2.getActor(actorName);
 #endif
-	return 0;
+	return nullptr != actor.get() ? 0 : 1;
 }
 
 int main() {
