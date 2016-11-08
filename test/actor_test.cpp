@@ -59,8 +59,8 @@ static int registryConnectTest(void) {
 	ActorRegistry registry(std::string("name"), port);
 	sleep(1);
 	Connection c = ClientSocket::openHostConnection("localhost", port);
-	c.writeString(std::string("dummy name"));
-
+//	c.writeString(std::string("dummy name"));
+//
 	return 0;
 }
 
@@ -102,13 +102,15 @@ static int registryAddActorAndRemoveTest(void) {
 
 static int registryAddReferenceTest(void) {
 	std::cout << "registryAddReferenceTest" << std::endl;
+	static const std::string name1("name1");
+	static const std::string name2("name2");
 	static const uint16_t port1 = 6001;
 	static const uint16_t port2 = 6002;
-	ActorRegistry registry1(std::string("name1"), port1);
-	ActorRegistry registry2(std::string("name2"), port2);
+	ActorRegistry registry1(name1, port1);
+	ActorRegistry registry2(name2, port2);
 	sleep(1);
-	registry1.addReference("another registry", "localhost", port2);
-	return 0;
+	std::string name = registry1.addReference("localhost", port2);
+	return name == name2 ? 0 : 1;
 }
 
 static int registeryAddActorAndFindItBackTest() {
@@ -150,7 +152,7 @@ static int findActorFromOtherRegistryTest() {
 	ActorRegistry registry1(std::string("name1"), port1);
 	ActorRegistry registry2(std::string("name2"), port2);
 	sleep(1);
-	registry1.addReference("another registry", "localhost", port2);
+	registry1.addReference("another registry", "localhost", port2); //should return the name of the other registry
 	registry2.registerActor(actorName, a);
 	auto actor = registry2.getActor(actorName);
 #endif

@@ -15,7 +15,7 @@ class ActorRegistry {
 public:
 	ActorRegistry(std::string name, uint16_t port);
 	~ActorRegistry();
-	void addReference(std::string registryName, std::string host, uint16_t port);
+	std::string addReference(std::string host, uint16_t port);
 	void removeReference(std::string registryName);
 	void registerActor(std::string name, AbstractActor &actor);
 	void unregisterActor(std::string name);

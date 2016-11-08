@@ -1,6 +1,7 @@
 #include <actorRegistry.h>
 #include <clientSocket.h>
 #include <serverSocket.h>
+#include <proxyServer.h>
 #include <functional>
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body);
@@ -23,26 +24,33 @@ void ActorRegistry::registryBody(ServerSocket &s) {
 	while (!terminated) {
 		try {
 			auto connection = s.acceptOneConnection();
-			auto name = connection.readString();
-			others.insert(std::move(name), std::move(connection));
+			auto otherName = connection.readString();
+			connection.writeString(this->name);
+			//others.insert(std::move(name), std::move(connection));
 			//this is for simplification
-//			auto name = connection.readString();
-//			auto actor = actors.getActor(name);
-//			if (nullptr == actor.get())
-//				connection.writeInt(0);
-//			else {
-//
-//			}
+			auto actorName = connection.readString();
+			try {
+				auto actor = actors.find(actorName).get();
+				auto p = new proxyServer(*actor, std::move(connection)); //what to do with that proxyServer ...
+				delete p;
+				connection.writeInt(1);
+			} catch (std::out_of_range e) {
+				connection.writeInt(0);
+				continue;
+			}
 		}
 		catch (std::exception e) { }
 	}
 	return ;
 }
 
-void ActorRegistry::addReference(std::string registryName, std::string host, uint16_t port) {
+std::string ActorRegistry::addReference(std::string host, uint16_t port) {
 	auto connection = ClientSocket::openHostConnection(host, port);
 	connection.writeString(name);
-	others.insert(std::move(registryName), std::move(connection));
+	//should read status...and react in consequence: what if failure returned?
+	std::string otherName = connection.readString();
+	others.insert(otherName, std::move(connection));
+	return otherName;
 }
 
 void ActorRegistry::removeReference(std::string registryName) { others.erase(registryName); }
