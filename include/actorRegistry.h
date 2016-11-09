@@ -5,7 +5,9 @@
 #include <cstdint>
 #include <thread>
 #include <memory>
+#include <vector>
 
+#include <proxyServer.h>
 #include <serverSocket.h>
 #include <sharedMap.h>
 
@@ -24,6 +26,7 @@ private:
 	std::string name;
 	SharedMap<std::string, Connection> others;
 	SharedMap<std::string, std::shared_ptr<AbstractActor>> actors;
+	std::vector<proxyServer> proxies;
 	std::thread t;
 	bool terminated;
 

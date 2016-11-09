@@ -1,7 +1,6 @@
 #include <actorRegistry.h>
 #include <clientSocket.h>
 #include <serverSocket.h>
-#include <proxyServer.h>
 #include <functional>
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body);
@@ -31,8 +30,7 @@ void ActorRegistry::registryBody(ServerSocket &s) {
 			auto actorName = connection.readString();
 			try {
 				auto actor = actors.find(actorName).get();
-				auto p = new proxyServer(*actor, std::move(connection)); //what to do with that proxyServer ...
-				delete p;
+				proxies.push_back(proxyServer(*actor, std::move(connection))); //ok and now when to remove ?
 				connection.writeInt(1);
 			} catch (std::out_of_range e) {
 				connection.writeInt(0);
@@ -56,7 +54,7 @@ std::string ActorRegistry::addReference(std::string host, uint16_t port) {
 void ActorRegistry::removeReference(std::string registryName) { others.erase(registryName); }
 
 void ActorRegistry::registerActor(std::string name, AbstractActor &actor) {
-	actors.insert(name, std::move(std::unique_ptr<AbstractActor>(&actor)));
+	actors.insert(name, std::move(std::shared_ptr<AbstractActor>(&actor)));
 }
 
 void ActorRegistry::unregisterActor(std::string name) { actors.erase(name); }

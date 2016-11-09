@@ -7,11 +7,13 @@
 
 class Connection {
 public:
+	Connection();
 	Connection(int fd);
 	~Connection();
 	Connection(const Connection &connection) = delete;
 	Connection &operator=(const Connection &connection) = delete;
 	Connection(Connection &&connection);
+	Connection &operator=(Connection &&connection);
 	void writeInt(uint32_t hostValue);
 	uint32_t readInt(void);
 	void writeString(std::string hostValue);

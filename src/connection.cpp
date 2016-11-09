@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <arpa/inet.h>
 
+Connection::Connection() : fd(-1) {}
+
 Connection::Connection(int fd) : fd(fd) {
 	FD_ZERO(&set);
 	FD_SET(fd, &set);
@@ -15,11 +17,13 @@ Connection::~Connection() {
 		close(fd);
 }
 
-Connection::Connection(Connection &&connection) : fd(-1) {
+Connection::Connection(Connection &&connection) : fd(-1) { *this = std::move(connection); }
+
+Connection &Connection::operator=(Connection &&connection) {
 	std::swap(fd, connection.fd);
 	std::swap(set, connection.set);
+	return *this;
 }
-
 void Connection::writeInt(uint32_t hostValue) {
 	const uint32_t sentValue = htonl(hostValue);
 	writeBytes(&sentValue, sizeof(sentValue));

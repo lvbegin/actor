@@ -11,6 +11,12 @@ enum postType : uint32_t { Sync, Async, Restart, } ;
 class proxyServer {
 public:
 	proxyServer(AbstractActor &actor, Connection connection);
+
+	proxyServer(const proxyServer &p) = delete;
+	proxyServer &operator=(const proxyServer &p) = delete;
+	proxyServer &operator=(proxyServer &&p);
+	proxyServer(proxyServer &&p);
+
 	~proxyServer();
 private:
 	Connection connection;
