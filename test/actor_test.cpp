@@ -32,7 +32,7 @@ static int proxyTest(void) {
 	static const uint16_t port = 4010;
 	std::thread t(executeSeverProxy, port);
 	sleep(2);
-	proxyClient client("localhost", port);
+	proxyClient client(ClientSocket::openHostConnection("localhost", port));
 	client.post(AbstractActor::COMMAND_SHUTDOWN);
 	t.join();
 	return 0;
@@ -44,7 +44,7 @@ static int proxyRestartTest(void) {
 	static const int command = 0x33;
 	std::thread t(executeSeverProxy, port);
 	sleep(2);
-	proxyClient client("localhost", port);
+	proxyClient client(ClientSocket::openHostConnection("localhost", port));
 	int NbError = (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
 	client.restart();
 	NbError += (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
