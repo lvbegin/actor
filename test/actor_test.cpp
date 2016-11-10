@@ -155,7 +155,9 @@ static int findActorFromOtherRegistryTest() {
 	std::string name = registry1.addReference("localhost", port2);
 	Actor *a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
 	registry2.registerActor(actorName, *a);
-	auto actor = registry2.getActor(actorName);
+	auto actor = registry1.getActor(actorName);
+	actor->postSync(AbstractActor::COMMAND_SHUTDOWN);
+	sleep(2);
 #endif
 	return nullptr != actor.get() ? 0 : 1;
 }

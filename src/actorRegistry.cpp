@@ -19,6 +19,7 @@ ActorRegistry::~ActorRegistry() {
 	t.join();
 }
 
+#include <iostream>
 void ActorRegistry::registryBody(ServerSocket &s) {
 	while (!terminated) {
 		try {
@@ -29,9 +30,14 @@ void ActorRegistry::registryBody(ServerSocket &s) {
 			//this is for simplification
 			auto actorName = connection.readString();
 			try {
+				std::cout << "received search request" << std::endl;
 				auto actor = actors.find(actorName).get();
-				proxies.push_back(proxyServer(*actor, std::move(connection))); //ok and now when to remove ?
+				std::cout << "actor found" << std::endl;
 				connection.writeInt(1);
+				std::cout << "push_back" << std::endl;
+				proxyServer(*actor, std::move(connection));
+//				proxies.push_back(proxyServer(*actor, std::move(connection))); //ok and now when to remove ?
+				std::cout << "done" << std::endl;
 			} catch (std::out_of_range e) {
 				connection.writeInt(0);
 				continue;
@@ -59,10 +65,24 @@ void ActorRegistry::registerActor(std::string name, AbstractActor &actor) {
 
 void ActorRegistry::unregisterActor(std::string name) { actors.erase(name); }
 
+#include <proxyClient.h>
 actorPtr  ActorRegistry::getActor(std::string name) {
 	try {
 		return actors.find(name);
 	} catch (std::out_of_range e) {
-		return std::shared_ptr<AbstractActor>();
+		actorPtr actor;
+		std::cout << "start search" << std::endl;
+		others.for_each([&actor, &name](std::pair<const std::string, Connection> &c) {
+			std::cout << "yet anoterh registry" << std::endl;
+			c.second.writeString(name);
+			std::cout << "name sent" << std::endl;
+			if (1 == c.second.readInt())
+			{
+				std::cout << "ok, found" << std::endl;
+				actor.reset(new proxyClient(std::move(c.second)));
+				std::cout << "ok, proxy Client created" << std::endl;
+			}
+		});
+		return actor;
 	}
 }

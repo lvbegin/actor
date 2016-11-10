@@ -5,6 +5,7 @@
 
 #include <map>
 #include <mutex>
+#include <algorithm>
 
 template<typename K, typename T>
 class SharedMap {
@@ -32,6 +33,11 @@ public:
 		if (map.end() == it)
 			THROW(std::out_of_range, "element not found.");
 		return it->second;
+	}
+	void for_each(std::function<void(std::pair<const K, T> &)> f) {
+		std::unique_lock<std::mutex> l(mutex);
+
+		std::for_each(map.begin(), map.end(), f);
 	}
 private:
 	std::map<K, T> map;
