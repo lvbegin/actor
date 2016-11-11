@@ -25,7 +25,6 @@ public:
 	void unregisterActor(std::string name);
 	actorPtr  getActor(std::string name);
 
-
 private:
 	enum class registryCommand_t : uint32_t { REGISTER_REGISTRY, SEARCH_ACTOR, };
 	std::string name;

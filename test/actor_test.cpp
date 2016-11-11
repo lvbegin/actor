@@ -31,7 +31,7 @@ static int proxyTest(void) {
 	std::cout << "proxyTest" << std::endl;
 	static const uint16_t port = 4010;
 	std::thread t(executeSeverProxy, port);
-	sleep(2);
+	sleep(1);
 	proxyClient client(ClientSocket::openHostConnection("localhost", port));
 	client.post(AbstractActor::COMMAND_SHUTDOWN);
 	t.join();

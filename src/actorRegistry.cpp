@@ -25,42 +25,35 @@ void ActorRegistry::registryBody(ServerSocket &s) {
 		try {
 			struct sockaddr_in client_addr {};
 			auto connection = s.acceptOneConnection(2, &client_addr);
-			auto command = static_cast<ActorRegistry::registryCommand_t>(connection.readInt());
-			switch (command) {
-				case ActorRegistry::registryCommand_t::REGISTER_REGISTRY: {
-					auto otherName = connection.readString();
-					registryAddresses.insert(std::move(otherName), client_addr);
+			switch (static_cast<ActorRegistry::registryCommand_t>(connection.readInt())) {
+				case registryCommand_t::REGISTER_REGISTRY:
+					registryAddresses.insert(connection.readString(), client_addr);
 					connection.writeString(this->name);
 					break;
-				}
-				case ActorRegistry::registryCommand_t::SEARCH_ACTOR: {
-					auto actorName = connection.readString();
+				case registryCommand_t::SEARCH_ACTOR:
 					try {
-						auto actor = actors.find(actorName).get();
+						auto actor = actors.find(connection.readString());
 						connection.writeInt(1);
-						proxies.push_back(proxyServer(*actor, std::move(connection))); //ok and now when to remove ?
+						proxies.push_back(proxyServer(*actor.get(), std::move(connection))); //ok and now when to remove ?
 					} catch (std::out_of_range e) {
 						connection.writeInt(0);
 					}
 					break;
-				}
 				default:
-					break;
+					THROW(std::runtime_error, "unknown case.");
 			}
 		}
 		catch (std::exception e) { }
 	}
-	return ;
 }
 
 std::string ActorRegistry::addReference(std::string host, uint16_t port) {
-	auto sin = ClientSocket::toSockAddr(host, port);
-	auto connection = ClientSocket::openHostConnection(sin);
-	connection.writeInt(static_cast<uint32_t>(ActorRegistry::registryCommand_t::REGISTER_REGISTRY));
+	auto connection = ClientSocket::openHostConnection(host, port);
+	connection.writeInt(static_cast<uint32_t>(registryCommand_t::REGISTER_REGISTRY));
 	connection.writeString(name);
 	//should read status...and react in consequence: what if failure returned?
 	std::string otherName = connection.readString();
-	registryAddresses.insert(otherName, sin);
+	registryAddresses.insert(otherName, ClientSocket::toSockAddr(host, port));
 	return otherName;
 }
 
@@ -84,7 +77,7 @@ actorPtr ActorRegistry::getOutsideActor(std::string &name) {
 	actorPtr actor;
 	registryAddresses.for_each([&actor, &name](std::pair<const std::string, struct sockaddr_in> &c) {
 		auto connection = ClientSocket::openHostConnection(c.second);
-		connection.writeInt(static_cast<uint32_t>(ActorRegistry::registryCommand_t::SEARCH_ACTOR));
+		connection.writeInt(static_cast<uint32_t>(registryCommand_t::SEARCH_ACTOR));
 		connection.writeString(name);
 		if (1 == connection.readInt())
 			actor.reset(new proxyClient(std::move(connection)));
