@@ -19,7 +19,7 @@ public:
 	ServerSocket &operator=(ServerSocket&& s);
 
 	~ServerSocket();
-	Connection acceptOneConnection(int timeout = 2);
+	Connection acceptOneConnection(int timeout = 2, struct sockaddr_in *client_addr = NULL);
 private:
 	static int listenOnSocket(uint16_t port);
 	void closeSocket(void);

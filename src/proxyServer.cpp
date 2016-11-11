@@ -3,22 +3,22 @@
 
 #include <arpa/inet.h>
 
-proxyServer::proxyServer(AbstractActor &actor, Connection connection) : connection(std::move(connection)),
-t([&actor, this]() {  startThread(actor); }){ }
+proxyServer::proxyServer(AbstractActor &actor, Connection connection) :
+t([&actor, connection {std::move(connection)}]() mutable {  startThread(actor, std::move(connection)); }) { }
 
 #include <iostream>
-proxyServer::proxyServer(proxyServer &&p) { *this = std::move(p); }
+proxyServer::proxyServer(proxyServer &&p) {  *this = std::move(p); }
 proxyServer &proxyServer::operator=(proxyServer &&p) {
-	connection = std::move(p.connection);
-	t = std::move(p.t);
-	std::cout << "move finished" << std::endl;
+	std::swap(t, p.t);
 	return *this;
 }
 
+proxyServer::~proxyServer() {
+	if (t.joinable())
+		t.join();
+};
 
-proxyServer::~proxyServer() { t.join(); };
-
-void proxyServer::startThread(AbstractActor &actor) {
+void proxyServer::startThread(AbstractActor &actor, Connection connection) {
 	while (true) {
 		uint32_t command;
 		switch (connection.readInt()) {

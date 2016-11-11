@@ -7,6 +7,8 @@
 #include <memory>
 #include <vector>
 
+#include <netinet/in.h>
+
 #include <proxyServer.h>
 #include <serverSocket.h>
 #include <sharedMap.h>
@@ -22,15 +24,20 @@ public:
 	void registerActor(std::string name, AbstractActor &actor);
 	void unregisterActor(std::string name);
 	actorPtr  getActor(std::string name);
+
+
 private:
+	enum class registryCommand_t : uint32_t { REGISTER_REGISTRY, SEARCH_ACTOR, };
 	std::string name;
-	SharedMap<std::string, Connection> others;
+	SharedMap<std::string, struct sockaddr_in> registryAddresses;
 	SharedMap<std::string, std::shared_ptr<AbstractActor>> actors;
 	std::vector<proxyServer> proxies;
 	std::thread t;
 	bool terminated;
 
 	void registryBody(ServerSocket &s);
+	actorPtr getLocalActor(std::string &name);
+	actorPtr getOutsideActor(std::string &name);
 };
 
 #endif

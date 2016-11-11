@@ -163,6 +163,7 @@ static int findActorFromOtherRegistryTest() {
 }
 
 int main() {
+
 	int nbFailure = basicActorTest();
 	nbFailure += proxyTest();
 	nbFailure += proxyRestartTest();

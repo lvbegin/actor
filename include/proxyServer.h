@@ -19,10 +19,9 @@ public:
 
 	~proxyServer();
 private:
-	Connection connection;
 	std::thread t;
 	static void startThread(AbstractActor &actor, uint16_t port);
-	void startThread(AbstractActor &actor);
+	static void startThread(AbstractActor &actor, Connection connection);
 };
 
 #endif
