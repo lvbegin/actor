@@ -10,18 +10,17 @@ enum postType : uint32_t { Sync, Async, Restart, } ;
 
 class proxyServer {
 public:
-	proxyServer(AbstractActor &actor, Connection connection);
+	proxyServer(std::shared_ptr<AbstractActor> actor, Connection connection);
+	~proxyServer();
 
 	proxyServer(const proxyServer &p) = delete;
 	proxyServer &operator=(const proxyServer &p) = delete;
 	proxyServer &operator=(proxyServer &&p);
 	proxyServer(proxyServer &&p);
 
-	~proxyServer();
 private:
 	std::thread t;
-	static void startThread(AbstractActor &actor, uint16_t port);
-	static void startThread(AbstractActor &actor, Connection connection);
+	static void startThread(std::shared_ptr<AbstractActor> actor, Connection connection);
 };
 
 #endif

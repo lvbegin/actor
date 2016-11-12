@@ -34,7 +34,7 @@ void ActorRegistry::registryBody(ServerSocket &s) {
 					try {
 						auto actor = actors.find(connection.readString());
 						connection.writeInt(1);
-						proxies.push_back(proxyServer(*actor.get(), std::move(connection))); //ok and now when to remove ?
+						proxies.push_back(proxyServer(actor, std::move(connection))); //ok and now when to remove ?
 					} catch (std::out_of_range e) {
 						connection.writeInt(0);
 					}

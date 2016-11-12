@@ -3,10 +3,10 @@
 
 #include <arpa/inet.h>
 
-proxyServer::proxyServer(AbstractActor &actor, Connection connection) :
-t([&actor, connection {std::move(connection)}]() mutable {  startThread(actor, std::move(connection)); }) { }
+proxyServer::proxyServer(std::shared_ptr<AbstractActor> actor, Connection connection) :
+	t([actor, connection {std::move(connection)}]() mutable { startThread(std::move(actor), std::move(connection)); }) { }
 
-#include <iostream>
+
 proxyServer::proxyServer(proxyServer &&p) {  *this = std::move(p); }
 proxyServer &proxyServer::operator=(proxyServer &&p) {
 	std::swap(t, p.t);
@@ -18,20 +18,20 @@ proxyServer::~proxyServer() {
 		t.join();
 };
 
-void proxyServer::startThread(AbstractActor &actor, Connection connection) {
+void proxyServer::startThread(std::shared_ptr<AbstractActor> actor, Connection connection) {
 	while (true) {
 		uint32_t command;
 		switch (connection.readInt()) {
 			case postType::Async:
 				command = connection.readInt();
-				actor.post(command);
+				actor->post(command);
 				break;
 			case postType::Sync:
 				command = connection.readInt();
-				connection.writeInt(static_cast<uint32_t>(actor.postSync(command)));
+				connection.writeInt(static_cast<uint32_t>(actor->postSync(command)));
 				break;
 			case postType::Restart:
-				actor.restart();
+				actor->restart();
 				continue;
 			default:
 				continue;

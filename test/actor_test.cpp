@@ -21,19 +21,21 @@ static int basicActorTest(void) {
 	return 0;
 }
 
+
+
 void executeSeverProxy(uint16_t port) {
-	Actor a([](int i) { /* do something */ return actorReturnCode::ok; });
-	proxyServer server(a, ServerSocket::getConnection(port));
+	auto a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
+	proxyServer server(std::shared_ptr<Actor>(a), ServerSocket::getConnection(port));
 }
 
 
 static int proxyTest(void) {
 	std::cout << "proxyTest" << std::endl;
-	static const uint16_t port = 4010;
+	static const uint16_t port = 4011;
 	std::thread t(executeSeverProxy, port);
 	sleep(1);
 	proxyClient client(ClientSocket::openHostConnection("localhost", port));
-	client.post(AbstractActor::COMMAND_SHUTDOWN);
+	client.postSync(AbstractActor::COMMAND_SHUTDOWN);
 	t.join();
 	return 0;
 }
@@ -43,7 +45,7 @@ static int proxyRestartTest(void) {
 	static const uint16_t port = 4003;
 	static const int command = 0x33;
 	std::thread t(executeSeverProxy, port);
-	sleep(2);
+	sleep(1);
 	proxyClient client(ClientSocket::openHostConnection("localhost", port));
 	int NbError = (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
 	client.restart();
