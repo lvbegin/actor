@@ -1,6 +1,6 @@
 #include <actor.h>
 
-Actor::Actor(std::function<actorReturnCode(int)> body)  : body(body), thread([&body, this]() { actorBody(body); }) { }
+Actor::Actor(std::function<actorReturnCode(int)> body)  : body(body), thread([this]() { actorBody(this->body); }) { }
 
 Actor::~Actor() { stopThread(); };
 

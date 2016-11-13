@@ -24,8 +24,8 @@ static int basicActorTest(void) {
 
 
 void executeSeverProxy(uint16_t port) {
-	auto a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
-	proxyServer server(std::shared_ptr<Actor>(a), ServerSocket::getConnection(port));
+	auto actor = std::make_shared<Actor>([](int i) { /* do something */ return actorReturnCode::ok; });
+	proxyServer server(actor, ServerSocket::getConnection(port));
 }
 
 
