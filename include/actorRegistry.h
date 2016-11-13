@@ -28,11 +28,11 @@ public:
 private:
 	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY, SEARCH_ACTOR, };
 	std::string name;
+	bool terminated;
 	SharedMap<std::string, struct sockaddr_in> registryAddresses;
 	SharedMap<std::string, std::shared_ptr<AbstractActor>> actors;
 	std::vector<proxyServer> proxies;
 	std::thread t;
-	bool terminated;
 
 	void registryBody(ServerSocket &s);
 	actorPtr getLocalActor(std::string &name);
