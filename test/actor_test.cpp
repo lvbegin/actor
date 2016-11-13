@@ -160,7 +160,7 @@ static int findActorFromOtherRegistryTest() {
 }
 
 static int findUnknownActorInMultipleRegistryTest() {
-	std::cout << "findActorFromOtherRegistryTest" << std::endl;
+	std::cout << "findUnknownActorInMultipleRegistryTest" << std::endl;
 	static const std::string name1("name1");
 	static const std::string name2("name2");
 	static const std::string actorName("my actor");
