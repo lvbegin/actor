@@ -49,7 +49,7 @@ void ActorRegistry::registryBody(ServerSocket &s) {
 
 std::string ActorRegistry::addReference(std::string host, uint16_t port) {
 	auto connection = ClientSocket::openHostConnection(host, port);
-	connection.writeInt(static_cast<uint32_t>(RegistryCommand::REGISTER_REGISTRY));
+	connection.writeInt(RegistryCommand::REGISTER_REGISTRY);
 	connection.writeString(name);
 	//should read status...and react in consequence: what if failure returned?
 	std::string otherName = connection.readString();
@@ -77,7 +77,7 @@ actorPtr ActorRegistry::getOutsideActor(std::string &name) {
 	actorPtr actor;
 	registryAddresses.for_each([&actor, &name](std::pair<const std::string, struct sockaddr_in> &c) {
 		auto connection = ClientSocket::openHostConnection(c.second);
-		connection.writeInt<RegistryCommand>(RegistryCommand::SEARCH_ACTOR);
+		connection.writeInt(RegistryCommand::SEARCH_ACTOR);
 		connection.writeString(name);
 		if (1 == connection.readInt<uint32_t>())
 			actor.reset(new proxyClient(std::move(connection)));
