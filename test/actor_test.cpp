@@ -159,6 +159,23 @@ static int findActorFromOtherRegistryTest() {
 	return nullptr != actor.get() ? 0 : 1;
 }
 
+static int findUnknownActorInMultipleRegistryTest() {
+	std::cout << "findActorFromOtherRegistryTest" << std::endl;
+	static const std::string name1("name1");
+	static const std::string name2("name2");
+	static const std::string actorName("my actor");
+	static const uint16_t port1 = 6001;
+	static const uint16_t port2 = 6002;
+	ActorRegistry registry1(name1, port1);
+	ActorRegistry registry2(name2, port2);
+	sleep(1);
+	std::string name = registry1.addReference("localhost", port2);
+	Actor *a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
+	registry2.registerActor(actorName, *a);
+	auto actor = registry1.getActor("unknown actor");
+	return nullptr == actor.get() ? 0 : 1;
+}
+
 int main() {
 
 	int nbFailure = basicActorTest();
@@ -171,6 +188,7 @@ int main() {
 	nbFailure += registeryAddActorAndFindItBackTest();
 	nbFailure += registeryFindUnknownActorTest();
 	nbFailure += findActorFromOtherRegistryTest();
+	nbFailure += findUnknownActorInMultipleRegistryTest();
 	std::cout << ((nbFailure) ? "Failure" : "Success") << std::endl;
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
