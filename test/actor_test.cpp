@@ -61,8 +61,6 @@ static int registryConnectTest(void) {
 	ActorRegistry registry(std::string("name"), port);
 	sleep(1);
 	Connection c = ClientSocket::openHostConnection("localhost", port);
-//	c.writeString(std::string("dummy name"));
-//
 	return 0;
 }
 
@@ -144,7 +142,6 @@ static int registeryFindUnknownActorTest() {
 }
 
 static int findActorFromOtherRegistryTest() {
-#if 1
 	std::cout << "findActorFromOtherRegistryTest" << std::endl;
 	static const std::string name1("name1");
 	static const std::string name2("name2");
@@ -159,8 +156,6 @@ static int findActorFromOtherRegistryTest() {
 	registry2.registerActor(actorName, *a);
 	auto actor = registry1.getActor(actorName);
 	actor->postSync(AbstractActor::COMMAND_SHUTDOWN);
-	sleep(2);
-#endif
 	return nullptr != actor.get() ? 0 : 1;
 }
 
