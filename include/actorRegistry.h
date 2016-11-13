@@ -26,7 +26,7 @@ public:
 	actorPtr  getActor(std::string name);
 
 private:
-	enum class registryCommand_t : uint32_t { REGISTER_REGISTRY, SEARCH_ACTOR, };
+	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY, SEARCH_ACTOR, };
 	std::string name;
 	SharedMap<std::string, struct sockaddr_in> registryAddresses;
 	SharedMap<std::string, std::shared_ptr<AbstractActor>> actors;
