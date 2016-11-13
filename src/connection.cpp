@@ -3,7 +3,6 @@
 #include <exception.h>
 
 #include <stdexcept>
-#include <arpa/inet.h>
 
 Connection::Connection() : fd(-1) {}
 
@@ -24,16 +23,6 @@ Connection &Connection::operator=(Connection &&connection) {
 	std::swap(set, connection.set);
 	return *this;
 }
-void Connection::writeInt(uint32_t hostValue) {
-	const uint32_t sentValue = htonl(hostValue);
-	writeBytes(&sentValue, sizeof(sentValue));
-}
-
-uint32_t Connection::readInt(void) {
-	uint32_t value;
-	readBytes(&value, sizeof(value));
-	return ntohl(value);
-}
 
 void Connection::writeString(std::string hostValue) {
 	const size_t nbBytesToWrite = hostValue.size() + 1;
@@ -42,14 +31,13 @@ void Connection::writeString(std::string hostValue) {
 }
 
 std::string Connection::readString(void) {
-	const size_t size = readInt();
+	const size_t size = readInt<size_t>();
 	char string[size]; //check max size
 	readBytesNonBlocking(string, size);
 	if (0 != string[size-1])
 		THROW(std::runtime_error, "non NULL-terminated string value");
 	return std::string(string);
 }
-
 
 void Connection::writeBytes(const void *buffer, size_t count) {
 	if (-1 == fd)

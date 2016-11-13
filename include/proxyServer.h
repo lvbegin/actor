@@ -6,7 +6,7 @@
 
 #include <thread>
 
-enum postType : uint32_t { Sync, Async, Restart, } ;
+enum class postType : uint32_t { Sync, Async, Restart, } ;
 
 class proxyServer {
 public:

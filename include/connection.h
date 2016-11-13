@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <unistd.h>
 #include <string>
+#include <arpa/inet.h>
 
 class Connection {
 public:
@@ -14,8 +15,18 @@ public:
 	Connection &operator=(const Connection &connection) = delete;
 	Connection(Connection &&connection);
 	Connection &operator=(Connection &&connection);
-	void writeInt(uint32_t hostValue);
-	uint32_t readInt(void);
+	template<typename T>
+	void writeInt(T hostValue) {
+		const uint32_t sentValue = htonl(static_cast<uint32_t>(hostValue));
+		writeBytes(&sentValue, sizeof(sentValue));
+	}
+
+	template<typename T>
+	T readInt(void) {
+		uint32_t value;
+		readBytes(&value, sizeof(value));
+		return static_cast<T>(ntohl(value));
+	}
 	void writeString(std::string hostValue);
 	std::string readString(void);
 	void writeBytes(const void *buffer, size_t count);

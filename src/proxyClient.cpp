@@ -9,7 +9,7 @@ proxyClient::~proxyClient() = default;
 actorReturnCode proxyClient::postSync(int i) {
 	connection.writeInt(postType::Sync);
 	connection.writeInt(i);
-	return static_cast<actorReturnCode>(connection.readInt());
+	return connection.readInt<actorReturnCode>();
 }
 
 void proxyClient::post(int i) {

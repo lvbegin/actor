@@ -21,14 +21,14 @@ proxyServer::~proxyServer() {
 void proxyServer::startThread(std::shared_ptr<AbstractActor> actor, Connection connection) {
 	while (true) {
 		uint32_t command;
-		switch (connection.readInt()) {
+		switch (connection.readInt<postType>()) {
 			case postType::Async:
-				command = connection.readInt();
+				command = connection.readInt<uint32_t>();
 				actor->post(command);
 				break;
 			case postType::Sync:
-				command = connection.readInt();
-				connection.writeInt(static_cast<uint32_t>(actor->postSync(command)));
+				command = connection.readInt<uint32_t>();
+				connection.writeInt(actor->postSync(command));
 				break;
 			case postType::Restart:
 				actor->restart();

@@ -25,7 +25,7 @@ void ActorRegistry::registryBody(ServerSocket &s) {
 		try {
 			struct sockaddr_in client_addr {};
 			auto connection = s.acceptOneConnection(2, &client_addr);
-			switch (static_cast<ActorRegistry::registryCommand_t>(connection.readInt())) {
+			switch (connection.readInt<registryCommand_t>()) {
 				case registryCommand_t::REGISTER_REGISTRY:
 					registryAddresses.insert(connection.readString(), client_addr);
 					connection.writeString(this->name);
@@ -77,9 +77,9 @@ actorPtr ActorRegistry::getOutsideActor(std::string &name) {
 	actorPtr actor;
 	registryAddresses.for_each([&actor, &name](std::pair<const std::string, struct sockaddr_in> &c) {
 		auto connection = ClientSocket::openHostConnection(c.second);
-		connection.writeInt(static_cast<uint32_t>(registryCommand_t::SEARCH_ACTOR));
+		connection.writeInt<registryCommand_t>(registryCommand_t::SEARCH_ACTOR);
 		connection.writeString(name);
-		if (1 == connection.readInt())
+		if (1 == connection.readInt<uint32_t>())
 			actor.reset(new proxyClient(std::move(connection)));
 	});
 	return actor;
