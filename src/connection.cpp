@@ -24,10 +24,9 @@ Connection &Connection::operator=(Connection &&connection) {
 	return *this;
 }
 
-void Connection::writeString(std::string hostValue) {
-	const size_t nbBytesToWrite = hostValue.size() + 1;
-	writeInt(nbBytesToWrite); //check max size
-	writeBytes(hostValue.c_str(), nbBytesToWrite);
+Connection &Connection::writeString(std::string hostValue) {
+	const size_t nbBytesToWrite = hostValue.size() + 1; //check max size
+	return writeInt(nbBytesToWrite).writeBytes(hostValue.c_str(), nbBytesToWrite);
 }
 
 std::string Connection::readString(void) {
@@ -39,7 +38,7 @@ std::string Connection::readString(void) {
 	return std::string(string);
 }
 
-void Connection::writeBytes(const void *buffer, size_t count) {
+Connection &Connection::writeBytes(const void *buffer, size_t count) {
 	if (-1 == fd)
 		THROW(std::runtime_error, "invalid writeByte");
 	const char *ptr = static_cast<const char *>(buffer);
@@ -49,6 +48,7 @@ void Connection::writeBytes(const void *buffer, size_t count) {
 			THROW(std::runtime_error, "send bytes failed");
 		nbTotalWritten += nbWritten;
 	}
+	return *this;
 }
 
 void Connection::readBytes(void *buffer, size_t count, int timeoutInSeconds) {

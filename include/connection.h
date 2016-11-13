@@ -16,9 +16,9 @@ public:
 	Connection(Connection &&connection);
 	Connection &operator=(Connection &&connection);
 	template<typename T>
-	void writeInt(T hostValue) {
+	Connection &writeInt(T hostValue) {
 		const uint32_t sentValue = htonl(static_cast<uint32_t>(hostValue));
-		writeBytes(&sentValue, sizeof(sentValue));
+		return writeBytes(&sentValue, sizeof(sentValue));
 	}
 
 	template<typename T>
@@ -27,9 +27,9 @@ public:
 		readBytes(&value, sizeof(value));
 		return static_cast<T>(ntohl(value));
 	}
-	void writeString(std::string hostValue);
+	Connection &writeString(std::string hostValue);
 	std::string readString(void);
-	void writeBytes(const void *buffer, size_t count);
+	Connection &writeBytes(const void *buffer, size_t count);
 	void readBytes(void *buffer, size_t count, int timeout = 5);
 private:
 	void readBytesNonBlocking(void *buffer, size_t count);
