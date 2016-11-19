@@ -20,6 +20,15 @@ public:
 			THROW(std::runtime_error, "actor already exist.");
 		map.insert(std::make_pair(std::forward<L>(key), std::forward<M>(value)));
 	}
+
+	template <typename... Args>
+	void emplace(Args&&... args) {
+		std::unique_lock<std::mutex> l(mutex);
+
+		map.emplace(std::forward<Args>(args)...);
+	}
+
+
 	void erase(K key) {
 		std::unique_lock<std::mutex> l(mutex);
 		auto it = map.find(key);

@@ -9,7 +9,7 @@
 
 #include <netinet/in.h>
 
-#include <proxyServer.h>
+#include <proxyContainer.h>
 #include <serverSocket.h>
 #include <sharedMap.h>
 
@@ -31,7 +31,8 @@ private:
 	bool terminated;
 	SharedMap<std::string, struct sockaddr_in> registryAddresses;
 	SharedMap<std::string, std::shared_ptr<AbstractActor>> actors;
-	std::vector<proxyServer> proxies;
+	//std::vector<proxyServer> proxies;
+	ProxyContainer proxies;
 	std::thread t;
 
 	void registryBody(ServerSocket &s);

@@ -1,24 +1,19 @@
 #include <proxyServer.h>
 #include <serverSocket.h>
+#include <proxyContainer.h>
 
 #include <arpa/inet.h>
 
-proxyServer::proxyServer(std::shared_ptr<AbstractActor> actor, Connection connection) :
-	t([actor, connection {std::move(connection)}]() mutable { startThread(std::move(actor), std::move(connection)); }) { }
-
-
-proxyServer::proxyServer(proxyServer &&p) {  *this = std::move(p); }
-proxyServer &proxyServer::operator=(proxyServer &&p) {
-	std::swap(t, p.t);
-	return *this;
-}
+proxyServer::proxyServer(std::shared_ptr<AbstractActor> actor, Connection connection, std::function<void(void)> notifyTerminate) :
+	t([actor, connection {std::move(connection)}, notifyTerminate]() mutable
+						{ startThread(std::move(actor), std::move(connection), notifyTerminate); }) { }
 
 proxyServer::~proxyServer() {
 	if (t.joinable())
 		t.join();
 };
 
-void proxyServer::startThread(std::shared_ptr<AbstractActor> actor, Connection connection) {
+void proxyServer::startThread(std::shared_ptr<AbstractActor> actor, Connection connection, std::function<void(void)> notifyTerminate) {
 	while (true) {
 		uint32_t command;
 		switch (connection.readInt<postType>()) {
@@ -36,7 +31,9 @@ void proxyServer::startThread(std::shared_ptr<AbstractActor> actor, Connection c
 			default:
 				continue;
 		}
-		if (AbstractActor::COMMAND_SHUTDOWN == command)
+		if (AbstractActor::COMMAND_SHUTDOWN == command) {
+			notifyTerminate();
 			return;
+		}
 	}
 }
