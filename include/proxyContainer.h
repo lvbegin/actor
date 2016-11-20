@@ -1,13 +1,13 @@
 #ifndef PROXY_CONTAINER_H__
 #define PROXY_CONTAINER_H__
 
-#include <actor.h>
+#include <executor.h>
 #include <sharedMap.h>
 #include <proxyServer.h>
 
 #include <atomic>
 
-class ProxyContainer : public Actor {
+class ProxyContainer {
 public:
 	ProxyContainer();
 	~ProxyContainer();
@@ -15,6 +15,7 @@ public:
 	void deleteProxy(int i);
 private:
 	SharedMap<int, proxyServer> proxies;
+	Executor executor;
 	returnCode containerBody(int);
 	static std::atomic<int> proxyId;
 	 int newproxyId(void);
