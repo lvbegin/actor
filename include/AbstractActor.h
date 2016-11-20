@@ -5,7 +5,7 @@
 
 class AbstractActor {
 public:
-	virtual ~AbstractActor() { }
+	virtual ~AbstractActor() = default;
 	virtual returnCode postSync(int i) = 0;
 	virtual void post(int i) = 0;
 	virtual void restart(void) = 0;
