@@ -1,9 +1,7 @@
 #ifndef ABSTRACT_ACTOR_H__
 #define ABSTRACT_ACTOR_H__
 
-#include <cstdint>
-
-enum class returnCode  : uint32_t { ok, shutdown, error, };
+#include <rc.h>
 
 class AbstractActor {
 public:
