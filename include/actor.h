@@ -2,40 +2,39 @@
 #define ACTOR_H__
 
 #include <AbstractActor.h>
+#include <executor.h>
+
 #include <functional>
-#include <thread>
-#include <future>
-#include <mutex>
-#include <condition_variable>
-#include <queue>
+#include <memory>
 
 class Actor : public AbstractActor {
 public:
-	Actor(std::function<actorReturnCode(int)> body);
+	Actor(std::function<returnCode(int)> body);
 	~Actor();
 
 	Actor(const Actor &a) = delete;
 	Actor &operator=(const Actor &a) = delete;
-	actorReturnCode postSync(int i);
+	returnCode postSync(int i);
 	void post(int i);
 	void restart(void);
 private:
-	struct message {
-		int command;
-		std::promise<actorReturnCode> promise;
-		message(int c) : command(c) {}
-	};
-
-	std::future<actorReturnCode> putMessage(int i);
-	void actorBody(std::function<actorReturnCode(int)> body);
-	message getMessage(void);
+	std::function<returnCode(int)> body;
+	std::unique_ptr<Executor> executor;
 	void stopThread(void);
-	std::mutex mutexQueue;
-	std::condition_variable condition;
-	std::function<actorReturnCode(int)> body;
-	std::queue<message> q;
-	std::thread thread;
-
+//	struct message {
+//		int command;
+//		std::promise<actorReturnCode> promise;
+//		message(int c) : command(c) {}
+//	};
+//
+//	std::future<actorReturnCode> putMessage(int i);
+//	void actorBody(std::function<actorReturnCode(int)> body);
+//	message getMessage(void);
+//	std::mutex mutexQueue;
+//	std::condition_variable condition;
+//	std::queue<message> q;
+//	std::thread thread;
+//
 };
 
 #endif

@@ -6,9 +6,9 @@ proxyClient::proxyClient(Connection connection) : connection(std::move(connectio
 
 proxyClient::~proxyClient() = default;
 
-actorReturnCode proxyClient::postSync(int i) {
+returnCode proxyClient::postSync(int i) {
 	connection.writeInt(postType::Sync).writeInt(i);
-	return connection.readInt<actorReturnCode>();
+	return connection.readInt<returnCode>();
 }
 
 void proxyClient::post(int i) { connection.writeInt(postType::Async).writeInt(i); }

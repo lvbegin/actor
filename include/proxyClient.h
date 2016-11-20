@@ -10,7 +10,7 @@ public:
 	proxyClient(Connection connection);
 
 	~proxyClient();
-	actorReturnCode postSync(int i);
+	returnCode postSync(int i);
 	void post(int i);
 	void restart(void);
 private:

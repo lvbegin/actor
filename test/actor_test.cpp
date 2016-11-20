@@ -3,18 +3,19 @@
 #include <proxyServer.h>
 #include <actorRegistry.h>
 #include <clientSocket.h>
+#include <executor.h> // to remove
+
 #include <cstdlib>
 #include <iostream>
-
 #include <unistd.h>
 
 
 static int basicActorTest(void) {
 	std::cout << "basicActorTest" << std::endl;
-	Actor a([](int i) { /* do something */ return actorReturnCode::ok; });
+	Actor a([](int i) { /* do something */ return returnCode::ok; });
 	sleep(2);
 	auto val = a.postSync(1);
-	if (actorReturnCode::ok != val) {
+	if (returnCode::ok != val) {
 		std::cout << "post failure" << std::endl;
 		return 1;
 	}
@@ -24,7 +25,7 @@ static int basicActorTest(void) {
 
 
 void executeSeverProxy(uint16_t port) {
-	auto actor = std::make_shared<Actor>([](int i) { /* do something */ return actorReturnCode::ok; });
+	auto actor = std::make_shared<Actor>([](int i) { /* do something */ return returnCode::ok; });
 	auto doNothing = []() { };
 	proxyServer server(actor, ServerSocket::getConnection(port), doNothing);
 }
@@ -48,10 +49,10 @@ static int proxyRestartTest(void) {
 	std::thread t(executeSeverProxy, port);
 	sleep(1);
 	proxyClient client(ClientSocket::openHostConnection("localhost", port));
-	int NbError = (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
+	int NbError = (returnCode::ok == client.postSync(command)) ? 0 : 1;
 	client.restart();
-	NbError += (actorReturnCode::ok == client.postSync(command)) ? 0 : 1;
-	NbError +=  (actorReturnCode::shutdown == client.postSync(AbstractActor::COMMAND_SHUTDOWN)) ? 0 : 1;
+	NbError += (returnCode::ok == client.postSync(command)) ? 0 : 1;
+	NbError +=  (returnCode::shutdown == client.postSync(AbstractActor::COMMAND_SHUTDOWN)) ? 0 : 1;
 	t.join();
 	return NbError;
 }
@@ -69,7 +70,7 @@ class ActorTest : public AbstractActor {
 public:
 	ActorTest() = default;
 	virtual ~ActorTest() = default;
-	virtual actorReturnCode postSync(int i) {return actorReturnCode::ok; };
+	virtual returnCode postSync(int i) {return returnCode::ok; };
 	virtual void post(int i) {};
 	virtual void restart(void) {};
 };
@@ -121,7 +122,7 @@ static int registeryAddActorAndFindItBackTest() {
 	static const uint16_t port = 6001;
 	ActorRegistry registry(std::string("name1"), port);
 
-	Actor *a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
+	Actor *a = new Actor([](int i) { /* do something */ return returnCode::ok; });
 	registry.registerActor(std::string(actorName), *a);
 
 	std::shared_ptr<AbstractActor> b = registry.getActor(actorName);
@@ -135,7 +136,7 @@ static int registeryFindUnknownActorTest() {
 	static const uint16_t port = 6001;
 	ActorRegistry registry(std::string("name1"), port);
 
-	Actor *a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
+	Actor *a = new Actor([](int i) { /* do something */ return returnCode::ok; });
 	registry.registerActor(std::string(actorName), *a);
 
 	std::shared_ptr<AbstractActor> b = registry.getActor(std::string("wrong name"));
@@ -153,7 +154,7 @@ static int findActorFromOtherRegistryTest() {
 	ActorRegistry registry2(name2, port2);
 	sleep(1);
 	std::string name = registry1.addReference("localhost", port2);
-	Actor *a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
+	Actor *a = new Actor([](int i) { /* do something */ return returnCode::ok; });
 	registry2.registerActor(actorName, *a);
 	auto actor = registry1.getActor(actorName);
 	actor->postSync(AbstractActor::COMMAND_SHUTDOWN);
@@ -171,7 +172,7 @@ static int findUnknownActorInMultipleRegistryTest() {
 	ActorRegistry registry2(name2, port2);
 	sleep(1);
 	std::string name = registry1.addReference("localhost", port2);
-	Actor *a = new Actor([](int i) { /* do something */ return actorReturnCode::ok; });
+	Actor *a = new Actor([](int i) { /* do something */ return returnCode::ok; });
 	registry2.registerActor(actorName, *a);
 	auto actor = registry1.getActor("unknown actor");
 	return nullptr == actor.get() ? 0 : 1;

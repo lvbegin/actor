@@ -3,12 +3,12 @@
 
 #include <cstdint>
 
-enum class actorReturnCode  : uint32_t { ok, shutdown, error, };
+enum class returnCode  : uint32_t { ok, shutdown, error, };
 
 class AbstractActor {
 public:
 	virtual ~AbstractActor() { }
-	virtual actorReturnCode postSync(int i) = 0;
+	virtual returnCode postSync(int i) = 0;
 	virtual void post(int i) = 0;
 	virtual void restart(void) = 0;
 	static const uint32_t COMMAND_SHUTDOWN = 0;

@@ -15,7 +15,7 @@ public:
 	void deleteProxy(int i);
 private:
 	SharedMap<int, proxyServer> proxies;
-	actorReturnCode containerBody(int);
+	returnCode containerBody(int);
 	static std::atomic<int> proxyId;
 	 int newproxyId(void);
 };
