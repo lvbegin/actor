@@ -1,14 +1,11 @@
 #include <actorRegistry.h>
 #include <clientSocket.h>
-#include <serverSocket.h>
 #include <proxyClient.h>
-#include <functional>
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body);
 
 ActorRegistry::ActorRegistry(std::string name, uint16_t port) : name(name), terminated(false),
-					t([this, port]() {  threadBody(port, [this](ServerSocket &s) { registryBody(s); }); })
-					{ }
+					t([this, port]() {  threadBody(port, [this](ServerSocket &s) { registryBody(s); }); }) { }
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body) {
 	auto s = std::make_unique<ServerSocket>(port);

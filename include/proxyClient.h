@@ -3,13 +3,14 @@
 
 #include <AbstractActor.h>
 #include <connection.h>
+
 #include <string>
 
 class proxyClient : public AbstractActor {
 public:
 	proxyClient(Connection connection);
-
 	~proxyClient();
+
 	returnCode postSync(int i);
 	void post(int i);
 	void restart(void);
