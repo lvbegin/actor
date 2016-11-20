@@ -4,7 +4,7 @@
 
 std::atomic<int> ProxyContainer::proxyId { 0 };
 
-ProxyContainer::ProxyContainer() : executor( [this](int command) -> returnCode { return this->containerBody(command); } ) {}
+ProxyContainer::ProxyContainer() : executor( [this](int id) { return (this->deleteProxy(id), returnCode::ok);}) {}
 
 ProxyContainer::~ProxyContainer() = default;
 
@@ -17,9 +17,3 @@ void ProxyContainer::createNewProxy(std::shared_ptr<AbstractActor> actor, Connec
 }
 
 void ProxyContainer::deleteProxy(int i) { proxies.erase(i); }
-
-returnCode ProxyContainer::containerBody(int i)
-{
-	deleteProxy(i);
-	return returnCode::ok;
-}
