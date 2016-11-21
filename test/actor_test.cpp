@@ -12,7 +12,7 @@
 
 static int basicActorTest(void) {
 	std::cout << "basicActorTest" << std::endl;
-	Actor a([](int i) { /* do something */ return returnCode::ok; });
+	Actor a([](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
 	sleep(2);
 	auto val = a.postSync(1);
 	if (returnCode::ok != val) {
@@ -22,10 +22,27 @@ static int basicActorTest(void) {
 	return 0;
 }
 
+static int basicActorWithParamsTest(void) {
+	std::cout << "basicActorWithParamsTest" << std::endl;
+	std::string paramValue("Hello World");
+	std::vector<unsigned char> params(paramValue.begin(), paramValue.end());
 
+	Actor a([paramValue](int i, const std::vector<unsigned char> &params) {
+				if (0 == paramValue.compare(std::string(params.begin(), params.end())))
+					return returnCode::ok;
+				else
+					return returnCode::error;});
+	sleep(2);
+	auto val = a.postSync(1, params);
+	if (returnCode::ok != val) {
+		std::cout << "post failure" << std::endl;
+		return 1;
+	}
+	return 0;
+}
 
 void executeSeverProxy(uint16_t port) {
-	auto actor = std::make_shared<Actor>([](int i) { /* do something */ return returnCode::ok; });
+	auto actor = std::make_shared<Actor>([](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
 	auto doNothing = []() { };
 	proxyServer server(actor, ServerSocket::getConnection(port), doNothing);
 }
@@ -70,8 +87,8 @@ class ActorTest : public AbstractActor {
 public:
 	ActorTest() = default;
 	virtual ~ActorTest() = default;
-	virtual returnCode postSync(int i) {return returnCode::ok; };
-	virtual void post(int i) {};
+	virtual returnCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>()) {return returnCode::ok; };
+	virtual void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>()) {};
 	virtual void restart(void) {};
 };
 
@@ -122,7 +139,7 @@ static int registeryAddActorAndFindItBackTest() {
 	static const uint16_t port = 6001;
 	ActorRegistry registry(std::string("name1"), port);
 
-	Actor *a = new Actor([](int i) { /* do something */ return returnCode::ok; });
+	Actor *a = new Actor([](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
 	registry.registerActor(std::string(actorName), *a);
 
 	std::shared_ptr<AbstractActor> b = registry.getActor(actorName);
@@ -136,7 +153,7 @@ static int registeryFindUnknownActorTest() {
 	static const uint16_t port = 6001;
 	ActorRegistry registry(std::string("name1"), port);
 
-	Actor *a = new Actor([](int i) { /* do something */ return returnCode::ok; });
+	Actor *a = new Actor([](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
 	registry.registerActor(std::string(actorName), *a);
 
 	std::shared_ptr<AbstractActor> b = registry.getActor(std::string("wrong name"));
@@ -154,7 +171,7 @@ static int findActorFromOtherRegistryTest() {
 	ActorRegistry registry2(name2, port2);
 	sleep(1);
 	std::string name = registry1.addReference("localhost", port2);
-	Actor *a = new Actor([](int i) { /* do something */ return returnCode::ok; });
+	Actor *a = new Actor([](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
 	registry2.registerActor(actorName, *a);
 	auto actor = registry1.getActor(actorName);
 	actor->postSync(AbstractActor::COMMAND_SHUTDOWN);
@@ -172,7 +189,7 @@ static int findUnknownActorInMultipleRegistryTest() {
 	ActorRegistry registry2(name2, port2);
 	sleep(1);
 	std::string name = registry1.addReference("localhost", port2);
-	Actor *a = new Actor([](int i) { /* do something */ return returnCode::ok; });
+	Actor *a = new Actor([](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
 	registry2.registerActor(actorName, *a);
 	auto actor = registry1.getActor("unknown actor");
 	return nullptr == actor.get() ? 0 : 1;
@@ -181,6 +198,7 @@ static int findUnknownActorInMultipleRegistryTest() {
 int main() {
 
 	int nbFailure = basicActorTest();
+	nbFailure += basicActorWithParamsTest();
 	nbFailure += proxyTest();
 	nbFailure += proxyRestartTest();
 	nbFailure += registryConnectTest();

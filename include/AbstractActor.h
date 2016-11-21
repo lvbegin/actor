@@ -3,11 +3,13 @@
 
 #include <rc.h>
 
+#include <vector>
+
 class AbstractActor {
 public:
 	virtual ~AbstractActor() = default;
-	virtual returnCode postSync(int i) = 0;
-	virtual void post(int i) = 0;
+	virtual returnCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>()) = 0;
+	virtual void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>()) = 0;
 	virtual void restart(void) = 0;
 	static const uint32_t COMMAND_SHUTDOWN = 0;
 protected:

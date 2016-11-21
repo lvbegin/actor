@@ -4,7 +4,7 @@
 
 std::atomic<int> ProxyContainer::proxyId { 0 };
 
-ProxyContainer::ProxyContainer() : executor( [this](int id) { return (this->deleteProxy(id), returnCode::ok);}) {}
+ProxyContainer::ProxyContainer() : executor( [this](int id, const std::vector<unsigned char> &not_used) { return (this->deleteProxy(id), returnCode::ok);}) {}
 
 ProxyContainer::~ProxyContainer() = default;
 

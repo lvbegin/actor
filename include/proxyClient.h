@@ -11,8 +11,8 @@ public:
 	proxyClient(Connection connection);
 	~proxyClient();
 
-	returnCode postSync(int i);
-	void post(int i);
+	returnCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
+	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void restart(void);
 private:
 	Connection connection;
