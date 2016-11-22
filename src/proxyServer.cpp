@@ -48,11 +48,11 @@ void proxyServer::startThread(std::shared_ptr<AbstractActor> actor, Connection c
 		switch (connection.readInt<postType>()) {
 			case postType::Async:
 				command = connection.readInt<uint32_t>();
-				actor->post(command);
+				actor->post(command, connection.readRawData());
 				break;
 			case postType::Sync:
 				command = connection.readInt<uint32_t>();
-				connection.writeInt(actor->postSync(command));
+				connection.writeInt(actor->postSync(command, connection.readRawData()));
 				break;
 			case postType::Restart:
 				actor->restart();

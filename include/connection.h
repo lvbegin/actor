@@ -33,6 +33,8 @@
 #include <cstdint>
 #include <unistd.h>
 #include <string>
+#include <vector>
+
 #include <arpa/inet.h>
 
 class Connection {
@@ -58,6 +60,8 @@ public:
 	}
 	Connection &writeString(std::string hostValue);
 	std::string readString(void);
+	Connection &writeRawData(std::vector<unsigned char> data);
+	std::vector<unsigned char> readRawData(void);
 	Connection &writeBytes(const void *buffer, size_t count);
 	void readBytes(void *buffer, size_t count, int timeout = 5);
 private:

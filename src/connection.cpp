@@ -53,6 +53,15 @@ Connection &Connection::operator=(Connection &&connection) {
 	return *this;
 }
 
+Connection &Connection::writeRawData(std::vector<unsigned char> data) { return writeInt(data.size()).writeBytes(data.data(), data.size()); }
+
+std::vector<unsigned char> Connection::readRawData(void) {
+	std::vector<unsigned char> data(readInt<size_t>());
+	if (0 < data.capacity())
+		readBytes(data.data(), data.capacity());
+	return data;
+}
+
 Connection &Connection::writeString(std::string hostValue) {
 	const size_t nbBytesToWrite = hostValue.size() + 1; //check max size
 	return writeInt(nbBytesToWrite).writeBytes(hostValue.c_str(), nbBytesToWrite);

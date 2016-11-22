@@ -45,6 +45,7 @@ public:
 	void restart(void);
 private:
 	Connection connection;
+	void postParams(std::vector<unsigned char> &params);
 };
 
 #endif
