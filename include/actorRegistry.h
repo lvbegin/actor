@@ -60,7 +60,6 @@ private:
 	bool terminated;
 	SharedMap<std::string, struct sockaddr_in> registryAddresses;
 	SharedMap<std::string, std::shared_ptr<AbstractActor>> actors;
-	//std::vector<proxyServer> proxies;
 	ProxyContainer proxies;
 	std::thread t;
 
