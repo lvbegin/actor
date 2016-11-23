@@ -58,21 +58,20 @@ Connection &Connection::writeRawData(const std::vector<unsigned char> &data) { r
 std::vector<unsigned char> Connection::readRawData(void) {
 	std::vector<unsigned char> data(readInt<size_t>());
 	if (0 < data.capacity())
-		readBytes(data.data(), data.capacity());
+		readBytesNonBlocking(data.data(), data.capacity());
 	return data;
 }
 
 Connection &Connection::writeString(const std::string &hostValue) {
-	const size_t nbBytesToWrite = hostValue.size() + 1; //check max size
+	const size_t nbBytesToWrite = hostValue.size() + 1;
 	return writeInt(nbBytesToWrite).writeBytes(hostValue.c_str(), nbBytesToWrite);
 }
 
 std::string Connection::readString(void) {
-	std::vector<char> string(readInt<size_t>());
-	readBytesNonBlocking(string.data(), string.size());
-	if ('\0' != string.data()[string.size() - 1])
+	auto string = readRawData();
+	if (0 == string.size() || '\0' != string.data()[string.size() - 1])
 		THROW(std::runtime_error, "non NULL-terminated string value");
-	return std::string(string.data());
+	return std::string(string.begin(), string.end() - 1);
 }
 
 Connection &Connection::writeBytes(const void *buffer, size_t count) {
