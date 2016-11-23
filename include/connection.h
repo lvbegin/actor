@@ -58,9 +58,9 @@ public:
 		readBytes(&value, sizeof(value));
 		return static_cast<T>(ntohl(value));
 	}
-	Connection &writeString(std::string hostValue);
+	Connection &writeString(const std::string &hostValue);
 	std::string readString(void);
-	Connection &writeRawData(std::vector<unsigned char> data);
+	Connection &writeRawData(const std::vector<unsigned char> &data);
 	std::vector<unsigned char> readRawData(void);
 	Connection &writeBytes(const void *buffer, size_t count);
 	void readBytes(void *buffer, size_t count, int timeout = 5);
