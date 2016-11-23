@@ -66,7 +66,6 @@ private:
 	message getMessage(void);
 	std::mutex mutexQueue;
 	std::condition_variable condition;
-	std::function<returnCode(int, std::vector<unsigned char>)> body; //why needed ?
 	std::queue<message> q;
 	std::thread thread;
 

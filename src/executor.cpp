@@ -37,7 +37,7 @@ Executor::message::~message() = default;
 Executor::message::message(struct message &&m) : command(m.command), params(std::move(m.params)), promise(std::move(m.promise)) { }
 
 
-Executor::Executor(std::function<returnCode(int, std::vector<unsigned char>)> body)  : body(body), thread([this]() { executorBody(this->body); }) { }
+Executor::Executor(std::function<returnCode(int, std::vector<unsigned char>)> body)  : thread([this, body]() { executorBody(body); }) { }
 
 Executor::~Executor() {
 	post(COMMAND_SHUTDOWN);
