@@ -54,11 +54,11 @@ private:
 		int command;
 		std::vector<unsigned char> params;
 		std::promise<returnCode> promise;
-		message(int c, std::vector<unsigned char> params) : command(c), params(params) {}
-		~message() = default;
+		message(int c, std::vector<unsigned char> params);
+		~message();
+		message(struct message &&m);
 		message (const struct message &m) = delete;
 		struct message &operator=(const struct message &m) = delete;
-		message(struct message &&m) : command(m.command), params(std::move(m.params)), promise(std::move(m.promise)) { }
 	};
 
 	std::future<returnCode> putMessage(int i, std::vector<unsigned char> params);
