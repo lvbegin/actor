@@ -68,12 +68,11 @@ Connection &Connection::writeString(const std::string &hostValue) {
 }
 
 std::string Connection::readString(void) {
-	const size_t size = readInt<size_t>();
-	char string[size]; //check max size
-	readBytesNonBlocking(string, size);
-	if (0 != string[size-1])
+	std::vector<char> string(readInt<size_t>());
+	readBytesNonBlocking(string.data(), string.size());
+	if ('\0' != string.data()[string.size() - 1])
 		THROW(std::runtime_error, "non NULL-terminated string value");
-	return std::string(string);
+	return std::string(string.data());
 }
 
 Connection &Connection::writeBytes(const void *buffer, size_t count) {
