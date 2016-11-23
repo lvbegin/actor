@@ -84,7 +84,7 @@ std::string ActorRegistry::addReference(std::string host, uint16_t port) {
 
 void ActorRegistry::removeReference(std::string registryName) { registryAddresses.erase(registryName); }
 
-void ActorRegistry::registerActor(std::string name, AbstractActor &actor) { actors.insert(name, std::move(actorPtr(&actor))); }
+void ActorRegistry::registerActor(Actor &actor) { actors.insert(actor.getName(), std::move(actorPtr(&actor))); }
 
 void ActorRegistry::unregisterActor(std::string name) { actors.erase(name); }
 

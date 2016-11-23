@@ -38,7 +38,7 @@
 
 class Actor : public AbstractActor {
 public:
-	Actor(std::function<returnCode(int, const std::vector<unsigned char> &)> body);
+	Actor(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body);
 	~Actor();
 
 	Actor(const Actor &a) = delete;
@@ -46,7 +46,9 @@ public:
 	returnCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void restart(void);
+	std::string getName();
 private:
+	const std::string name;
 	std::function<returnCode(int, const std::vector<unsigned char> &)> body;
 	std::unique_ptr<Executor> executor;
 };

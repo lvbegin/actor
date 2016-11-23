@@ -31,6 +31,7 @@
 #define ACTOR_REGISTRY_H__
 
 #include <AbstractActor.h>
+#include <actor.h>
 #include <cstdint>
 #include <thread>
 #include <memory>
@@ -50,7 +51,7 @@ public:
 	~ActorRegistry();
 	std::string addReference(std::string host, uint16_t port);
 	void removeReference(std::string registryName);
-	void registerActor(std::string name, AbstractActor &actor);
+	void registerActor(Actor &actor);
 	void unregisterActor(std::string name);
 	actorPtr  getActor(std::string name);
 
