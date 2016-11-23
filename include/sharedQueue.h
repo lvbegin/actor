@@ -27,46 +27,38 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EXECUTOR_H__
-#define EXECUTOR_H__
+#ifndef SHARED_QUEUE_H__
+#define SHARED_QUEUE_H__
 
-#include <sharedQueue.h>
-#include <rc.h>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
 
-#include <functional>
-#include <thread>
-#include <future>
-
-
-class Executor {
+template<typename T>
+class SharedQueue {
 public:
-	Executor(std::function<returnCode(int, std::vector<unsigned char>)> body);
-	~Executor();
+	SharedQueue() = default;
+	~SharedQueue() = default;
 
-	Executor(const Executor &a) = delete;
-	Executor &operator=(const Executor &a) = delete;
-	returnCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
-	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
-	static const uint32_t COMMAND_SHUTDOWN = 0;
+	void post (T v) {
+		std::unique_lock<std::mutex> l(mutexQueue);
+
+		q.push(std::move(v));
+		condition.notify_one();
+	}
+	T get(void) {
+		std::unique_lock<std::mutex> l(mutexQueue);
+
+		condition.wait(l, [this]() { return !q.empty();});
+		auto message = std::move(q.front());
+		q.pop();
+		return message;
+	}
+
 private:
-	struct message {
-		int command;
-		std::vector<unsigned char> params;
-		std::promise<returnCode> promise;
-		message(int c, std::vector<unsigned char> params);
-		~message();
-		message(struct message &&m);
-		message (const struct message &m) = delete;
-		struct message &operator=(const struct message &m) = delete;
-	};
-
-	std::future<returnCode> putMessage(int i, std::vector<unsigned char> params);
-	void executorBody(std::function<returnCode(int, std::vector<unsigned char>)> body);
-	message getMessage(void);
-	SharedQueue<message> queue;
-	std::thread thread;
-
+	std::mutex mutexQueue;
+	std::condition_variable condition;
+	std::queue<T> q;
 };
-
 
 #endif

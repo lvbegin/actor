@@ -46,12 +46,9 @@ Executor::~Executor() {
 };
 
 std::future<returnCode> Executor::putMessage(int i, std::vector<unsigned char> params) {
-	std::unique_lock<std::mutex> l(mutexQueue);
-
 	struct message  m(i, std::move(params));
 	auto future = m.promise.get_future();
-	q.push(std::move(m));
-	condition.notify_one();
+	queue.post(std::move(m));
 	return future;
 }
 
@@ -59,15 +56,7 @@ returnCode Executor::postSync(int i, std::vector<unsigned char> params) { return
 
 void Executor::post(int i, std::vector<unsigned char> params) { putMessage(i, params); }
 
-
-struct Executor::message Executor::getMessage(void) {
-	std::unique_lock<std::mutex> l(mutexQueue);
-
-	condition.wait(l, [this]() { return !q.empty();});
-	auto message = std::move(q.front());
-	q.pop();
-	return message;
-}
+struct Executor::message Executor::getMessage(void) { return queue.get(); }
 
 void Executor::executorBody(std::function<returnCode(int, std::vector<unsigned char>)> body) {
 	while (true) {
