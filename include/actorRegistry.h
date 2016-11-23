@@ -66,7 +66,7 @@ private:
 
 	void registryBody(ServerSocket &s);
 	actorPtr getLocalActor(std::string &name);
-	actorPtr getOutsideActor(std::string &name);
+	actorPtr getRemoteActor(std::string &name);
 };
 
 #endif

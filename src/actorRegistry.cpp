@@ -92,13 +92,13 @@ actorPtr  ActorRegistry::getActor(std::string name) {
 	try {
 		return getLocalActor(name);
 	} catch (std::out_of_range e) {
-		return getOutsideActor(name);
+		return getRemoteActor(name);
 	}
 }
 
 actorPtr ActorRegistry::getLocalActor(std::string &name) { return actors.find(name); }
 
-actorPtr ActorRegistry::getOutsideActor(std::string &name) {
+actorPtr ActorRegistry::getRemoteActor(std::string &name) {
 	actorPtr actor;
 	registryAddresses.for_each([&actor, &name](std::pair<const std::string, struct sockaddr_in> &c) {
 		auto connection = ClientSocket::openHostConnection(c.second);
