@@ -30,9 +30,9 @@
 #ifndef ACTOR_H__
 #define ACTOR_H__
 
+#include <actorController.h>
 #include <AbstractActor.h>
 #include <executor.h>
-
 #include <functional>
 #include <memory>
 
@@ -52,8 +52,20 @@ public:
 	void restart(void);
 	std::string getName();
 	static ActorRef createActorRef(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body);
+
+	static void registerActor(std::shared_ptr<Actor> monitor, std::shared_ptr<Actor> monitored) {
+		monitor->monitored.addActor(std::move(monitored));
+		monitored->supervisor = std::weak_ptr<Actor>(monitor);
+	}
+	static void unregisterActor(std::shared_ptr<Actor> monitor, std::shared_ptr<Actor> monitored) {
+		monitor->monitored.removeActor(monitored->getName());
+		monitored->supervisor.reset();
+	}
+
 private:
 	const std::string name;
+	ActorController monitored;
+	std::weak_ptr<Actor> supervisor;
 	std::function<returnCode(int, const std::vector<unsigned char> &)> body;
 	std::unique_ptr<Executor> executor;
 };
