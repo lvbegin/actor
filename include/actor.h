@@ -51,6 +51,7 @@ public:
 	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void restart(void);
 	std::string getName();
+
 	static ActorRef createActorRef(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body);
 
 	static void registerActor(std::shared_ptr<Actor> monitor, std::shared_ptr<Actor> monitored) {
