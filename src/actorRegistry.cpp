@@ -96,9 +96,9 @@ GenericActorPtr  ActorRegistry::getActor(std::string name) {
 	}
 }
 
-GenericActorPtr ActorRegistry::getLocalActor(std::string &name) { return actors.find(name); }
+GenericActorPtr ActorRegistry::getLocalActor(const std::string &name) { return actors.find(name); }
 
-GenericActorPtr ActorRegistry::getRemoteActor(std::string &name) {
+GenericActorPtr ActorRegistry::getRemoteActor(const std::string &name) {
 	GenericActorPtr actor;
 	registryAddresses.for_each([&actor, &name](std::pair<const std::string, struct sockaddr_in> &c) {
 		auto connection = ClientSocket::openHostConnection(c.second);

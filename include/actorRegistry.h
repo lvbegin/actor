@@ -65,8 +65,8 @@ private:
 	std::thread t;
 
 	void registryBody(ServerSocket &s);
-	GenericActorPtr getLocalActor(std::string &name);
-	GenericActorPtr getRemoteActor(std::string &name);
+	GenericActorPtr getLocalActor(const std::string &name);
+	GenericActorPtr getRemoteActor(const std::string &name);
 };
 
 #endif

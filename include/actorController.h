@@ -7,21 +7,22 @@
 #include <algorithm>
 
 class Actor;
+using ActorRef = std::shared_ptr<Actor>;
 
 class ActorController {
 public:
 	ActorController();
 	~ActorController();
 
-	void addActor(std::shared_ptr<Actor> actor);
+	void addActor(ActorRef actor);
 	void restartActor(const std::string &name);
 	void restartAll();
 	void removeActor(const std::string &name);
 
 private:
-	std::vector<std::shared_ptr<Actor>>::iterator find(const std::string & name);
+	std::vector<ActorRef>::iterator find(const std::string & name);
 
-	std::vector<std::shared_ptr<Actor>> actors;
+	std::vector<ActorRef> actors;
 };
 
 #endif

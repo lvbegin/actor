@@ -36,10 +36,6 @@
 #include <functional>
 #include <memory>
 
-class Actor;
-using ActorRef = std::shared_ptr<Actor>;
-
-
 class Actor : public AbstractActor {
 public:
 	Actor(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body);
@@ -53,15 +49,8 @@ public:
 	std::string getName();
 
 	static ActorRef createActorRef(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body);
-
-	static void registerActor(std::shared_ptr<Actor> monitor, std::shared_ptr<Actor> monitored) {
-		monitor->monitored.addActor(std::move(monitored));
-		monitored->supervisor = std::weak_ptr<Actor>(monitor);
-	}
-	static void unregisterActor(std::shared_ptr<Actor> monitor, std::shared_ptr<Actor> monitored) {
-		monitor->monitored.removeActor(monitored->getName());
-		monitored->supervisor.reset();
-	}
+	static void registerActor(ActorRef monitor, ActorRef monitored);
+	static void unregisterActor(ActorRef monitor, ActorRef monitored);
 
 private:
 	const std::string name;

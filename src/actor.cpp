@@ -44,3 +44,13 @@ std::string Actor::getName() { return name; }
 ActorRef Actor::createActorRef(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body) {
 	return std::make_shared<Actor>(name, body);
 }
+
+void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
+	monitor->monitored.addActor(std::move(monitored));
+	monitored->supervisor = std::weak_ptr<Actor>(monitor);
+}
+
+void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
+	monitor->monitored.removeActor(monitored->getName());
+	monitored->supervisor.reset();
+}
