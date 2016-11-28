@@ -36,6 +36,10 @@
 #include <functional>
 #include <memory>
 
+class Actor;
+using ActorRef = std::shared_ptr<Actor>;
+
+
 class Actor : public AbstractActor {
 public:
 	Actor(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body);
@@ -47,6 +51,7 @@ public:
 	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void restart(void);
 	std::string getName();
+	static ActorRef createActorRef(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body);
 private:
 	const std::string name;
 	std::function<returnCode(int, const std::vector<unsigned char> &)> body;

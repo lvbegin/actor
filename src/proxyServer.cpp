@@ -33,7 +33,7 @@
 
 #include <arpa/inet.h>
 
-proxyServer::proxyServer(std::shared_ptr<AbstractActor> actor, Connection connection, std::function<void(void)> notifyTerminate) :
+proxyServer::proxyServer(ActorRef actor, Connection connection, std::function<void(void)> notifyTerminate) :
 	t([actor, connection {std::move(connection)}, notifyTerminate]() mutable
 						{ startThread(std::move(actor), std::move(connection), notifyTerminate); }) { }
 
@@ -42,7 +42,7 @@ proxyServer::~proxyServer() {
 		t.join();
 };
 
-void proxyServer::startThread(std::shared_ptr<AbstractActor> actor, Connection connection, std::function<void(void)> notifyTerminate) {
+void proxyServer::startThread(ActorRef actor, Connection connection, std::function<void(void)> notifyTerminate) {
 	while (true) {
 		uint32_t command;
 		switch (connection.readInt<postType>()) {

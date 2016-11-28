@@ -84,11 +84,11 @@ std::string ActorRegistry::addReference(std::string host, uint16_t port) {
 
 void ActorRegistry::removeReference(std::string registryName) { registryAddresses.erase(registryName); }
 
-void ActorRegistry::registerActor(Actor &actor) { actors.insert(actor.getName(), std::move(actorPtr(&actor))); }
+void ActorRegistry::registerActor(ActorRef actor) { actors.insert(actor->getName(), actor); }
 
 void ActorRegistry::unregisterActor(std::string name) { actors.erase(name); }
 
-actorPtr  ActorRegistry::getActor(std::string name) {
+GenericActorPtr  ActorRegistry::getActor(std::string name) {
 	try {
 		return getLocalActor(name);
 	} catch (std::out_of_range e) {
@@ -96,10 +96,10 @@ actorPtr  ActorRegistry::getActor(std::string name) {
 	}
 }
 
-actorPtr ActorRegistry::getLocalActor(std::string &name) { return actors.find(name); }
+GenericActorPtr ActorRegistry::getLocalActor(std::string &name) { return actors.find(name); }
 
-actorPtr ActorRegistry::getRemoteActor(std::string &name) {
-	actorPtr actor;
+GenericActorPtr ActorRegistry::getRemoteActor(std::string &name) {
+	GenericActorPtr actor;
 	registryAddresses.for_each([&actor, &name](std::pair<const std::string, struct sockaddr_in> &c) {
 		auto connection = ClientSocket::openHostConnection(c.second);
 		connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);

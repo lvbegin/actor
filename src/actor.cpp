@@ -40,3 +40,7 @@ void Actor::post(int i, std::vector<unsigned char> params) { executor->post(i, p
 void Actor::restart(void) { executor.reset(new Executor(body)); }
 
 std::string Actor::getName() { return name; }
+
+ActorRef Actor::createActorRef(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body) {
+	return std::make_shared<Actor>(name, body);
+}

@@ -43,7 +43,7 @@
 #include <serverSocket.h>
 #include <sharedMap.h>
 
-using actorPtr = std::shared_ptr<AbstractActor>;
+using GenericActorPtr = std::shared_ptr<AbstractActor>;
 
 class ActorRegistry {
 public:
@@ -51,22 +51,22 @@ public:
 	~ActorRegistry();
 	std::string addReference(std::string host, uint16_t port);
 	void removeReference(std::string registryName);
-	void registerActor(Actor &actor);
+	void registerActor(ActorRef actor);
 	void unregisterActor(std::string name);
-	actorPtr  getActor(std::string name);
+	GenericActorPtr  getActor(std::string name);
 
 private:
 	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY, SEARCH_ACTOR, };
 	std::string name;
 	bool terminated;
 	SharedMap<std::string, struct sockaddr_in> registryAddresses;
-	SharedMap<std::string, std::shared_ptr<AbstractActor>> actors;
+	SharedMap<std::string, ActorRef> actors;
 	ProxyContainer proxies;
 	std::thread t;
 
 	void registryBody(ServerSocket &s);
-	actorPtr getLocalActor(std::string &name);
-	actorPtr getRemoteActor(std::string &name);
+	GenericActorPtr getLocalActor(std::string &name);
+	GenericActorPtr getRemoteActor(std::string &name);
 };
 
 #endif

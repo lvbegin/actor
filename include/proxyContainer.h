@@ -33,6 +33,7 @@
 #include <executor.h>
 #include <sharedMap.h>
 #include <proxyServer.h>
+#include <actor.h>
 
 #include <atomic>
 
@@ -40,7 +41,7 @@ class ProxyContainer {
 public:
 	ProxyContainer();
 	~ProxyContainer();
-	void createNewProxy(std::shared_ptr<AbstractActor> actor, Connection connection);
+	void createNewProxy(ActorRef actor, Connection connection);
 	void deleteProxy(int i);
 private:
 	SharedMap<int, proxyServer> proxies;

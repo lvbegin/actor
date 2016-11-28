@@ -116,9 +116,9 @@ static int registryAddActorTest(void) {
 	std::cout << "registryAddAtorTest" << std::endl;
 	static const uint16_t port = 6001;
 	ActorRegistry registry(std::string("name"), port);
-	Actor *a = new Actor("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
+	ActorRef a = Actor::createActorRef("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
 
-	registry.registerActor(*a);
+	registry.registerActor(a);
 	return 0;
 }
 
@@ -126,16 +126,16 @@ static int registryAddActorAndRemoveTest(void) {
 	std::cout << "registryAddActorAndRemoveTest" << std::endl;
 	static const uint16_t port = 6001;
 	ActorRegistry registry(std::string("name"), port);
-	Actor *a = new Actor("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
+	ActorRef a = Actor::createActorRef("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
 
-	registry.registerActor(*a);
+	registry.registerActor(a);
 	registry.unregisterActor("my actor");
 	try {
 	    registry.unregisterActor("my actor");
 	    return 1;
 	} catch (std::runtime_error e) { }
-	a = new Actor("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
-	registry.registerActor(/*"my actor",*/ *a);
+	a = Actor::createActorRef("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
+	registry.registerActor(/*"my actor",*/ a);
 	return 0;
 }
 
@@ -159,11 +159,11 @@ static int registeryAddActorAndFindItBackTest() {
 	static const uint16_t port = 6001;
 	ActorRegistry registry(std::string("name1"), port);
 
-	Actor *a = new Actor(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
-	registry.registerActor(*a);
+	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
+	registry.registerActor(a);
 
-	std::shared_ptr<AbstractActor> b = registry.getActor(actorName);
-	return (a == b.get()) ? 0 : 1;
+	GenericActorPtr b = registry.getActor(actorName);
+	return (a.get() == b.get()) ? 0 : 1;
 }
 
 static int registeryFindUnknownActorTest() {
@@ -173,10 +173,10 @@ static int registeryFindUnknownActorTest() {
 	static const uint16_t port = 6001;
 	ActorRegistry registry(std::string("name1"), port);
 
-	Actor *a = new Actor(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
-	registry.registerActor(*a);
+	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
+	registry.registerActor(a);
 
-	std::shared_ptr<AbstractActor> b = registry.getActor(std::string("wrong name"));
+	GenericActorPtr b = registry.getActor(std::string("wrong name"));
 	return (nullptr == b.get()) ? 0 : 1;
 }
 
@@ -192,13 +192,13 @@ static int findActorFromOtherRegistryTest() {
 	ActorRegistry registry2(name2, port2);
 	sleep(1);
 	std::string name = registry1.addReference("localhost", port2);
-	Actor *a = new Actor(actorName, [](int i, const std::vector<unsigned char> &params) {
+	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) {
 		if (i == dummyCommand && 0 == params.size())
 			return returnCode::ok;
 		else
 			return returnCode::error;} );
 
-	registry2.registerActor(*a);
+	registry2.registerActor(a);
 	auto actor = registry1.getActor(actorName);
 	if (returnCode::ok != actor->postSync(dummyCommand))
 		return 1;
@@ -219,12 +219,12 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	ActorRegistry registry2(name2, port2);
 	sleep(1);
 	std::string name = registry1.addReference("localhost", port2);
-	Actor *a = new Actor(actorName, [](int i, const std::vector<unsigned char> &params) {
+	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) {
 		if (i == dummyCommand && 0 == paramValue.compare(std::string(params.begin(), params.end())))
 							return returnCode::ok;
 						else
 							return returnCode::error;} );
-	registry2.registerActor(*a);
+	registry2.registerActor(a);
 	auto actor = registry1.getActor(actorName);
 	if (returnCode::ok != actor->postSync(dummyCommand, std::vector<unsigned char>(paramValue.begin(), paramValue.end())))
 		return 1;
@@ -244,8 +244,8 @@ static int findUnknownActorInMultipleRegistryTest() {
 	ActorRegistry registry2(name2, port2);
 	sleep(1);
 	std::string name = registry1.addReference("localhost", port2);
-	Actor *a = new Actor(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
-	registry2.registerActor(*a);
+	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
+	registry2.registerActor(a);
 	auto actor = registry1.getActor("unknown actor");
 	return nullptr == actor.get() ? 0 : 1;
 }
