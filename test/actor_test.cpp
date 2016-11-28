@@ -250,6 +250,16 @@ static int findUnknownActorInMultipleRegistryTest() {
 	return nullptr == actor.get() ? 0 : 1;
 }
 
+static int initSupervisionTest() {
+	std::cout << "initSupervisionTest" << std::endl;
+
+	auto supervisor = Actor::createActorRef("supervisor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
+	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
+	Actor::registerActor(supervisor, supervised);
+	Actor::unregisterActor(supervisor, supervised);
+	return 0;
+}
+
 int main() {
 
 	int nbFailure = basicActorTest();
@@ -265,6 +275,7 @@ int main() {
 	nbFailure += findActorFromOtherRegistryTest();
 	nbFailure += findActorFromOtherRegistryAndSendCommandWithParamsTest();
 	nbFailure += findUnknownActorInMultipleRegistryTest();
+	nbFailure += initSupervisionTest();
 	std::cout << ((nbFailure) ? "Failure" : "Success") << std::endl;
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
