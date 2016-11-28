@@ -46,7 +46,7 @@ ActorRef Actor::createActorRef(std::string name, std::function<returnCode(int, c
 }
 
 void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
-	monitor->monitored.addActor(std::move(monitored));
+	monitor->monitored.addActor(monitored);
 	monitored->supervisor = std::weak_ptr<Actor>(monitor);
 }
 

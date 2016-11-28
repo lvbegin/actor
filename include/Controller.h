@@ -27,40 +27,34 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ACTOR_H__
-#define ACTOR_H__
+#ifndef ACTOR_CONTROLLER_H__
+#define ACTOR_CONTROLLER_H__
 
-#include <AbstractActor.h>
-#include <Controller.h>
-#include <executor.h>
-#include <functional>
-#include <memory>
+#include <exception.h>
 
-class Actor;
-using ActorRef = std::shared_ptr<Actor>;
+#include <algorithm>
 
-class Actor : public AbstractActor {
+template <typename T>
+class Controller {
 public:
-	Actor(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body);
-	~Actor();
+	Controller() = default;
+	~Controller() = default;
 
-	Actor(const Actor &a) = delete;
-	Actor &operator=(const Actor &a) = delete;
-	returnCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
-	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
-	void restart(void);
-	std::string getName();
+	void addActor(T actor) { actors.push_back(actor); }
+	void restartActor(const std::string &name) { (*find(name))->restart(); }
+	void restartAll() { std::for_each(actors.begin(), actors.end(), [](T &actor){ actor->restart();} );}
+	void removeActor(const std::string &name) { actors.erase(find(name)); }
 
-	static ActorRef createActorRef(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body);
-	static void registerActor(ActorRef monitor, ActorRef monitored);
-	static void unregisterActor(ActorRef monitor, ActorRef monitored);
 
 private:
-	const std::string name;
-	Controller<ActorRef> monitored;
-	std::weak_ptr<Actor> supervisor;
-	std::function<returnCode(int, const std::vector<unsigned char> &)> body;
-	std::unique_ptr<Executor> executor;
+	typename std::vector<T>::iterator find(const std::string & name) {
+		auto it = std::find_if(actors.begin(), actors.end(), [&name](T &actors) { return (0 == name.compare(actors->getName())); });
+		if (actors.end() == it)
+			THROW(std::runtime_error, "controlled element not found");
+		return it;
+	}
+
+	std::vector<T> actors;
 };
 
 #endif
