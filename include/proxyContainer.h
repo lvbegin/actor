@@ -47,7 +47,7 @@ private:
 	SharedMap<int, proxyServer> proxies;
 	Executor executor;
 	static std::atomic<int> proxyId;
-	 int newproxyId(void);
+	static int newproxyId(void);
 };
 
 #endif
