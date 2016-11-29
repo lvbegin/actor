@@ -37,7 +37,7 @@ Executor::message::~message() = default;
 Executor::message::message(struct message &&m) : command(m.command), params(std::move(m.params)), promise(std::move(m.promise)) { }
 
 
-Executor::Executor(std::function<returnCode(int, std::vector<unsigned char>)> body)  : thread([this, body]() { executorBody(body); }) { }
+Executor::Executor(ExecutorBody body)  : thread([this, body]() { executeBody(body); }) { }
 
 Executor::~Executor() {
 	post(COMMAND_SHUTDOWN);
@@ -58,7 +58,7 @@ void Executor::post(int i, std::vector<unsigned char> params) { putMessage(i, pa
 
 struct Executor::message Executor::getMessage(void) { return queue.get(); }
 
-void Executor::executorBody(std::function<returnCode(int, std::vector<unsigned char>)> body) {
+void Executor::executeBody(ExecutorBody body) {
 	while (true) {
 		struct Executor::message message(getMessage());
 		if (COMMAND_SHUTDOWN == message.command) {

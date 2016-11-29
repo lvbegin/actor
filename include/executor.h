@@ -37,10 +37,11 @@
 #include <thread>
 #include <future>
 
+using ExecutorBody = std::function<returnCode(int, const std::vector<unsigned char> &)>;
 
 class Executor {
 public:
-	Executor(std::function<returnCode(int, std::vector<unsigned char>)> body);
+	Executor(ExecutorBody body);
 	~Executor();
 
 	Executor(const Executor &a) = delete;
@@ -61,7 +62,7 @@ private:
 	};
 
 	std::future<returnCode> putMessage(int i, std::vector<unsigned char> params);
-	void executorBody(std::function<returnCode(int, std::vector<unsigned char>)> body);
+	void executeBody(ExecutorBody body);
 	message getMessage(void);
 	SharedQueue<message> queue;
 	std::thread thread;

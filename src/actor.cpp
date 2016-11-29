@@ -29,7 +29,7 @@
 
 #include <actor.h>
 
-Actor::Actor(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body)  : name(std::move(name)), body(body), executor(new Executor(body)) { }
+Actor::Actor(std::string name, ExecutorBody body)  : name(std::move(name)), body(body), executor(new Executor(body)) { }
 
 Actor::~Actor() = default;
 
@@ -41,7 +41,7 @@ void Actor::restart(void) { executor.reset(new Executor(body)); }
 
 std::string Actor::getName() { return name; }
 
-ActorRef Actor::createActorRef(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body) {
+ActorRef Actor::createActorRef(std::string name, ExecutorBody body) {
 	return std::make_shared<Actor>(name, body);
 }
 

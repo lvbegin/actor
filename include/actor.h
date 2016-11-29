@@ -33,6 +33,7 @@
 #include <AbstractActor.h>
 #include <Controller.h>
 #include <executor.h>
+
 #include <functional>
 #include <memory>
 
@@ -41,7 +42,7 @@ using ActorRef = std::shared_ptr<Actor>;
 
 class Actor : public AbstractActor {
 public:
-	Actor(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body);
+	Actor(std::string name, ExecutorBody body);
 	~Actor();
 
 	Actor(const Actor &a) = delete;
@@ -51,7 +52,7 @@ public:
 	void restart(void);
 	std::string getName();
 
-	static ActorRef createActorRef(std::string name, std::function<returnCode(int, const std::vector<unsigned char> &)> body);
+	static ActorRef createActorRef(std::string name, ExecutorBody body);
 	static void registerActor(ActorRef monitor, ActorRef monitored);
 	static void unregisterActor(ActorRef monitor, ActorRef monitored);
 
@@ -59,7 +60,7 @@ private:
 	const std::string name;
 	Controller<ActorRef> monitored;
 	std::weak_ptr<Actor> supervisor;
-	std::function<returnCode(int, const std::vector<unsigned char> &)> body;
+	ExecutorBody body;
 	std::unique_ptr<Executor> executor;
 };
 
