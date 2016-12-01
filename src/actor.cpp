@@ -35,13 +35,9 @@ executor(new Executor([this, body](int command, const std::vector<unsigned char>
 
 Actor::~Actor() = default;
 
-returnCode Actor::postSync(int i, std::vector<unsigned char> params) {
-	return executorQueue.putMessage(i, params).get();
-}
+returnCode Actor::postSync(int i, std::vector<unsigned char> params) { return executorQueue.putMessage(i, params).get(); }
 
-void Actor::post(int i, std::vector<unsigned char> params) {
-	executorQueue.putMessage(i, params);
-}
+void Actor::post(int i, std::vector<unsigned char> params) { executorQueue.putMessage(i, params); }
 
 void Actor::restart(void) {
 	executor.reset(); //stop the current thread. Ensure that the new thread does not receive the shutdown
@@ -51,9 +47,7 @@ void Actor::restart(void) {
 
 std::string Actor::getName() { return name; }
 
-ActorRef Actor::createActorRef(std::string name, ExecutorBody body) {
-	return std::make_shared<Actor>(name, body);
-}
+ActorRef Actor::createActorRef(std::string name, ExecutorBody body) { return std::make_shared<Actor>(name, body); }
 
 void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
 	monitor->monitored.addActor(monitored);
