@@ -75,12 +75,20 @@ void executeSeverProxy(uint16_t port) {
 }
 
 
+
+static Connection openOneConnection(uint16_t port) {
+	while (true) {
+		try {
+			return ClientSocket::openHostConnection("localhost", port);
+		} catch (std::exception e) {}
+	}
+}
+
 static int proxyTest(void) {
 	std::cout << "proxyTest" << std::endl;
 	static const uint16_t port = 4011;
 	std::thread t(executeSeverProxy, port);
-	sleep(1);
-	proxyClient client(ClientSocket::openHostConnection("localhost", port));
+	proxyClient client(openOneConnection(port));
 	client.postSync(AbstractActor::COMMAND_SHUTDOWN);
 	t.join();
 	return 0;
@@ -91,8 +99,7 @@ static int proxyRestartTest(void) {
 	static const uint16_t port = 4003;
 	static const int command = 0x33;
 	std::thread t(executeSeverProxy, port);
-	sleep(1);
-	proxyClient client(ClientSocket::openHostConnection("localhost", port));
+	proxyClient client(openOneConnection(port));
 	int NbError = (returnCode::ok == client.postSync(command)) ? 0 : 1;
 	client.restart();
 	NbError += (returnCode::ok == client.postSync(command)) ? 0 : 1;
@@ -104,9 +111,8 @@ static int proxyRestartTest(void) {
 static int registryConnectTest(void) {
 	std::cout << "registryConnectTest" << std::endl;
 	static const uint16_t port = 6001;
-	ActorRegistry registry(std::string("name"), port);
-	sleep(1);
-	Connection c = ClientSocket::openHostConnection("localhost", port);
+	ActorRegistry registry(std::string("name"), port);;
+	Connection c = openOneConnection(port);
 	return 0;
 }
 
@@ -239,8 +245,14 @@ static int findUnknownActorInMultipleRegistryTest() {
 	static const uint16_t port2 = 6002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
-	sleep(1);
-	std::string name = registry1.addReference("localhost", port2);
+	std::string name;
+	bool referenceAdded = false;
+	while (!referenceAdded) {
+		try {
+		name = registry1.addReference("localhost", port2);
+		referenceAdded = true;
+		} catch (std::exception e) {}
+	}
 	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
 	registry2.registerActor(a);
 	auto actor = registry1.getActor("unknown actor");
