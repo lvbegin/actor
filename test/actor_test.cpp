@@ -42,7 +42,6 @@
 static int basicActorTest(void) {
 	std::cout << "basicActorTest" << std::endl;
 	Actor a("actor name", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
-	sleep(2);
 	auto val = a.postSync(1);
 	if (returnCode::ok != val) {
 		std::cout << "post failure" << std::endl;
@@ -61,7 +60,6 @@ static int basicActorWithParamsTest(void) {
 					return returnCode::ok;
 				else
 					return returnCode::error;});
-	sleep(2);
 	auto val = a.postSync(1, params);
 	if (returnCode::ok != val) {
 		std::cout << "post failure" << std::endl;
@@ -135,7 +133,7 @@ static int registryAddActorAndRemoveTest(void) {
 	    return 1;
 	} catch (std::runtime_error e) { }
 	a = Actor::createActorRef("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
-	registry.registerActor(/*"my actor",*/ a);
+	registry.registerActor(a);
 	return 0;
 }
 
@@ -147,7 +145,6 @@ static int registryAddReferenceTest(void) {
 	static const uint16_t port2 = 6002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
-	sleep(1);
 	std::string name = registry1.addReference("localhost", port2);
 	return name == name2 ? 0 : 1;
 }
@@ -190,7 +187,7 @@ static int findActorFromOtherRegistryTest() {
 	static const uint16_t port2 = 6002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
-	sleep(1);
+
 	std::string name = registry1.addReference("localhost", port2);
 	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) {
 		if (i == dummyCommand && 0 == params.size())
@@ -217,7 +214,7 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	static const uint16_t port2 = 6002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
-	sleep(1);
+
 	std::string name = registry1.addReference("localhost", port2);
 	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) {
 		if (i == dummyCommand && 0 == paramValue.compare(std::string(params.begin(), params.end())))
