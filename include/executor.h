@@ -30,7 +30,7 @@
 #ifndef EXECUTOR_H__
 #define EXECUTOR_H__
 
-#include <sharedQueue.h>
+#include <messageQueue.h>
 #include <rc.h>
 
 #include <functional>
@@ -41,30 +41,15 @@ using ExecutorBody = std::function<returnCode(int, const std::vector<unsigned ch
 
 class Executor {
 public:
-	Executor(ExecutorBody body);
+	Executor(ExecutorBody body, MessageQueue *queue);
 	~Executor();
 
 	Executor(const Executor &a) = delete;
 	Executor &operator=(const Executor &a) = delete;
-	returnCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
-	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	static const uint32_t COMMAND_SHUTDOWN = 0;
 private:
-	struct message {
-		int command;
-		std::vector<unsigned char> params;
-		std::promise<returnCode> promise;
-		message(int c, std::vector<unsigned char> params);
-		~message();
-		message(struct message &&m);
-		message (const struct message &m) = delete;
-		struct message &operator=(const struct message &m) = delete;
-	};
-
-	std::future<returnCode> putMessage(int i, std::vector<unsigned char> params);
 	void executeBody(ExecutorBody body);
-	message getMessage(void);
-	SharedQueue<message> queue;
+	MessageQueue *messageQueue;
 	std::thread thread;
 
 };

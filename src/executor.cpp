@@ -28,39 +28,18 @@
  */
 
 #include <executor.h>
+#include <exception.h>
 
-
-Executor::message::message(int c, std::vector<unsigned char> params) : command(c), params(params) {}
-
-Executor::message::~message() = default;
-
-Executor::message::message(struct message &&m) : command(m.command), params(std::move(m.params)), promise(std::move(m.promise)) { }
-
-
-Executor::Executor(ExecutorBody body)  : thread([this, body]() { executeBody(body); }) { }
+Executor::Executor(ExecutorBody body, MessageQueue *queue)  : messageQueue(queue), thread([this, body]() { executeBody(body); }) { }
 
 Executor::~Executor() {
-	post(COMMAND_SHUTDOWN);
-	if (thread.joinable())
-		thread.join();
+	messageQueue->putMessage(COMMAND_SHUTDOWN);
+	thread.join();
 };
-
-std::future<returnCode> Executor::putMessage(int i, std::vector<unsigned char> params) {
-	struct message  m(i, std::move(params));
-	auto future = m.promise.get_future();
-	queue.post(std::move(m));
-	return future;
-}
-
-returnCode Executor::postSync(int i, std::vector<unsigned char> params) { return putMessage(i, params).get(); }
-
-void Executor::post(int i, std::vector<unsigned char> params) { putMessage(i, params); }
-
-struct Executor::message Executor::getMessage(void) { return queue.get(); }
 
 void Executor::executeBody(ExecutorBody body) {
 	while (true) {
-		struct Executor::message message(getMessage());
+		struct MessageQueue::message message(messageQueue->getMessage());
 		if (COMMAND_SHUTDOWN == message.command) {
 			message.promise.set_value(returnCode::shutdown);
 			return;
@@ -74,8 +53,7 @@ void Executor::executeBody(ExecutorBody body) {
 			return;
 		default:
 			message.promise.set_value(returnCode::error);
-			//notify parent.
-			return;
+			break;
 		}
 	}
 }

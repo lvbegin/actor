@@ -27,22 +27,23 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <proxyContainer.h>
+#include <messageQueue.h>
 
-#include <tuple>
 
-std::atomic<int> ProxyContainer::proxyId { 0 };
+MessageQueue::message::message(int c, std::vector<unsigned char> params) : command(c), params(params) {}
 
-ProxyContainer::ProxyContainer() : executor([this](int id, const std::vector<unsigned char> &not_used) { return (this->deleteProxy(id), returnCode::ok);}, &executorQueue) { }
+MessageQueue::message::~message() = default;
 
-ProxyContainer::~ProxyContainer() = default;
+MessageQueue::message::message(struct message &&m) : command(m.command), params(std::move(m.params)), promise(std::move(m.promise)) { }
 
-int ProxyContainer::newproxyId(void) { return proxyId++; }
+MessageQueue::MessageQueue() = default;
+MessageQueue::~MessageQueue() = default;
 
-void ProxyContainer::createNewProxy(ActorRef actor, Connection connection) {
-	const auto id = newproxyId();
-	const auto terminate = [this, id]() { this->executorQueue.putMessage(id); };
-	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id), std::forward_as_tuple(actor, std::move(connection), terminate));
+std::future<returnCode> MessageQueue::putMessage(int i, std::vector<unsigned char> params) {
+	struct message  m(i, std::move(params));
+	auto future = m.promise.get_future();
+	queue.post(std::move(m));
+	return future;
 }
 
-void ProxyContainer::deleteProxy(int i) { proxies.erase(i); }
+struct MessageQueue::message MessageQueue::getMessage(void) { return queue.get(); }

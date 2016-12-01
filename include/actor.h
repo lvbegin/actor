@@ -36,6 +36,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 
 class Actor;
 using ActorRef = std::shared_ptr<Actor>;
@@ -61,7 +62,9 @@ private:
 	Controller<ActorRef> monitored;
 	std::weak_ptr<Actor> supervisor;
 	ExecutorBody body;
+	MessageQueue executorQueue;
 	std::unique_ptr<Executor> executor;
+	returnCode actorExecutor(ExecutorBody body, int command, const std::vector<unsigned char> &params);
 };
 
 #endif

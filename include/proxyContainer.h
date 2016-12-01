@@ -45,6 +45,7 @@ public:
 	void deleteProxy(int i);
 private:
 	SharedMap<int, proxyServer> proxies;
+	MessageQueue executorQueue;
 	Executor executor;
 	static std::atomic<int> proxyId;
 	static int newproxyId(void);

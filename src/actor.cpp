@@ -29,15 +29,25 @@
 
 #include <actor.h>
 
-Actor::Actor(std::string name, ExecutorBody body)  : name(std::move(name)), body(body), executor(new Executor(body)) { }
+Actor::Actor(std::string name, ExecutorBody body)  : name(std::move(name)), body(body),
+executor(new Executor([this, body](int command, const std::vector<unsigned char> &params)
+		{ return this->actorExecutor(body, command, params); }, &executorQueue)) { }
 
 Actor::~Actor() = default;
 
-returnCode Actor::postSync(int i, std::vector<unsigned char> params) { return executor->postSync(i, params); }
+returnCode Actor::postSync(int i, std::vector<unsigned char> params) {
+	return executorQueue.putMessage(i, params).get();
+}
 
-void Actor::post(int i, std::vector<unsigned char> params) { executor->post(i, params); }
+void Actor::post(int i, std::vector<unsigned char> params) {
+	executorQueue.putMessage(i, params);
+}
 
-void Actor::restart(void) { executor.reset(new Executor(body)); }
+void Actor::restart(void) {
+	executor.reset(); //stop the current thread. Ensure that the new thread does not receive the shutdown
+	executor.reset(new Executor([this](int command, const std::vector<unsigned char> &params)
+			{ return this->actorExecutor(this->body, command, params); }, &executorQueue));
+}
 
 std::string Actor::getName() { return name; }
 
@@ -53,4 +63,18 @@ void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
 void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
 	monitor->monitored.removeActor(monitored->getName());
 	monitored->supervisor.reset();
+}
+
+returnCode Actor::actorExecutor(ExecutorBody body, int command, const std::vector<unsigned char> &params) {
+	if (command == 0x69) {
+		monitored.restartOne(std::string(params.begin(), params.end()));
+		return returnCode::ok;
+	}
+	try {
+		return body(command, params);
+	} catch (std::exception e) {
+		ActorRef supervisorRef(supervisor);
+		supervisorRef->post(0x69, std::vector<unsigned char>(name.begin(), name.end()));
+		return returnCode::error;
+	}
 }

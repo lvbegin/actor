@@ -41,7 +41,8 @@ public:
 	~Controller() = default;
 
 	void addActor(T actor) { actors.push_back(actor); }
-	void restartActor(const std::string &name) { (*find(name))->restart(); }
+	void restartOne(const std::string &name) {
+		(*find(name))->restart();  /*take into account that it may not be controlled anymore */}
 	void restartAll() { std::for_each(actors.begin(), actors.end(), [](T &actor){ actor->restart();} );}
 	void removeActor(const std::string &name) { actors.erase(find(name)); }
 
@@ -49,7 +50,7 @@ public:
 private:
 	typename std::vector<T>::iterator find(const std::string & name) {
 		auto it = std::find_if(actors.begin(), actors.end(), [&name](T &actors) { return (0 == name.compare(actors->getName())); });
-		if (actors.end() == it)
+		if (actors.end() == it) //not sure that it is an error...
 			THROW(std::runtime_error, "controlled element not found");
 		return it;
 	}

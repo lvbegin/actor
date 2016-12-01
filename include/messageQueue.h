@@ -27,22 +27,32 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <proxyContainer.h>
+#ifndef MESSAGE_QUEUE_H__
+#define MESSAGE_QUEUE_H__
 
-#include <tuple>
+#include <sharedQueue.h>
+#include <rc.h>
 
-std::atomic<int> ProxyContainer::proxyId { 0 };
+#include <future>
 
-ProxyContainer::ProxyContainer() : executor([this](int id, const std::vector<unsigned char> &not_used) { return (this->deleteProxy(id), returnCode::ok);}, &executorQueue) { }
+class MessageQueue {
+public:
+	struct message {
+		int command;
+		std::vector<unsigned char> params;
+		std::promise<returnCode> promise;
+		message(int c, std::vector<unsigned char> params);
+		~message();
+		message(struct message &&m);
+		message (const struct message &m) = delete;
+		struct message &operator=(const struct message &m) = delete;
+	};
+	MessageQueue();
+	~MessageQueue();
+	std::future<returnCode> putMessage(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
+	message getMessage(void);
+private:
+	SharedQueue<message> queue;
+};
 
-ProxyContainer::~ProxyContainer() = default;
-
-int ProxyContainer::newproxyId(void) { return proxyId++; }
-
-void ProxyContainer::createNewProxy(ActorRef actor, Connection connection) {
-	const auto id = newproxyId();
-	const auto terminate = [this, id]() { this->executorQueue.putMessage(id); };
-	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id), std::forward_as_tuple(actor, std::move(connection), terminate));
-}
-
-void ProxyContainer::deleteProxy(int i) { proxies.erase(i); }
+#endif
