@@ -143,6 +143,8 @@ static int registryAddActorAndRemoveTest(void) {
 	return 0;
 }
 
+static void ensureRegistryStarted(uint16_t port) { openOneConnection(port); }
+
 static int registryAddReferenceTest(void) {
 	std::cout << "registryAddReferenceTest" << std::endl;
 	static const std::string name1("name1");
@@ -151,7 +153,9 @@ static int registryAddReferenceTest(void) {
 	static const uint16_t port2 = 6002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
-	/* do something here to avoid false positive */
+
+	ensureRegistryStarted(port1);
+	ensureRegistryStarted(port2);
 	std::string name = registry1.addReference("localhost", port2);
 	return name == name2 ? 0 : 1;
 }
@@ -194,8 +198,12 @@ static int findActorFromOtherRegistryTest() {
 	static const uint16_t port2 = 6002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
-/* do something here to avoid false positive */
-	std::string name = registry1.addReference("localhost", port2);
+
+	ensureRegistryStarted(port1);
+	ensureRegistryStarted(port2);
+	const std::string name = registry1.addReference("localhost", port2);
+	if (name2.compare(name))
+		return 1;
 	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) {
 		if (i == dummyCommand && 0 == params.size())
 			return returnCode::ok;
@@ -222,8 +230,11 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
 
-	/* do something here to avoid false positive */
-	std::string name = registry1.addReference("localhost", port2);
+	ensureRegistryStarted(port1);
+	ensureRegistryStarted(port2);
+	const std::string name = registry1.addReference("localhost", port2);
+	if (name2.compare(name))
+		return 1;
 	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) {
 		if (i == dummyCommand && 0 == paramValue.compare(std::string(params.begin(), params.end())))
 							return returnCode::ok;
@@ -247,14 +258,12 @@ static int findUnknownActorInMultipleRegistryTest() {
 	static const uint16_t port2 = 6002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
-	std::string name;
-	bool referenceAdded = false;
-	while (!referenceAdded) {
-		try {
-		name = registry1.addReference("localhost", port2);
-		referenceAdded = true;
-		} catch (std::exception e) {}
-	}
+
+	ensureRegistryStarted(port1);
+	ensureRegistryStarted(port2);
+	const std::string name = registry1.addReference("localhost", port2);
+	if (name2.compare(name))
+		return 1;
 	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
 	registry2.registerActor(a);
 	auto actor = registry1.getActor("unknown actor");
