@@ -57,7 +57,7 @@ public:
 
 private:
 	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY, SEARCH_ACTOR, };
-	std::string name;
+	const std::string name;
 	bool terminated;
 	SharedMap<std::string, struct sockaddr_in> registryAddresses;
 	SharedMap<std::string, ActorRef> actors;
