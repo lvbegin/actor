@@ -40,10 +40,10 @@ public:
 	SharedQueue() = default;
 	~SharedQueue() = default;
 
-	void post (T v) {
+	void post (T &&v) {
 		std::unique_lock<std::mutex> l(mutexQueue);
 
-		q.push(std::move(v));
+		q.push(std::forward<T>(v));
 		condition.notify_one();
 	}
 	T get(void) {
