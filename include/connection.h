@@ -47,25 +47,25 @@ public:
 	Connection(Connection &&connection);
 	Connection &operator=(Connection &&connection);
 	template<typename T>
-	Connection &writeInt(T hostValue) {
+	const Connection &writeInt(T hostValue) const {
 		const uint32_t sentValue = htonl(static_cast<uint32_t>(hostValue));
 		return writeBytes(&sentValue, sizeof(sentValue));
 	}
 
 	template<typename T>
-	T readInt(void) {
+	T readInt(void) const {
 		uint32_t value;
 		readBytes(&value, sizeof(value));
 		return static_cast<T>(ntohl(value));
 	}
-	Connection &writeString(const std::string &hostValue);
-	std::string readString(void);
-	Connection &writeRawData(const std::vector<unsigned char> &data);
-	std::vector<unsigned char> readRawData(void);
-	Connection &writeBytes(const void *buffer, size_t count);
-	void readBytes(void *buffer, size_t count, int timeout = 5);
+	const Connection &writeString(const std::string &hostValue) const;
+	std::string readString(void) const;
+	const Connection &writeRawData(const std::vector<unsigned char> &data) const;
+	std::vector<unsigned char> readRawData(void) const;
+	const Connection &writeBytes(const void *buffer, size_t count) const;
+	void readBytes(void *buffer, size_t count, int timeout = 5) const;
 private:
-	void readBytesNonBlocking(void *buffer, size_t count);
+	void readBytesNonBlocking(void *buffer, size_t count) const;
 
 	int fd;
 	fd_set set;

@@ -43,11 +43,11 @@ Connection ClientSocket::openHostConnection(std::string host, uint16_t port) {
 	return openHostConnection(sin);
 }
 
-Connection ClientSocket::openHostConnection(struct sockaddr_in &sin) {
+Connection ClientSocket::openHostConnection(const struct sockaddr_in &sin) {
 	const int fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == fd)
 		THROW(std::runtime_error, "socket creation failed.");
-	if (-1 == connect(fd, reinterpret_cast<sockaddr*>(&sin), sizeof(struct sockaddr_in)))
+	if (-1 == connect(fd, reinterpret_cast<const sockaddr*>(&sin), sizeof(struct sockaddr_in)))
 		THROW(std::runtime_error, "cannot connect.");
 	return Connection(fd);
 }

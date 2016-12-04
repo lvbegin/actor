@@ -53,28 +53,28 @@ Connection &Connection::operator=(Connection &&connection) {
 	return *this;
 }
 
-Connection &Connection::writeRawData(const std::vector<unsigned char> &data) { return writeInt(data.size()).writeBytes(data.data(), data.size()); }
+const Connection &Connection::writeRawData(const std::vector<unsigned char> &data) const { return writeInt(data.size()).writeBytes(data.data(), data.size()); }
 
-std::vector<unsigned char> Connection::readRawData(void) {
+std::vector<unsigned char> Connection::readRawData(void) const {
 	std::vector<unsigned char> data(readInt<size_t>());
 	if (0 < data.capacity())
 		readBytesNonBlocking(data.data(), data.capacity());
 	return data;
 }
 
-Connection &Connection::writeString(const std::string &hostValue) {
+const Connection &Connection::writeString(const std::string &hostValue) const {
 	const size_t nbBytesToWrite = hostValue.size() + 1;
 	return writeInt(nbBytesToWrite).writeBytes(hostValue.c_str(), nbBytesToWrite);
 }
 
-std::string Connection::readString(void) {
+std::string Connection::readString(void) const {
 	auto string = readRawData();
 	if (0 == string.size() || '\0' != string.data()[string.size() - 1])
 		THROW(std::runtime_error, "non NULL-terminated string value");
 	return std::string(string.begin(), string.end() - 1);
 }
 
-Connection &Connection::writeBytes(const void *buffer, size_t count) {
+const Connection &Connection::writeBytes(const void *buffer, size_t count) const {
 	if (-1 == fd)
 		THROW(std::runtime_error, "invalid writeByte");
 	const char *ptr = static_cast<const char *>(buffer);
@@ -87,19 +87,19 @@ Connection &Connection::writeBytes(const void *buffer, size_t count) {
 	return *this;
 }
 
-void Connection::readBytes(void *buffer, size_t count, int timeoutInSeconds) {
-	waitForRead<std::runtime_error, std::runtime_error>(fd, &set, timeoutInSeconds);
+void Connection::readBytes(void *buffer, size_t count, int timeoutInSeconds) const {
+	waitForRead<std::runtime_error, std::runtime_error>(fd, set, timeoutInSeconds);
 	readBytesNonBlocking(buffer, count);
 }
 
-void Connection::readBytesNonBlocking(void *buffer, size_t count) {
+void Connection::readBytesNonBlocking(void *buffer, size_t count) const {
 	static const int timeoutOnRead = 60;
 	if (-1 == fd)
 		THROW(std::runtime_error, "invalid fd in readBytesNonBlocking");
 	char *ptr = static_cast<char *>(buffer);
 	struct timeval timeout { timeoutOnRead, 0 };
 	for (size_t nbTotalRead = 0; nbTotalRead < count; ) {
-		waitForRead<std::runtime_error, std::runtime_error>(fd, &set, &timeout);
+		waitForRead<std::runtime_error, std::runtime_error>(fd, set, &timeout);
 		const ssize_t nbRead = read(fd, ptr + nbTotalRead, count - nbTotalRead);
 		if (0 >= nbRead)
 			THROW(std::runtime_error, "read bytes failed");

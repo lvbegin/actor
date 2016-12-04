@@ -53,7 +53,7 @@ public:
 	void removeReference(std::string registryName);
 	void registerActor(ActorRef actor);
 	void unregisterActor(std::string name);
-	GenericActorPtr  getActor(std::string name);
+	GenericActorPtr  getActor(std::string name) const;
 
 private:
 	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY, SEARCH_ACTOR, };
@@ -65,8 +65,8 @@ private:
 	std::thread t;
 
 	void registryBody(ServerSocket &s);
-	GenericActorPtr getLocalActor(const std::string &name);
-	GenericActorPtr getRemoteActor(const std::string &name);
+	GenericActorPtr getLocalActor(const std::string &name) const;
+	GenericActorPtr getRemoteActor(const std::string &name) const;
 };
 
 #endif

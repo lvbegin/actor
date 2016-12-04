@@ -45,7 +45,7 @@ void Actor::restart(void) {
 			{ return this->actorExecutor(this->body, command, params); }, &executorQueue));
 }
 
-std::string Actor::getName() { return name; }
+std::string Actor::getName() const { return name; }
 
 ActorRef Actor::createActorRef(std::string name, ExecutorBody body) { return std::make_shared<Actor>(name, body); }
 

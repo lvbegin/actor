@@ -151,6 +151,7 @@ static int registryAddReferenceTest(void) {
 	static const uint16_t port2 = 6002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
+	/* do something here to avoid false positive */
 	std::string name = registry1.addReference("localhost", port2);
 	return name == name2 ? 0 : 1;
 }
@@ -193,7 +194,7 @@ static int findActorFromOtherRegistryTest() {
 	static const uint16_t port2 = 6002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
-
+/* do something here to avoid false positive */
 	std::string name = registry1.addReference("localhost", port2);
 	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) {
 		if (i == dummyCommand && 0 == params.size())
@@ -221,6 +222,7 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
 
+	/* do something here to avoid false positive */
 	std::string name = registry1.addReference("localhost", port2);
 	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) {
 		if (i == dummyCommand && 0 == paramValue.compare(std::string(params.begin(), params.end())))

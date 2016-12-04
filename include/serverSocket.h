@@ -48,7 +48,7 @@ public:
 	ServerSocket &operator=(ServerSocket&& s);
 
 	~ServerSocket();
-	Connection acceptOneConnection(int timeout = 2, struct sockaddr_in *client_addr = NULL);
+	Connection acceptOneConnection(int timeout = 2, struct sockaddr_in *client_addr = NULL) const;
 private:
 	static int listenOnSocket(uint16_t port);
 	void closeSocket(void);

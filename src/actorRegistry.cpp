@@ -88,7 +88,7 @@ void ActorRegistry::registerActor(ActorRef actor) { actors.insert(actor->getName
 
 void ActorRegistry::unregisterActor(std::string name) { actors.erase(name); }
 
-GenericActorPtr  ActorRegistry::getActor(std::string name) {
+GenericActorPtr  ActorRegistry::getActor(std::string name) const {
 	try {
 		return getLocalActor(name);
 	} catch (std::out_of_range e) {
@@ -96,11 +96,11 @@ GenericActorPtr  ActorRegistry::getActor(std::string name) {
 	}
 }
 
-GenericActorPtr ActorRegistry::getLocalActor(const std::string &name) { return actors.find(name); }
+GenericActorPtr ActorRegistry::getLocalActor(const std::string &name) const { return actors.find(name); }
 
-GenericActorPtr ActorRegistry::getRemoteActor(const std::string &name) {
+GenericActorPtr ActorRegistry::getRemoteActor(const std::string &name) const {
 	GenericActorPtr actor;
-	registryAddresses.for_each([&actor, &name](std::pair<const std::string, struct sockaddr_in> &c) {
+	registryAddresses.for_each([&actor, &name](const std::pair<const std::string, struct sockaddr_in> &c) {
 		auto connection = ClientSocket::openHostConnection(c.second);
 		connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
 		if (1 == connection.readInt<uint32_t>())

@@ -49,15 +49,12 @@ public:
 			THROW(std::runtime_error, "actor already exist.");
 		map.insert(std::make_pair(std::forward<L>(key), std::forward<M>(value)));
 	}
-
 	template <typename... Args>
 	void emplace(Args&&... args) {
 		std::unique_lock<std::mutex> l(mutex);
 
 		map.emplace(std::forward<Args>(args)...);
 	}
-
-
 	void erase(K key) {
 		std::unique_lock<std::mutex> l(mutex);
 		auto it = map.find(key);
@@ -65,21 +62,21 @@ public:
 			THROW(std::runtime_error, "element to erase does not exist.");
 		map.erase(it);
 	}
-	T find (K key) {
+	T find (K key) const {
 		std::unique_lock<std::mutex> l(mutex);
 		auto it = map.find(key);
 		if (map.end() == it)
 			THROW(std::out_of_range, "element not found.");
 		return it->second;
 	}
-	void for_each(std::function<void(std::pair<const K, T> &)> f) {
+	void for_each(std::function<void(const std::pair<const K, T> &)> f) const {
 		std::unique_lock<std::mutex> l(mutex);
 
 		std::for_each(map.begin(), map.end(), f);
 	}
 private:
 	std::map<K, T> map;
-	std::mutex mutex;
+	mutable std::mutex mutex;
 };
 
 #endif

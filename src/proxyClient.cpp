@@ -31,8 +31,7 @@
 #include <proxyServer.h>
 #include <clientSocket.h>
 
-proxyClient::proxyClient(Connection connection) : connection(std::move(connection)) {}
-
+proxyClient::proxyClient(Connection connection) : connection(std::move(connection)) { }
 proxyClient::~proxyClient() = default;
 
 returnCode proxyClient::postSync(int command, std::vector<unsigned char> params) {
@@ -43,6 +42,3 @@ returnCode proxyClient::postSync(int command, std::vector<unsigned char> params)
 void proxyClient::post(int command, std::vector<unsigned char> params) { connection.writeInt(postType::Async).writeInt(command).writeRawData(params); }
 
 void proxyClient::restart() { connection.writeInt(postType::Restart); }
-
-void postParams(std::vector<unsigned char> &params) {
-}

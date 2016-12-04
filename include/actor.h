@@ -51,7 +51,7 @@ public:
 	returnCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void restart(void);
-	std::string getName();
+	std::string getName() const;
 
 	static ActorRef createActorRef(std::string name, ExecutorBody body);
 	static void registerActor(ActorRef monitor, ActorRef monitored);
