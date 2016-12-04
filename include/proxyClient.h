@@ -44,7 +44,7 @@ public:
 	void post(int command, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void restart(void);
 private:
-	Connection connection;
+	const Connection connection;
 };
 
 #endif
