@@ -46,7 +46,7 @@ ActorRegistry::~ActorRegistry() {
 	t.join();
 }
 
-void ActorRegistry::registryBody(ServerSocket &s) {
+void ActorRegistry::registryBody(const ServerSocket &s) {
 	while (!terminated) {
 		try {
 			struct sockaddr_in client_addr {};

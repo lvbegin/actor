@@ -64,7 +64,7 @@ private:
 	ProxyContainer proxies;
 	std::thread t;
 
-	void registryBody(ServerSocket &s);
+	void registryBody(const ServerSocket &s);
 	GenericActorPtr getLocalActor(const std::string &name) const;
 	GenericActorPtr getRemoteActor(const std::string &name) const;
 };
