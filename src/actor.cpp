@@ -61,6 +61,7 @@ void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
 
     } catch (std::exception e) {
     	monitored->supervisor = tmp;
+    	throw e;
     }
 }
 
@@ -76,6 +77,7 @@ void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
 		monitor->monitored.removeActor(monitored->getName());
 	} catch (std::exception e) {
     	monitored->supervisor = tmp;
+    	throw e;
 	}
 }
 
