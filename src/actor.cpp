@@ -53,18 +53,30 @@ void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
 	std::lock(monitor->monitorMutex, monitored->monitorMutex);
     std::lock_guard<std::mutex> l1(monitor->monitorMutex, std::adopt_lock);
     std::lock_guard<std::mutex> l2(monitored->monitorMutex, std::adopt_lock);
-    //manage exception in between
-	monitor->monitored.addActor(monitored);
-	monitored->supervisor = std::weak_ptr<Actor>(monitor);
+
+    auto tmp = monitored->supervisor;
+    monitored->supervisor = std::weak_ptr<Actor>(monitor);
+    try {
+    	monitor->monitored.addActor(monitored);
+
+    } catch (std::exception e) {
+    	monitored->supervisor = tmp;
+    }
 }
 
 void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
 	std::lock(monitor->monitorMutex, monitored->monitorMutex);
     std::lock_guard<std::mutex> l1(monitor->monitorMutex, std::adopt_lock);
     std::lock_guard<std::mutex> l2(monitored->monitorMutex, std::adopt_lock);
-    //manage exception in between
-	monitor->monitored.removeActor(monitored->getName());
+
+    auto tmp = monitored->supervisor;
 	monitored->supervisor.reset();
+
+	try {
+		monitor->monitored.removeActor(monitored->getName());
+	} catch (std::exception e) {
+    	monitored->supervisor = tmp;
+	}
 }
 
 returnCode Actor::actorExecutor(ExecutorBody body, int command, const std::vector<unsigned char> &params) {
