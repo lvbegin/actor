@@ -59,6 +59,7 @@ public:
 
 private:
 	const std::string name;
+	std::mutex monitorMutex;
 	Controller<ActorRef> monitored;
 	std::weak_ptr<Actor> supervisor;
 	ExecutorBody body;

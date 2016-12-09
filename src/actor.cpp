@@ -29,7 +29,7 @@
 
 #include <actor.h>
 
-Actor::Actor(std::string name, ExecutorBody body)  : name(std::move(name)), body(body),
+Actor::Actor(std::string name, ExecutorBody body)  : name(std::move(name)), body(body), executorQueue(),
 executor(new Executor([this, body](int command, const std::vector<unsigned char> &params)
 		{ return this->actorExecutor(body, command, params); }, &executorQueue)) { }
 
@@ -50,17 +50,27 @@ std::string Actor::getName() const { return name; }
 ActorRef Actor::createActorRef(std::string name, ExecutorBody body) { return std::make_shared<Actor>(name, body); }
 
 void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
+	std::lock(monitor->monitorMutex, monitored->monitorMutex);
+    std::lock_guard<std::mutex> l1(monitor->monitorMutex, std::adopt_lock);
+    std::lock_guard<std::mutex> l2(monitored->monitorMutex, std::adopt_lock);
+    //manage exception in between
 	monitor->monitored.addActor(monitored);
 	monitored->supervisor = std::weak_ptr<Actor>(monitor);
 }
 
 void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
+	std::lock(monitor->monitorMutex, monitored->monitorMutex);
+    std::lock_guard<std::mutex> l1(monitor->monitorMutex, std::adopt_lock);
+    std::lock_guard<std::mutex> l2(monitored->monitorMutex, std::adopt_lock);
+    //manage exception in between
 	monitor->monitored.removeActor(monitored->getName());
 	monitored->supervisor.reset();
 }
 
 returnCode Actor::actorExecutor(ExecutorBody body, int command, const std::vector<unsigned char> &params) {
 	if (command == 0x69) {
+		std::lock_guard<std::mutex> l(monitorMutex);
+
 		monitored.restartOne(std::string(params.begin(), params.end()));
 		return returnCode::ok;
 	}

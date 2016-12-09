@@ -38,10 +38,35 @@
 
 #include <memory.h>
 
+struct netAddr{
+	  struct sockaddr ai_addr;
+	  size_t ai_addrlen;
+	  netAddr(struct sockaddr ai_addr, size_t ai_addrlen) : ai_addr(ai_addr), ai_addrlen(ai_addrlen) { }
+};
+
 Connection ClientSocket::openHostConnection(std::string host, uint16_t port) {
-	sockaddr_in sin = toSockAddr(host, port);
-	return openHostConnection(sin);
+	struct netAddr addr = toNetAddr(host, port);
+	return openHostConnection(addr);
 }
+
+Connection ClientSocket::openHostConnection(const struct netAddr &sin) {
+	const int fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (-1 == fd)
+		THROW(std::runtime_error, "socket creation failed.");
+	if (-1 == connect(fd, &sin.ai_addr, sin.ai_addrlen))
+		THROW(std::runtime_error, "cannot connect.");
+	return Connection(fd);
+}
+
+struct netAddr ClientSocket::toNetAddr(std::string host, uint16_t port) {
+	struct addrinfo *addr;
+	if (0 > getaddrinfo(host.c_str(), std::to_string(port).c_str(), NULL, &addr))
+		THROW(std::runtime_error, "cannot convert hostname.");
+	const auto rc = netAddr(*addr->ai_addr, addr->ai_addrlen);
+	freeaddrinfo(addr);
+	return rc;
+}
+
 
 Connection ClientSocket::openHostConnection(const struct sockaddr_in &sin) {
 	const int fd = socket(AF_INET, SOCK_STREAM, 0);
