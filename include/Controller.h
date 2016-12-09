@@ -44,12 +44,10 @@ public:
 
 	void addActor(T actor) { actors.push_back(actor); }
 	void removeActor(const std::string &name) { applyOn(name, [this](const typename std::vector<T>::const_iterator &it) { this->actors.erase(it); }); }
-	void restartOne(const std::string &name) { //do something to constify
-		applyOn(name, [](const typename std::vector<T>::const_iterator &it) { (*it)->restart(); });
-	}
+	void restartOne(const std::string &name) const { applyOn(name, [](const typename std::vector<T>::const_iterator &it) { (*it)->restart(); }); }
 	void restartAll() const { std::for_each(actors.begin(), actors.end(), [](const T &actor){ actor->restart();} ); }
 private:
-	void applyOn(const std::string & name, std::function<void(const typename std::vector<T>::const_iterator &)> op) {
+	void applyOn(const std::string & name, std::function<void(const typename std::vector<T>::const_iterator &)> op) const {
 		typename std::vector<T>::const_iterator it = std::find_if(actors.begin(), actors.end(), [&name](const T &actors) { return (0 == name.compare(actors->getName())); });
 		if (actors.end() != it)
 			op(it);
