@@ -303,6 +303,23 @@ static int supervisorRestartsActorTest() {
 	return (exceptionThrown) ? 0 : 1;
 }
 
+static int actorNotifiesErrorToSupervisorTest() {
+	std::cout << "supervisorRestartsActorTest" << std::endl;
+	static int someCommand = 0xaa;
+	auto supervisor = Actor::createActorRef("supervisor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
+	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) {
+		Actor::notifyError(0x69);
+		return returnCode::ok;
+	 });
+	Actor::registerActor(supervisor, supervised);
+	if (returnCode::error != supervised->postSync(someCommand))
+		return 1;
+	if (returnCode::error != supervised->postSync(someCommand))
+		return 1;
+	Actor::unregisterActor(supervisor, supervised);
+	return 0;
+}
+
 int main() {
 
 	int nbFailure = basicActorTest();
@@ -320,6 +337,7 @@ int main() {
 	nbFailure += findUnknownActorInMultipleRegistryTest();
 	nbFailure += initSupervisionTest();
 	nbFailure += supervisorRestartsActorTest();
+	nbFailure += actorNotifiesErrorToSupervisorTest();
 	std::cout << ((nbFailure) ? "Failure" : "Success") << std::endl;
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

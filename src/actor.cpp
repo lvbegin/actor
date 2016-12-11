@@ -45,7 +45,7 @@ void Actor::restart(void) {
 			{ return this->actorExecutor(this->body, command, params); }, &executorQueue));
 }
 
-std::string Actor::getName() const { return name; }
+std::string Actor::getName(void) const { return name; }
 
 ActorRef Actor::createActorRef(std::string name, ExecutorBody body) { return std::make_shared<Actor>(name, body); }
 
@@ -58,7 +58,6 @@ void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
     monitored->supervisor = std::weak_ptr<Actor>(monitor);
     try {
     	monitor->monitored.addActor(monitored);
-
     } catch (std::exception e) {
     	monitored->supervisor = tmp;
     	throw e;
@@ -81,6 +80,8 @@ void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
 	}
 }
 
+void Actor::notifyError(int e) { throw std::runtime_error("error"); }
+
 returnCode Actor::actorExecutor(ExecutorBody body, int command, const std::vector<unsigned char> &params) {
 	if (command == 0x69) {
 		std::lock_guard<std::mutex> l(monitorMutex);
@@ -91,7 +92,7 @@ returnCode Actor::actorExecutor(ExecutorBody body, int command, const std::vecto
 	try {
 		return body(command, params);
 	} catch (std::exception e) {
-		ActorRef supervisorRef(supervisor);
+		ActorRef supervisorRef = supervisor.lock();
 		supervisorRef->post(0x69, std::vector<unsigned char>(name.begin(), name.end()));
 		return returnCode::error;
 	}
