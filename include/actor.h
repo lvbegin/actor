@@ -41,9 +41,11 @@
 class Actor;
 using ActorRef = std::shared_ptr<Actor>;
 
+using ActorBody = std::function<returnCode(int, const std::vector<unsigned char> &)>;
+
 class Actor : public AbstractActor {
 public:
-	Actor(std::string name, ExecutorBody body);
+	Actor(std::string name, ActorBody body);
 	~Actor();
 
 	Actor(const Actor &a) = delete;
@@ -54,7 +56,7 @@ public:
 	std::string getName(void) const;
 
 	static void notifyError(int e);
-	static ActorRef createActorRef(std::string name, ExecutorBody body);
+	static ActorRef createActorRef(std::string name, ActorBody body);
 	static void registerActor(ActorRef monitor, ActorRef monitored);
 	static void unregisterActor(ActorRef monitor, ActorRef monitored);
 
@@ -63,10 +65,10 @@ private:
 	std::mutex monitorMutex;
 	Controller<ActorRef> monitored;
 	std::weak_ptr<Actor> supervisor;
-	ExecutorBody body;
+	ActorBody body;
 	MessageQueue executorQueue;
 	std::unique_ptr<Executor> executor;
-	returnCode actorExecutor(ExecutorBody body, int command, const std::vector<unsigned char> &params);
+	returnCode actorExecutor(ActorBody body, int command, const std::vector<unsigned char> &params);
 	void postError(int i, const std::string &actorName);
 
 };

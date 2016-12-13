@@ -44,7 +44,7 @@ void Executor::executeBody(ExecutorBody body) {
 			message.promise.set_value(returnCode::shutdown);
 			return;
 		}
-		switch (body(message.code, std::move(message.params))) {
+		switch (body(message.type, message.code, std::move(message.params))) {
 		case returnCode::ok:
 			message.promise.set_value(returnCode::ok);
 			break;

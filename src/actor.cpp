@@ -29,8 +29,8 @@
 
 #include <actor.h>
 
-Actor::Actor(std::string name, ExecutorBody body)  : name(std::move(name)), body(body), executorQueue(),
-executor(new Executor([this, body](int command, const std::vector<unsigned char> &params)
+Actor::Actor(std::string name, ActorBody body)  : name(std::move(name)), body(body), executorQueue(),
+executor(new Executor([this, body](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
 		{ return this->actorExecutor(body, command, params); }, &executorQueue)) { }
 
 Actor::~Actor() = default;
@@ -45,13 +45,13 @@ void Actor::post(int i, std::vector<unsigned char> params) {
 
 void Actor::restart(void) {
 	executor.reset(); //stop the current thread. Ensure that the new thread does not receive the shutdown
-	executor.reset(new Executor([this](int command, const std::vector<unsigned char> &params)
+	executor.reset(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
 			{ return this->actorExecutor(this->body, command, params); }, &executorQueue));
 }
 
 std::string Actor::getName(void) const { return name; }
 
-ActorRef Actor::createActorRef(std::string name, ExecutorBody body) { return std::make_shared<Actor>(name, body); }
+ActorRef Actor::createActorRef(std::string name, ActorBody body) { return std::make_shared<Actor>(name, body); }
 
 void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
 	std::lock(monitor->monitorMutex, monitored->monitorMutex);
@@ -89,7 +89,7 @@ void Actor::notifyError(int e) { throw std::runtime_error("error"); }
 void Actor::postError(int i, const std::string &actorName) {
 	executorQueue.putMessage(MessageQueue::type::ERROR_MESSAGE, i, std::vector<unsigned char>(actorName.begin(), actorName.end()));
 }
-returnCode Actor::actorExecutor(ExecutorBody body, int command, const std::vector<unsigned char> &params) {
+returnCode Actor::actorExecutor(ActorBody body, int command, const std::vector<unsigned char> &params) {
 	if (command == 0x69) {
 		std::lock_guard<std::mutex> l(monitorMutex);
 
