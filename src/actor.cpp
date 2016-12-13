@@ -89,15 +89,15 @@ void Actor::notifyError(int e) { throw std::runtime_error("error"); }
 void Actor::postError(int i, const std::string &actorName) {
 	executorQueue.putMessage(MessageQueue::type::ERROR_MESSAGE, i, std::vector<unsigned char>(actorName.begin(), actorName.end()));
 }
-returnCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int command, const std::vector<unsigned char> &params) {
-	if (command == 0x69) {
+returnCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int code, const std::vector<unsigned char> &params) {
+	if (MessageQueue::type::ERROR_MESSAGE == type) {
 		std::lock_guard<std::mutex> l(monitorMutex);
 
 		monitored.restartOne(std::string(params.begin(), params.end()));
 		return returnCode::ok;
 	}
 	try {
-		return body(command, params);
+		return body(code, params);
 	} catch (std::exception e) {
 		ActorRef supervisorRef = supervisor.lock();
 		supervisorRef->postError(0x69, name);
