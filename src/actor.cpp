@@ -31,7 +31,7 @@
 
 Actor::Actor(std::string name, ActorBody body)  : name(std::move(name)), body(body), executorQueue(),
 executor(new Executor([this, body](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
-		{ return this->actorExecutor(body, command, params); }, &executorQueue)) { }
+		{ return this->actorExecutor(body, type, command, params); }, &executorQueue)) { }
 
 Actor::~Actor() = default;
 
@@ -46,7 +46,7 @@ void Actor::post(int i, std::vector<unsigned char> params) {
 void Actor::restart(void) {
 	executor.reset(); //stop the current thread. Ensure that the new thread does not receive the shutdown
 	executor.reset(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
-			{ return this->actorExecutor(this->body, command, params); }, &executorQueue));
+			{ return this->actorExecutor(this->body, type, command, params); }, &executorQueue));
 }
 
 std::string Actor::getName(void) const { return name; }
@@ -89,7 +89,7 @@ void Actor::notifyError(int e) { throw std::runtime_error("error"); }
 void Actor::postError(int i, const std::string &actorName) {
 	executorQueue.putMessage(MessageQueue::type::ERROR_MESSAGE, i, std::vector<unsigned char>(actorName.begin(), actorName.end()));
 }
-returnCode Actor::actorExecutor(ActorBody body, int command, const std::vector<unsigned char> &params) {
+returnCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int command, const std::vector<unsigned char> &params) {
 	if (command == 0x69) {
 		std::lock_guard<std::mutex> l(monitorMutex);
 

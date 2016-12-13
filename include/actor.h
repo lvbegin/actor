@@ -68,7 +68,7 @@ private:
 	ActorBody body;
 	MessageQueue executorQueue;
 	std::unique_ptr<Executor> executor;
-	returnCode actorExecutor(ActorBody body, int command, const std::vector<unsigned char> &params);
+	returnCode actorExecutor(ActorBody body, MessageQueue::type type, int command, const std::vector<unsigned char> &params);
 	void postError(int i, const std::string &actorName);
 
 };
