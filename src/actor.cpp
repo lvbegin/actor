@@ -30,8 +30,8 @@
 #include <actor.h>
 
 Actor::Actor(std::string name, ActorBody body)  : name(std::move(name)), body(body), executorQueue(),
-executor(new Executor([this, body](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
-		{ return this->actorExecutor(body, type, command, params); }, &executorQueue)) { }
+executor(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
+		{ return this->actorExecutor(this->body, type, command, params); }, &executorQueue)) { }
 
 Actor::~Actor() = default;
 
