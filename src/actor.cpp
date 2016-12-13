@@ -35,9 +35,13 @@ executor(new Executor([this, body](int command, const std::vector<unsigned char>
 
 Actor::~Actor() = default;
 
-returnCode Actor::postSync(int i, std::vector<unsigned char> params) { return executorQueue.putMessage(i, params).get(); }
+returnCode Actor::postSync(int i, std::vector<unsigned char> params) {
+	return executorQueue.putMessage(MessageQueue::type::COMMAND_MESSAGE, i, params).get();
+}
 
-void Actor::post(int i, std::vector<unsigned char> params) { executorQueue.putMessage(i, params); }
+void Actor::post(int i, std::vector<unsigned char> params) {
+	executorQueue.putMessage(MessageQueue::type::COMMAND_MESSAGE, i, params);
+}
 
 void Actor::restart(void) {
 	executor.reset(); //stop the current thread. Ensure that the new thread does not receive the shutdown
@@ -82,6 +86,9 @@ void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
 
 void Actor::notifyError(int e) { throw std::runtime_error("error"); }
 
+void Actor::postError(int i, const std::string &actorName) {
+	executorQueue.putMessage(MessageQueue::type::ERROR_MESSAGE, i, std::vector<unsigned char>(actorName.begin(), actorName.end()));
+}
 returnCode Actor::actorExecutor(ExecutorBody body, int command, const std::vector<unsigned char> &params) {
 	if (command == 0x69) {
 		std::lock_guard<std::mutex> l(monitorMutex);
@@ -93,7 +100,7 @@ returnCode Actor::actorExecutor(ExecutorBody body, int command, const std::vecto
 		return body(command, params);
 	} catch (std::exception e) {
 		ActorRef supervisorRef = supervisor.lock();
-		supervisorRef->post(0x69, std::vector<unsigned char>(name.begin(), name.end()));
+		supervisorRef->postError(0x69, name);
 		return returnCode::error;
 	}
 }

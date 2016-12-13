@@ -30,17 +30,16 @@
 #include <messageQueue.h>
 
 
-MessageQueue::message::message(int c, std::vector<unsigned char> params) : command(c), params(params) {}
+MessageQueue::message::message(MessageQueue::type type, int code, std::vector<unsigned char> params) : type(type), code(code), params(params) {}
 
 MessageQueue::message::~message() = default;
-
-MessageQueue::message::message(struct message &&m) : command(m.command), params(std::move(m.params)), promise(std::move(m.promise)) { }
+MessageQueue::message::message(struct message &&m) = default;
 
 MessageQueue::MessageQueue() = default;
 MessageQueue::~MessageQueue() = default;
 
-std::future<returnCode> MessageQueue::putMessage(int i, std::vector<unsigned char> params) {
-	struct message  m(i, std::move(params));
+std::future<returnCode> MessageQueue::putMessage(MessageQueue::type type, int code, std::vector<unsigned char> params) {
+	struct message  m(type, code, std::move(params));
 	auto future = m.promise.get_future();
 	queue.post(std::move(m));
 	return future;

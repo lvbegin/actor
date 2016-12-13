@@ -33,18 +33,18 @@
 Executor::Executor(ExecutorBody body, MessageQueue *queue)  : messageQueue(queue), thread([this, body]() { executeBody(body); }) { }
 
 Executor::~Executor() {
-	messageQueue->putMessage(COMMAND_SHUTDOWN);
+	messageQueue->putMessage(MessageQueue::type::COMMAND_MESSAGE, COMMAND_SHUTDOWN);
 	thread.join();
 };
 
 void Executor::executeBody(ExecutorBody body) {
 	while (true) {
 		struct MessageQueue::message message(messageQueue->getMessage());
-		if (COMMAND_SHUTDOWN == message.command) {
+		if (COMMAND_SHUTDOWN == message.code) {
 			message.promise.set_value(returnCode::shutdown);
 			return;
 		}
-		switch (body(message.command, std::move(message.params))) {
+		switch (body(message.code, std::move(message.params))) {
 		case returnCode::ok:
 			message.promise.set_value(returnCode::ok);
 			break;

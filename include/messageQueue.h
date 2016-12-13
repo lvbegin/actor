@@ -35,13 +35,16 @@
 
 #include <future>
 
+
 class MessageQueue {
 public:
+	enum class type:uint32_t { COMMAND_MESSAGE, ERROR_MESSAGE, RESTART_MESSAGE, };
 	struct message {
-		int command;
+		MessageQueue::type type;
+		int code;
 		std::vector<unsigned char> params;
 		std::promise<returnCode> promise;
-		message(int c, std::vector<unsigned char> params);
+		message(MessageQueue::type type, int c, std::vector<unsigned char> params);
 		~message();
 		message(struct message &&m);
 		message (const struct message &m) = delete;
@@ -49,7 +52,7 @@ public:
 	};
 	MessageQueue();
 	~MessageQueue();
-	std::future<returnCode> putMessage(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
+	std::future<returnCode> putMessage(MessageQueue::type type, int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	message getMessage(void);
 private:
 	SharedQueue<message> queue;
