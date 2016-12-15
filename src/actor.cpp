@@ -55,6 +55,14 @@ std::string Actor::getName(void) const { return name; }
 ActorRef Actor::createActorRef(std::string name, ActorBody body) { return std::make_shared<Actor>(name, body); }
 
 void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
+	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.addActor(monitored); } );
+}
+
+void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
+	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.removeActor(monitored->getName()); } );
+}
+
+void Actor::doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std::function<void(void)> op) {
 	std::lock(monitor->monitorMutex, monitored->monitorMutex);
     std::lock_guard<std::mutex> l1(monitor->monitorMutex, std::adopt_lock);
     std::lock_guard<std::mutex> l2(monitored->monitorMutex, std::adopt_lock);
@@ -62,27 +70,11 @@ void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
     auto tmp = monitored->supervisor;
     monitored->supervisor = std::weak_ptr<Actor>(monitor);
     try {
-    	monitor->monitored.addActor(monitored);
+    	op();
     } catch (std::exception e) {
     	monitored->supervisor = tmp;
     	throw e;
     }
-}
-
-void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
-	std::lock(monitor->monitorMutex, monitored->monitorMutex);
-    std::lock_guard<std::mutex> l1(monitor->monitorMutex, std::adopt_lock);
-    std::lock_guard<std::mutex> l2(monitored->monitorMutex, std::adopt_lock);
-
-    auto tmp = monitored->supervisor;
-	monitored->supervisor.reset();
-
-	try {
-		monitor->monitored.removeActor(monitored->getName());
-	} catch (std::exception e) {
-    	monitored->supervisor = tmp;
-    	throw e;
-	}
 }
 
 void Actor::notifyError(int e) { throw ActorException(e, "error"); }

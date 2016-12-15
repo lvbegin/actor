@@ -71,7 +71,7 @@ private:
 	std::unique_ptr<Executor> executor;
 	returnCode actorExecutor(ActorBody body, MessageQueue::type type, int command, const std::vector<unsigned char> &params);
 	void postError(int i, const std::string &actorName);
-
+	static void doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std::function<void(void)> op);
 };
 
 #endif
