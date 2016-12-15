@@ -304,7 +304,7 @@ static int supervisorRestartsActorTest() {
 }
 
 static int actorNotifiesErrorToSupervisorTest() {
-	std::cout << "supervisorRestartsActorTest" << std::endl;
+	std::cout << "actorNotifiesErrorToSupervisorTest" << std::endl;
 	static int someCommand = 0xaa;
 	auto supervisor = Actor::createActorRef("supervisor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
 	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) {
@@ -319,6 +319,35 @@ static int actorNotifiesErrorToSupervisorTest() {
 	Actor::unregisterActor(supervisor, supervised);
 	return 0;
 }
+
+static int actorDoesNothingIfNoSupervisorTest() {
+	std::cout << "actorDoesNothingIfNoSupervisorTest" << std::endl;
+	static int someCommand = 0xaa;
+	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) {
+		Actor::notifyError(0x69);
+		return returnCode::ok;
+	 });
+	if (returnCode::error != supervised->postSync(someCommand))
+		return 1;
+	if (returnCode::error != supervised->postSync(someCommand))
+		return 1;
+	return 0;
+}
+
+static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
+	std::cout << "actorDoesNothingIfNoSupervisorAndExceptionThrownTest" << std::endl;
+	static int someCommand = 0xaa;
+	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) {
+		throw std::runtime_error("some error");
+		return returnCode::ok; //remove that ?
+	 });
+	if (returnCode::error != supervised->postSync(someCommand))
+		return 1;
+	if (returnCode::error != supervised->postSync(someCommand))
+		return 1;
+	return 0;
+}
+
 
 int main() {
 
@@ -338,6 +367,8 @@ int main() {
 	nbFailure += initSupervisionTest();
 	nbFailure += supervisorRestartsActorTest();
 	nbFailure += actorNotifiesErrorToSupervisorTest();
+	nbFailure += actorDoesNothingIfNoSupervisorTest();
+	nbFailure += actorDoesNothingIfNoSupervisorAndExceptionThrownTest();
 	std::cout << ((nbFailure) ? "Failure" : "Success") << std::endl;
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

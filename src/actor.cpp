@@ -28,6 +28,7 @@
  */
 
 #include <actor.h>
+#include <actorException.h>
 
 Actor::Actor(std::string name, ActorBody body)  : name(std::move(name)), body(body), executorQueue(),
 executor(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
@@ -84,11 +85,12 @@ void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
 	}
 }
 
-void Actor::notifyError(int e) { throw std::runtime_error("error"); }
+void Actor::notifyError(int e) { throw ActorException(e, "error"); }
 
 void Actor::postError(int i, const std::string &actorName) {
 	executorQueue.putMessage(MessageQueue::type::ERROR_MESSAGE, i, std::vector<unsigned char>(actorName.begin(), actorName.end()));
 }
+
 returnCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int code, const std::vector<unsigned char> &params) {
 	if (MessageQueue::type::ERROR_MESSAGE == type) {
 		std::lock_guard<std::mutex> l(monitorMutex);
@@ -98,9 +100,15 @@ returnCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int cod
 	}
 	try {
 		return body(code, params);
+	} catch (ActorException e) {
+		ActorRef supervisorRef = supervisor.lock();
+		if (nullptr != supervisorRef.get())
+			supervisorRef->postError(e.getErrorCode(), name);
+		return returnCode::error;
 	} catch (std::exception e) {
 		ActorRef supervisorRef = supervisor.lock();
-		supervisorRef->postError(exceptionThrowError, name);
+		if (nullptr != supervisorRef.get())
+			supervisorRef->postError(exceptionThrowError, name);
 		return returnCode::error;
 	}
 }
