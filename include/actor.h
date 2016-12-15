@@ -61,6 +61,7 @@ public:
 	static void unregisterActor(ActorRef monitor, ActorRef monitored);
 
 private:
+	static const int exceptionThrowError = 0x00;
 	const std::string name;
 	std::mutex monitorMutex;
 	Controller<ActorRef> monitored;

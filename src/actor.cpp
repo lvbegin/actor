@@ -100,7 +100,7 @@ returnCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int cod
 		return body(code, params);
 	} catch (std::exception e) {
 		ActorRef supervisorRef = supervisor.lock();
-		supervisorRef->postError(0x69, name);
+		supervisorRef->postError(exceptionThrowError, name);
 		return returnCode::error;
 	}
 }
