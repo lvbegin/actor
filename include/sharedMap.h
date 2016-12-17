@@ -42,9 +42,15 @@ public:
 	SharedMap() = default;
 	~SharedMap() = default;
 
+	SharedMap(const SharedMap &m) = delete;
+	SharedMap &operator=(const SharedMap &m) = delete;
+	SharedMap(SharedMap &&m) = delete;
+	SharedMap &operator=(SharedMap &&m) = delete;
+
 	template <typename L, typename M>
 	void insert(L&& key, M &&value) {
 		std::unique_lock<std::mutex> l(mutex);
+
 		if (map.end() != map.find(key))
 			THROW(std::runtime_error, "actor already exist.");
 		map.insert(std::make_pair(std::forward<L>(key), std::forward<M>(value)));
@@ -57,6 +63,7 @@ public:
 	}
 	void erase(K key) {
 		std::unique_lock<std::mutex> l(mutex);
+
 		const auto it = map.find(key);
 		if (map.end() == it)
 			THROW(std::runtime_error, "element to erase does not exist.");
@@ -64,6 +71,7 @@ public:
 	}
 	T find (K key) const {
 		std::unique_lock<std::mutex> l(mutex);
+
 		const auto it = map.find(key);
 		if (map.end() == it)
 			THROW(std::out_of_range, "element not found.");
