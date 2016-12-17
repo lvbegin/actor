@@ -77,7 +77,7 @@ void Actor::doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std:
     }
 }
 
-void Actor::notifyError(int e) { throw ActorException(e, "error"); }
+void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
 void Actor::postError(int i, const std::string &actorName) {
 	executorQueue.putMessage(MessageQueue::type::ERROR_MESSAGE, i, std::vector<unsigned char>(actorName.begin(), actorName.end()));
