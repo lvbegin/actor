@@ -45,15 +45,15 @@ void Executor::executeBody(ExecutorBody body) {
 			return;
 		}
 		switch (body(message.type, message.code, std::move(message.params))) {
-		case returnCode::ok:
-			message.promise.set_value(returnCode::ok);
-			break;
-		case returnCode::shutdown:
-			message.promise.set_value(returnCode::shutdown);
-			return;
-		default:
-			message.promise.set_value(returnCode::error);
-			break;
+			case returnCode::ok:
+				message.promise.set_value(returnCode::ok);
+				break;
+			case returnCode::shutdown:
+				message.promise.set_value(returnCode::shutdown);
+				return;
+			default:
+				message.promise.set_value(returnCode::error);
+				break;
 		}
 	}
 }
