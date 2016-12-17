@@ -74,7 +74,7 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 }
 
 std::string ActorRegistry::addReference(std::string host, uint16_t port) {
-	auto connection = ClientSocket::openHostConnection(host, port);
+	const auto connection = ClientSocket::openHostConnection(host, port);
 	connection.writeInt(RegistryCommand::REGISTER_REGISTRY).writeString(name);
 	//should read status...and react in consequence: what if failure returned?
 	const std::string otherName = connection.readString();
