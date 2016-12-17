@@ -57,14 +57,14 @@ public:
 	}
 	void erase(K key) {
 		std::unique_lock<std::mutex> l(mutex);
-		auto it = map.find(key);
+		const auto it = map.find(key);
 		if (map.end() == it)
 			THROW(std::runtime_error, "element to erase does not exist.");
 		map.erase(it);
 	}
 	T find (K key) const {
 		std::unique_lock<std::mutex> l(mutex);
-		auto it = map.find(key);
+		const auto it = map.find(key);
 		if (map.end() == it)
 			THROW(std::out_of_range, "element not found.");
 		return it->second;
