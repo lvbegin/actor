@@ -32,7 +32,6 @@
 #include <proxyServer.h>
 #include <actorRegistry.h>
 #include <clientSocket.h>
-#include <executor.h> // to remove
 
 #include <cstdlib>
 #include <iostream>
