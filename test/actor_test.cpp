@@ -160,6 +160,24 @@ static int registryAddReferenceTest(void) {
 	return name == name2 ? 0 : 1;
 }
 
+static int registryAddReferenceOverrideExistingOneTest(void) {
+	std::cout << "registryAddReferenceOverrideExistingOneTest" << std::endl;
+	static const std::string name1("name1");
+	static const std::string name2("name2");
+	static const uint16_t port1 = 6001;
+	static const uint16_t port2 = 6002;
+	static const uint16_t port3 = 6003;
+	ActorRegistry registry1(name1, port1);
+	ActorRegistry registry2(name2, port2);
+	ActorRegistry registry3(name1, port3);
+
+	ensureRegistryStarted(port1);
+	ensureRegistryStarted(port2);
+	registry1.addReference("localhost", port2);
+	std::string name = registry3.addReference("localhost", port2);
+	return name == name2 ? 0 : 1;
+}
+
 static int registeryAddActorAndFindItBackTest() {
 	std::cout << "registeryAddActorAndFindItBackTest" << std::endl;
 
@@ -350,7 +368,6 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 
 
 int main() {
-
 	int nbFailure = basicActorTest();
 	nbFailure += basicActorWithParamsTest();
 	nbFailure += proxyTest();
@@ -359,6 +376,7 @@ int main() {
 	nbFailure += registryAddActorTest();
 	nbFailure += registryAddActorAndRemoveTest();
 	nbFailure += registryAddReferenceTest();
+	nbFailure += registryAddReferenceOverrideExistingOneTest();
 	nbFailure += registeryAddActorAndFindItBackTest();
 	nbFailure += registeryFindUnknownActorTest();
 	nbFailure += findActorFromOtherRegistryTest();
