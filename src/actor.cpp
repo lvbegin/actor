@@ -67,12 +67,12 @@ void Actor::doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std:
     std::lock_guard<std::mutex> l1(monitor->monitorMutex, std::adopt_lock);
     std::lock_guard<std::mutex> l2(monitored->monitorMutex, std::adopt_lock);
 
-    auto tmp = monitored->supervisor;
+    auto tmp = std::move(monitored->supervisor);
     monitored->supervisor = std::weak_ptr<Actor>(monitor);
     try {
     	op();
     } catch (std::exception e) {
-    	monitored->supervisor = tmp;
+    	monitored->supervisor = std::move(tmp);
     	throw e;
     }
 }
