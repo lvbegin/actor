@@ -37,7 +37,7 @@
 #include <thread>
 #include <future>
 
-using ExecutorBody = std::function<returnCode(MessageQueue::type, int, const std::vector<unsigned char> &)>;
+using ExecutorBody = std::function<ReturnCode(MessageQueue::type, int, const std::vector<unsigned char> &)>;
 
 class Executor {
 public:

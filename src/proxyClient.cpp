@@ -34,9 +34,9 @@
 proxyClient::proxyClient(Connection connection) : connection(std::move(connection)) { }
 proxyClient::~proxyClient() = default;
 
-returnCode proxyClient::postSync(int command, std::vector<unsigned char> params) {
+ReturnCode proxyClient::postSync(int command, std::vector<unsigned char> params) {
 	connection.writeInt(postType::Sync).writeInt(command).writeRawData(params);
-	return connection.readInt<returnCode>();
+	return connection.readInt<ReturnCode>();
 }
 
 void proxyClient::post(int command, std::vector<unsigned char> params) { connection.writeInt(postType::Async).writeInt(command).writeRawData(params); }

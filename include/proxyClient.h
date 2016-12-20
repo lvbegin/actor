@@ -40,7 +40,7 @@ public:
 	proxyClient(Connection connection);
 	~proxyClient();
 
-	returnCode postSync(int command, std::vector<unsigned char> params = std::vector<unsigned char>());
+	ReturnCode postSync(int command, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void post(int command, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void restart(void);
 private:

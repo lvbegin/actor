@@ -38,7 +38,7 @@ MessageQueue::message::message(struct message &&m) = default;
 MessageQueue::MessageQueue() = default;
 MessageQueue::~MessageQueue() = default;
 
-std::future<returnCode> MessageQueue::putMessage(MessageQueue::type type, int code, std::vector<unsigned char> params) {
+std::future<ReturnCode> MessageQueue::putMessage(MessageQueue::type type, int code, std::vector<unsigned char> params) {
 	struct message  m(type, code, std::move(params));
 	auto future = m.promise.get_future();
 	queue.post(std::move(m));

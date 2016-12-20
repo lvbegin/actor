@@ -43,7 +43,7 @@ public:
 		MessageQueue::type type;
 		int code;
 		std::vector<unsigned char> params;
-		std::promise<returnCode> promise;
+		std::promise<ReturnCode> promise;
 		message(MessageQueue::type type, int c, std::vector<unsigned char> params);
 		~message();
 		message(struct message &&m);
@@ -52,7 +52,7 @@ public:
 	};
 	MessageQueue();
 	~MessageQueue();
-	std::future<returnCode> putMessage(MessageQueue::type type, int i, std::vector<unsigned char> params = std::vector<unsigned char>());
+	std::future<ReturnCode> putMessage(MessageQueue::type type, int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	message getMessage(void);
 private:
 	SharedQueue<message> queue;

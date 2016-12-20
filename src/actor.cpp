@@ -36,7 +36,7 @@ Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy) 
 
 Actor::~Actor() = default;
 
-returnCode Actor::postSync(int i, std::vector<unsigned char> params) {
+ReturnCode Actor::postSync(int i, std::vector<unsigned char> params) {
 	return executorQueue.putMessage(MessageQueue::type::COMMAND_MESSAGE, i, params).get();
 }
 
@@ -83,29 +83,29 @@ void Actor::postError(int i, const std::string &actorName) {
 	executorQueue.putMessage(MessageQueue::type::ERROR_MESSAGE, i, std::vector<unsigned char>(actorName.begin(), actorName.end()));
 }
 
-returnCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int code, const std::vector<unsigned char> &params) {
+ReturnCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int code, const std::vector<unsigned char> &params) {
 	if (MessageQueue::type::ERROR_MESSAGE == type)
 		return doSupervisorOperation(code, params);
 	return executeActorBody(body, code, params);
 }
 
-returnCode Actor::executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params) {
+ReturnCode Actor::executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params) {
 	try {
 		return body(code, params);
 	} catch (ActorException e) {
 		ActorRef supervisorRef = supervisor.lock();
 		if (nullptr != supervisorRef.get())
 			supervisorRef->postError(e.getErrorCode(), name);
-		return returnCode::error;
+		return ReturnCode::error;
 	} catch (std::exception e) {
 		ActorRef supervisorRef = supervisor.lock();
 		if (nullptr != supervisorRef.get())
 			supervisorRef->postError(EXCEPTION_THROWN_ERROR, name);
-		return returnCode::error;
+		return ReturnCode::error;
 	}
 }
 
-returnCode Actor::doSupervisorOperation(int code, const std::vector<unsigned char> &params) {
+ReturnCode Actor::doSupervisorOperation(int code, const std::vector<unsigned char> &params) {
 	std::lock_guard<std::mutex> l(monitorMutex);
 
 	switch (restartStrategy())
@@ -121,5 +121,5 @@ returnCode Actor::doSupervisorOperation(int code, const std::vector<unsigned cha
 			throw std::runtime_error("unexpected case.");
 
 	}
-	return returnCode::ok;
+	return ReturnCode::ok;
 }
