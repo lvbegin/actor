@@ -84,24 +84,12 @@ void Actor::postError(int i, const std::string &actorName) {
 }
 
 returnCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int code, const std::vector<unsigned char> &params) {
-	if (MessageQueue::type::ERROR_MESSAGE == type) {
-		std::lock_guard<std::mutex> l(monitorMutex);
+	if (MessageQueue::type::ERROR_MESSAGE == type)
+		return doSupervisorOperation(code, params);
+	return executeActorBody(body, code, params);
+}
 
-		switch (restartStrategy())
-		{
-			case RestartType::RESTART_ONE:
-				monitored.restartOne(std::string(params.begin(), params.end()));
-				break;
-			case RestartType::RESTART_ALL:
-				monitored.restartAll();
-				break;
-			default:
-				/* should escalate to supervisor */
-				throw std::runtime_error("unexpected case.");
-
-		}
-		return returnCode::ok;
-	}
+returnCode Actor::executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params) {
 	try {
 		return body(code, params);
 	} catch (ActorException e) {
@@ -115,4 +103,23 @@ returnCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int cod
 			supervisorRef->postError(EXCEPTION_THROWN_ERROR, name);
 		return returnCode::error;
 	}
+}
+
+returnCode Actor::doSupervisorOperation(int code, const std::vector<unsigned char> &params) {
+	std::lock_guard<std::mutex> l(monitorMutex);
+
+	switch (restartStrategy())
+	{
+		case RestartType::RESTART_ONE:
+			monitored.restartOne(std::string(params.begin(), params.end()));
+			break;
+		case RestartType::RESTART_ALL:
+			monitored.restartAll();
+			break;
+		default:
+			/* should escalate to supervisor */
+			throw std::runtime_error("unexpected case.");
+
+	}
+	return returnCode::ok;
 }
