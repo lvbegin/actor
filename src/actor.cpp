@@ -30,9 +30,9 @@
 #include <actor.h>
 #include <actorException.h>
 
-Actor::Actor(std::string name, ActorBody body)  : name(std::move(name)), body(body), executorQueue(),
-executor(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
-		{ return this->actorExecutor(this->body, type, command, params); }, &executorQueue)) { }
+Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy)  : name(std::move(name)), restartStrategy(restartStrategy), body(body), executorQueue(),
+		executor(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
+				{ return this->actorExecutor(this->body, type, command, params); }, &executorQueue)) { }
 
 Actor::~Actor() = default;
 
@@ -52,7 +52,7 @@ void Actor::restart(void) {
 
 std::string Actor::getName(void) const { return name; }
 
-ActorRef Actor::createActorRef(std::string name, ActorBody body) { return std::make_shared<Actor>(name, body); }
+ActorRef Actor::createActorRef(std::string name, ActorBody body, RestartStrategy restartStragy) { return std::make_shared<Actor>(name, body, restartStragy); }
 
 void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
 	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.addActor(monitored); } );
@@ -87,7 +87,19 @@ returnCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int cod
 	if (MessageQueue::type::ERROR_MESSAGE == type) {
 		std::lock_guard<std::mutex> l(monitorMutex);
 
-		monitored.restartOne(std::string(params.begin(), params.end()));
+		switch (restartStrategy())
+		{
+			case RestartType::RESTART_ONE:
+				monitored.restartOne(std::string(params.begin(), params.end()));
+				break;
+			case RestartType::RESTART_ALL:
+				monitored.restartAll();
+				break;
+			default:
+				/* should escalate to supervisor */
+				throw std::runtime_error("unexpected case.");
+
+		}
 		return returnCode::ok;
 	}
 	try {

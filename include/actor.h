@@ -33,6 +33,7 @@
 #include <AbstractActor.h>
 #include <Controller.h>
 #include <executor.h>
+#include <restartStragegy.h>
 
 #include <functional>
 #include <memory>
@@ -45,24 +46,27 @@ using ActorBody = std::function<returnCode(int, const std::vector<unsigned char>
 
 class Actor : public AbstractActor {
 public:
-	Actor(std::string name, ActorBody body);
+	Actor(std::string name, ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);
+
 	~Actor();
 
 	Actor(const Actor &a) = delete;
 	Actor &operator=(const Actor &a) = delete;
+
 	returnCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void restart(void);
 	std::string getName(void) const;
 
 	static void notifyError(int e);
-	static ActorRef createActorRef(std::string name, ActorBody body);
+	static ActorRef createActorRef(std::string name, ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);
 	static void registerActor(ActorRef monitor, ActorRef monitored);
 	static void unregisterActor(ActorRef monitor, ActorRef monitored);
 
 private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
 	const std::string name;
+	const RestartStrategy restartStrategy;
 	std::mutex monitorMutex;
 	Controller<ActorRef> monitored;
 	std::weak_ptr<Actor> supervisor;

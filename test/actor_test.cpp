@@ -320,20 +320,28 @@ static int supervisorRestartsActorTest() {
 	return (exceptionThrown) ? 0 : 1;
 }
 
+/* Improve that test by checking that the Actors restarted.
+ * Also check that the second Actor was not restarted. */
 static int actorNotifiesErrorToSupervisorTest() {
 	std::cout << "actorNotifiesErrorToSupervisorTest" << std::endl;
 	static int someCommand = 0xaa;
 	auto supervisor = Actor::createActorRef("supervisor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; });
-	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) {
+	auto supervised1 = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) {
 		Actor::notifyError(0x69);
 		return returnCode::ok;
 	 });
-	Actor::registerActor(supervisor, supervised);
-	if (returnCode::error != supervised->postSync(someCommand))
+	auto supervised2 = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) {
+		return returnCode::ok;
+	 });
+
+	Actor::registerActor(supervisor, supervised1);
+	Actor::registerActor(supervisor, supervised2);
+
+	if (returnCode::error != supervised1->postSync(someCommand))
 		return 1;
-	if (returnCode::error != supervised->postSync(someCommand))
+	if (returnCode::error != supervised1->postSync(someCommand))
 		return 1;
-	Actor::unregisterActor(supervisor, supervised);
+	Actor::unregisterActor(supervisor, supervised1);
 	return 0;
 }
 
@@ -365,6 +373,35 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 	return 0;
 }
 
+/* Improve that test by checking that the Actors restarted */
+static int restartAllActorBySupervisorTest() {
+	std::cout << "actorNotifiesErrorToSupervisorTest" << std::endl;
+	static int someCommand = 0xaa;
+	auto supervisor = Actor::createActorRef("supervisor",
+			[](int i, const std::vector<unsigned char> &params) { /* do something */ return returnCode::ok; },
+			[](void) { return RestartType::RESTART_ALL; });
+	auto supervised1 = Actor::createActorRef("supervised1", [](int i, const std::vector<unsigned char> &params) {
+		Actor::notifyError(0x69);
+		return returnCode::ok;
+	 });
+	auto supervised2 = Actor::createActorRef("supervised2", [](int i, const std::vector<unsigned char> &params) {
+		return returnCode::ok;
+	 });
+
+	Actor::registerActor(supervisor, supervised1);
+	Actor::registerActor(supervisor, supervised2);
+
+	if (returnCode::error != supervised1->postSync(someCommand))
+		return 1;
+	if (returnCode::error != supervised1->postSync(someCommand))
+		return 1;
+	if (returnCode::ok != supervised2->postSync(someCommand))
+		return 1;
+	Actor::unregisterActor(supervisor, supervised1);
+	Actor::unregisterActor(supervisor, supervised2);
+	return 0;
+}
+
 
 int main() {
 	int nbFailure = basicActorTest();
@@ -386,6 +423,7 @@ int main() {
 	nbFailure += actorNotifiesErrorToSupervisorTest();
 	nbFailure += actorDoesNothingIfNoSupervisorTest();
 	nbFailure += actorDoesNothingIfNoSupervisorAndExceptionThrownTest();
+	nbFailure += restartAllActorBySupervisorTest();
 	std::cout << ((nbFailure) ? "Failure" : "Success") << std::endl;
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }
