@@ -46,8 +46,9 @@ using ActorBody = std::function<ReturnCode(int, const std::vector<unsigned char>
 
 class Actor : public AbstractActor {
 public:
-	Actor(std::string name, ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);
-
+	Actor(std::string name, ActorBody body, RestartStrategy restartStrategy = defaultRestartStrategy);
+	Actor(std::string name, ActorBody body,
+					std::function<void(void)> atRestart, RestartStrategy restartStrategy = defaultRestartStrategy);
 	~Actor();
 
 	Actor(const Actor &a) = delete;
@@ -60,16 +61,20 @@ public:
 
 	static void notifyError(int e);
 	static ActorRef createActorRef(std::string name, ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);
+	static ActorRef createActorRef(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStragy = defaultRestartStrategy);
+
 	static void registerActor(ActorRef monitor, ActorRef monitored);
 	static void unregisterActor(ActorRef monitor, ActorRef monitored);
 
 private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
+	static std::function<void(void)> doNothing;
 	const std::string name;
 	const RestartStrategy restartStrategy;
 	std::mutex monitorMutex;
 	Controller<ActorRef> monitored;
 	std::weak_ptr<Actor> supervisor;
+	std::function<void(void)> atRestart;
 	ActorBody body;
 	MessageQueue executorQueue;
 	std::unique_ptr<Executor> executor;

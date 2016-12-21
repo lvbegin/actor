@@ -30,9 +30,14 @@
 #include <actor.h>
 #include <actorException.h>
 
-Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy)  : name(std::move(name)), restartStrategy(restartStrategy), body(body), executorQueue(),
-		executor(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
-				{ return this->actorExecutor(this->body, type, command, params); }, &executorQueue)) { }
+std::function<void(void)> Actor::doNothing = [](void) {};
+
+Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy)  : Actor(name, body, Actor::doNothing, restartStrategy) {}
+
+Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
+						name(std::move(name)), restartStrategy(restartStrategy), atRestart(atRestart), body(body), executorQueue(),
+						executor(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
+								{ return this->actorExecutor(this->body, type, command, params); }, &executorQueue)) { }
 
 Actor::~Actor() = default;
 
@@ -46,6 +51,7 @@ void Actor::post(int i, std::vector<unsigned char> params) {
 
 void Actor::restart(void) {
 	executor.reset(); //stop the current thread. Ensure that the new thread does not receive the shutdown
+	atRestart();
 	executor.reset(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
 			{ return this->actorExecutor(this->body, type, command, params); }, &executorQueue));
 }
@@ -53,6 +59,10 @@ void Actor::restart(void) {
 std::string Actor::getName(void) const { return name; }
 
 ActorRef Actor::createActorRef(std::string name, ActorBody body, RestartStrategy restartStragy) { return std::make_shared<Actor>(name, body, restartStragy); }
+
+ActorRef Actor::createActorRef(std::string name, ActorBody body, std::function<void(void)> atRestart,
+					RestartStrategy restartStragy) { return std::make_shared<Actor>(name, body, atRestart, restartStragy); }
+
 
 void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
 	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.addActor(monitored); } );
@@ -93,12 +103,12 @@ ReturnCode Actor::executeActorBody(ActorBody body, int code, const std::vector<u
 	try {
 		return body(code, params);
 	} catch (ActorException e) {
-		ActorRef supervisorRef = supervisor.lock();
+		const auto supervisorRef = supervisor.lock();
 		if (nullptr != supervisorRef.get())
 			supervisorRef->postError(e.getErrorCode(), name);
 		return ReturnCode::error;
 	} catch (std::exception e) {
-		ActorRef supervisorRef = supervisor.lock();
+		const auto supervisorRef = supervisor.lock();
 		if (nullptr != supervisorRef.get())
 			supervisorRef->postError(EXCEPTION_THROWN_ERROR, name);
 		return ReturnCode::error;

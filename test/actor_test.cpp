@@ -320,19 +320,24 @@ static int supervisorRestartsActorTest() {
 	return (exceptionThrown) ? 0 : 1;
 }
 
-/* Improve that test by checking that the Actors restarted.
- * Also check that the second Actor was not restarted. */
 static int actorNotifiesErrorToSupervisorTest() {
 	std::cout << "actorNotifiesErrorToSupervisorTest" << std::endl;
 	static int someCommand = 0xaa;
-	auto supervisor = Actor::createActorRef("supervisor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return ReturnCode::ok; });
-	auto supervised1 = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) {
-		Actor::notifyError(0x69);
-		return ReturnCode::ok;
-	 });
-	auto supervised2 = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) {
-		return ReturnCode::ok;
-	 });
+	bool supervisorRestarted = false;
+	bool supervised1Restarted = false;
+	bool supervised2Restarted = false;
+	auto supervisor = Actor::createActorRef("supervisor",
+			[](int i, const std::vector<unsigned char> &params) { /* do something */ return ReturnCode::ok; },
+			[&supervisorRestarted](void) { supervisorRestarted = true; } );
+	auto supervised1 = Actor::createActorRef("supervised1",
+			[](int i, const std::vector<unsigned char> &params) {
+				Actor::notifyError(0x69);
+				return ReturnCode::ok;
+	 	 	 },
+			 [&supervised1Restarted](void) { supervised1Restarted = true; } );
+	auto supervised2 = Actor::createActorRef("supervised2",
+			[](int i, const std::vector<unsigned char> &params) { return ReturnCode::ok; },
+			[&supervised2Restarted](void) { supervised2Restarted = true; } );
 
 	Actor::registerActor(supervisor, supervised1);
 	Actor::registerActor(supervisor, supervised2);
@@ -341,7 +346,13 @@ static int actorNotifiesErrorToSupervisorTest() {
 		return 1;
 	if (ReturnCode::error != supervised1->postSync(someCommand))
 		return 1;
+
+	for (int i = 0; i < 5 && !supervised1Restarted; i++)
+		sleep(1);
+	if (supervisorRestarted || !supervised1Restarted || supervised2Restarted)
+		return 1;
 	Actor::unregisterActor(supervisor, supervised1);
+
 	return 0;
 }
 
@@ -377,16 +388,22 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 static int restartAllActorBySupervisorTest() {
 	std::cout << "actorNotifiesErrorToSupervisorTest" << std::endl;
 	static int someCommand = 0xaa;
+	bool supervisorRestarted = false;
+	bool supervised1Restarted = false;
+	bool supervised2Restarted = false;
 	auto supervisor = Actor::createActorRef("supervisor",
 			[](int i, const std::vector<unsigned char> &params) { /* do something */ return ReturnCode::ok; },
+			[&supervisorRestarted](void) { supervisorRestarted = true; },
 			[](void) { return RestartType::RESTART_ALL; });
-	auto supervised1 = Actor::createActorRef("supervised1", [](int i, const std::vector<unsigned char> &params) {
-		Actor::notifyError(0x69);
-		return ReturnCode::ok;
-	 });
-	auto supervised2 = Actor::createActorRef("supervised2", [](int i, const std::vector<unsigned char> &params) {
-		return ReturnCode::ok;
-	 });
+	auto supervised1 = Actor::createActorRef("supervised1",
+			[](int i, const std::vector<unsigned char> &params) {
+				Actor::notifyError(0x69);
+				return ReturnCode::ok;
+	 	 	 },
+			 [&supervised1Restarted](void) { supervised1Restarted = true; });
+	auto supervised2 = Actor::createActorRef("supervised2",
+			[](int i, const std::vector<unsigned char> &params) { return ReturnCode::ok; },
+			[&supervised2Restarted](void) { supervised2Restarted = true; });
 
 	Actor::registerActor(supervisor, supervised1);
 	Actor::registerActor(supervisor, supervised2);
@@ -397,6 +414,12 @@ static int restartAllActorBySupervisorTest() {
 		return 1;
 	if (ReturnCode::ok != supervised2->postSync(someCommand))
 		return 1;
+	for (int i = 0; i < 5 && !supervised1Restarted && !supervised2Restarted; i++)
+		sleep(1);
+
+	if (supervisorRestarted || !supervised1Restarted || !supervised2Restarted)
+		return 1;
+
 	Actor::unregisterActor(supervisor, supervised1);
 	Actor::unregisterActor(supervisor, supervised2);
 	return 0;
