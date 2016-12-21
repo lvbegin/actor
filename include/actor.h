@@ -61,7 +61,7 @@ public:
 
 	static void notifyError(int e);
 	static ActorRef createActorRef(std::string name, ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);
-	static ActorRef createActorRef(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStragy = defaultRestartStrategy);
+	static ActorRef createActorRefWithRestart(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStragy = defaultRestartStrategy);
 
 	static void registerActor(ActorRef monitor, ActorRef monitored);
 	static void unregisterActor(ActorRef monitor, ActorRef monitored);

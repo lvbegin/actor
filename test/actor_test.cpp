@@ -326,16 +326,16 @@ static int actorNotifiesErrorToSupervisorTest() {
 	bool supervisorRestarted = false;
 	bool supervised1Restarted = false;
 	bool supervised2Restarted = false;
-	auto supervisor = Actor::createActorRef("supervisor",
+	auto supervisor = Actor::createActorRefWithRestart("supervisor",
 			[](int i, const std::vector<unsigned char> &params) { /* do something */ return ReturnCode::ok; },
 			[&supervisorRestarted](void) { supervisorRestarted = true; } );
-	auto supervised1 = Actor::createActorRef("supervised1",
+	auto supervised1 = Actor::createActorRefWithRestart("supervised1",
 			[](int i, const std::vector<unsigned char> &params) {
 				Actor::notifyError(0x69);
 				return ReturnCode::ok;
 	 	 	 },
 			 [&supervised1Restarted](void) { supervised1Restarted = true; } );
-	auto supervised2 = Actor::createActorRef("supervised2",
+	auto supervised2 = Actor::createActorRefWithRestart("supervised2",
 			[](int i, const std::vector<unsigned char> &params) { return ReturnCode::ok; },
 			[&supervised2Restarted](void) { supervised2Restarted = true; } );
 
@@ -391,17 +391,17 @@ static int restartAllActorBySupervisorTest() {
 	bool supervisorRestarted = false;
 	bool supervised1Restarted = false;
 	bool supervised2Restarted = false;
-	auto supervisor = Actor::createActorRef("supervisor",
+	auto supervisor = Actor::createActorRefWithRestart("supervisor",
 			[](int i, const std::vector<unsigned char> &params) { /* do something */ return ReturnCode::ok; },
 			[&supervisorRestarted](void) { supervisorRestarted = true; },
 			[](void) { return RestartType::RESTART_ALL; });
-	auto supervised1 = Actor::createActorRef("supervised1",
+	auto supervised1 = Actor::createActorRefWithRestart("supervised1",
 			[](int i, const std::vector<unsigned char> &params) {
 				Actor::notifyError(0x69);
 				return ReturnCode::ok;
 	 	 	 },
 			 [&supervised1Restarted](void) { supervised1Restarted = true; });
-	auto supervised2 = Actor::createActorRef("supervised2",
+	auto supervised2 = Actor::createActorRefWithRestart("supervised2",
 			[](int i, const std::vector<unsigned char> &params) { return ReturnCode::ok; },
 			[&supervised2Restarted](void) { supervised2Restarted = true; });
 

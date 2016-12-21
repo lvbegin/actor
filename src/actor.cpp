@@ -60,7 +60,7 @@ std::string Actor::getName(void) const { return name; }
 
 ActorRef Actor::createActorRef(std::string name, ActorBody body, RestartStrategy restartStragy) { return std::make_shared<Actor>(name, body, restartStragy); }
 
-ActorRef Actor::createActorRef(std::string name, ActorBody body, std::function<void(void)> atRestart,
+ActorRef Actor::createActorRefWithRestart(std::string name, ActorBody body, std::function<void(void)> atRestart,
 					RestartStrategy restartStragy) { return std::make_shared<Actor>(name, body, atRestart, restartStragy); }
 
 
