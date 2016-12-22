@@ -41,18 +41,18 @@ void Executor::executeBody(ExecutorBody body) {
 	while (true) {
 		struct MessageQueue::message message(messageQueue->get());
 		if (COMMAND_SHUTDOWN == message.code) {
-			message.promise.set_value(ReturnCode::shutdown);
+			message.promise.set_value(StatusCode::shutdown);
 			return;
 		}
 		switch (body(message.type, message.code, std::move(message.params))) {
-			case ReturnCode::ok:
-				message.promise.set_value(ReturnCode::ok);
+			case StatusCode::ok:
+				message.promise.set_value(StatusCode::ok);
 				break;
-			case ReturnCode::shutdown:
-				message.promise.set_value(ReturnCode::shutdown);
+			case StatusCode::shutdown:
+				message.promise.set_value(StatusCode::shutdown);
 				return;
 			default:
-				message.promise.set_value(ReturnCode::error);
+				message.promise.set_value(StatusCode::error);
 				break;
 		}
 	}

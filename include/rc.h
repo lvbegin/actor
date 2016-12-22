@@ -32,6 +32,6 @@
 
 #include <cstdint>
 
-enum class ReturnCode  : uint32_t { ok, shutdown, error, };
+enum class StatusCode  : uint32_t { ok, shutdown, error, };
 
 #endif

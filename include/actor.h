@@ -42,7 +42,7 @@
 class Actor;
 using ActorRef = std::shared_ptr<Actor>;
 
-using ActorBody = std::function<ReturnCode(int, const std::vector<unsigned char> &)>;
+using ActorBody = std::function<StatusCode(int, const std::vector<unsigned char> &)>;
 
 class Actor : public AbstractActor {
 public:
@@ -54,7 +54,7 @@ public:
 	Actor(const Actor &a) = delete;
 	Actor &operator=(const Actor &a) = delete;
 
-	ReturnCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
+	StatusCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void restart(void);
 	std::string getName(void) const;
@@ -78,10 +78,10 @@ private:
 	ActorBody body;
 	MessageQueue executorQueue;
 	std::unique_ptr<Executor> executor;
-	ReturnCode actorExecutor(ActorBody body, MessageQueue::type type, int command, const std::vector<unsigned char> &params);
+	StatusCode actorExecutor(ActorBody body, MessageQueue::type type, int command, const std::vector<unsigned char> &params);
 	void postError(int i, const std::string &actorName);
-	ReturnCode doSupervisorOperation(int code, const std::vector<unsigned char> &params);
-	ReturnCode executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params);
+	StatusCode doSupervisorOperation(int code, const std::vector<unsigned char> &params);
+	StatusCode executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params);
 	static void doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std::function<void(void)> op);
 };
 
