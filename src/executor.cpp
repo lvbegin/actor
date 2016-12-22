@@ -33,13 +33,13 @@
 Executor::Executor(ExecutorBody body, MessageQueue *queue)  : messageQueue(queue), thread([this, body]() { executeBody(body); }) { }
 
 Executor::~Executor() {
-	messageQueue->putMessage(MessageQueue::type::COMMAND_MESSAGE, COMMAND_SHUTDOWN);
+	messageQueue->put(MessageQueue::type::COMMAND_MESSAGE, COMMAND_SHUTDOWN);
 	thread.join();
 };
 
 void Executor::executeBody(ExecutorBody body) {
 	while (true) {
-		struct MessageQueue::message message(messageQueue->getMessage());
+		struct MessageQueue::message message(messageQueue->get());
 		if (COMMAND_SHUTDOWN == message.code) {
 			message.promise.set_value(ReturnCode::shutdown);
 			return;

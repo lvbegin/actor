@@ -45,4 +45,12 @@ std::future<ReturnCode> MessageQueue::putMessage(MessageQueue::type type, int co
 	return future;
 }
 
-struct MessageQueue::message MessageQueue::getMessage(void) { return queue.get(); }
+void MessageQueue::put(MessageQueue::type type, int code, std::vector<unsigned char> params) {
+	putMessage(type, code, params);
+}
+
+ReturnCode MessageQueue::putSync(MessageQueue::type type, int code, std::vector<unsigned char> params) {
+	return putMessage(type, code, params).get();
+}
+
+struct MessageQueue::message MessageQueue::get(void) { return queue.get(); }

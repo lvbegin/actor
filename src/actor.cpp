@@ -42,11 +42,11 @@ Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atResta
 Actor::~Actor() = default;
 
 ReturnCode Actor::postSync(int i, std::vector<unsigned char> params) {
-	return executorQueue.putMessage(MessageQueue::type::COMMAND_MESSAGE, i, params).get();
+	return executorQueue.putSync(MessageQueue::type::COMMAND_MESSAGE, i, params);
 }
 
 void Actor::post(int i, std::vector<unsigned char> params) {
-	executorQueue.putMessage(MessageQueue::type::COMMAND_MESSAGE, i, params);
+	executorQueue.put(MessageQueue::type::COMMAND_MESSAGE, i, params);
 }
 
 void Actor::restart(void) {
@@ -94,7 +94,7 @@ void Actor::doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std:
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
 void Actor::postError(int i, const std::string &actorName) {
-	executorQueue.putMessage(MessageQueue::type::ERROR_MESSAGE, i, std::vector<unsigned char>(actorName.begin(), actorName.end()));
+	executorQueue.put(MessageQueue::type::ERROR_MESSAGE, i, std::vector<unsigned char>(actorName.begin(), actorName.end()));
 }
 
 ReturnCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int code, const std::vector<unsigned char> &params) {

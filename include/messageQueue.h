@@ -52,9 +52,13 @@ public:
 	};
 	MessageQueue();
 	~MessageQueue();
-	std::future<ReturnCode> putMessage(MessageQueue::type type, int i, std::vector<unsigned char> params = std::vector<unsigned char>());
-	message getMessage(void);
+
+	void put(MessageQueue::type type, int code, std::vector<unsigned char> params = std::vector<unsigned char>());
+	ReturnCode putSync(MessageQueue::type type, int code, std::vector<unsigned char> params);
+
+	message get(void);
 private:
+	std::future<ReturnCode> putMessage(MessageQueue::type type, int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	SharedQueue<message> queue;
 };
 
