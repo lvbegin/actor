@@ -54,11 +54,11 @@ public:
 	~MessageQueue();
 
 	void put(MessageQueue::type type, int code, std::vector<unsigned char> params = std::vector<unsigned char>());
-	ReturnCode putSync(MessageQueue::type type, int code, std::vector<unsigned char> params);
+	ReturnCode putSync(MessageQueue::type type, int code, std::vector<unsigned char> params= std::vector<unsigned char>());
 
 	message get(void);
 private:
-	std::future<ReturnCode> putMessage(MessageQueue::type type, int i, std::vector<unsigned char> params = std::vector<unsigned char>());
+	std::future<ReturnCode> putMessage(MessageQueue::type type, int i, std::vector<unsigned char> params);
 	SharedQueue<message> queue;
 };
 
