@@ -34,6 +34,7 @@
 #include <Controller.h>
 #include <executor.h>
 #include <restartStragegy.h>
+#include <actorStateMachine.h>
 
 #include <functional>
 #include <memory>
@@ -79,9 +80,7 @@ private:
 	std::function<void(void)> atRestart;
 	ActorBody body;
 	MessageQueue executorQueue;
-	enum { RUNNING, RESTARTING, STOPPED,} state;
-	std::mutex mutex;
-	std::condition_variable stateChanged;
+	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
 	StatusCode actorExecutor(ActorBody body, MessageQueue::type type, int command, const std::vector<unsigned char> &params);
 	void postError(int i, const std::string &actorName);

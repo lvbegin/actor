@@ -36,13 +36,11 @@ Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy) 
 
 Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
 						name(std::move(name)), restartStrategy(restartStrategy), atRestart(atRestart), body(body), executorQueue(),
-						state(RUNNING), executor(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
+						executor(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
 								{ return this->actorExecutor(this->body, type, command, params); }, &executorQueue)) { }
 
 Actor::~Actor() {
-	std::unique_lock<std::mutex> l(mutex);
-	stateChanged.wait(l, [this]() { return RUNNING == this->state; });
-	this->state = STOPPED;
+	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
 	executorQueue.put(MessageQueue::type::COMMAND_MESSAGE, Executor::COMMAND_SHUTDOWN);
 };
 
@@ -57,10 +55,7 @@ void Actor::post(int i, std::vector<unsigned char> params) {
 void Actor::restart(void) { executorQueue.put(MessageQueue::type::COMMAND_MESSAGE, COMMAND_RESTART); }
 
 StatusCode Actor::restartMessage(void) {
-	std::unique_lock<std::mutex> l(mutex);
-	if (STOPPED == state)
-		return StatusCode::error;
-	state = RESTARTING;
+	stateMachine.moveTo(ActorStateMachine::ActorState::RESTARTING); //move outside
 
 	auto status = std::promise<StatusCode>();
 	auto e = std::promise<std::unique_ptr<Executor> &>();
@@ -78,8 +73,7 @@ StatusCode Actor::restartMessage(void) {
 	e.set_value(newExecutor);
 	auto r = status.get_future().get();
 
-	state = RUNNING;
-	stateChanged.notify_one();
+	stateMachine.moveTo(ActorStateMachine::ActorState::RUNNING); //move outside
  	return r;
 }
 
@@ -125,10 +119,9 @@ void Actor::postError(int i, const std::string &actorName) {
 }
 
 StatusCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int code, const std::vector<unsigned char> &params) {
+	/* check that we are indeed in running state */
 	if (MessageQueue::type::ERROR_MESSAGE == type)
 		return doSupervisorOperation(code, params);
-	if (Executor::COMMAND_SHUTDOWN == code)
-		return StatusCode::shutdown;
 	if (COMMAND_RESTART == code) {
 		return (StatusCode::ok == restartMessage()) ? StatusCode::shutdown : StatusCode::error;
 	}
