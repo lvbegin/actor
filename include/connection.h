@@ -37,6 +37,13 @@
 
 #include <arpa/inet.h>
 
+#include <iostream>
+
+class ConnectionTimeout : public std::runtime_error {
+public:
+	ConnectionTimeout(std::string s) : std::runtime_error(s) {}
+};
+
 class Connection {
 public:
 	Connection();

@@ -68,6 +68,8 @@ public:
 
 private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
+	static const uint32_t COMMAND_RESTART = 1;
+
 	static std::function<void(void)> doNothing;
 	const std::string name;
 	const RestartStrategy restartStrategy;
@@ -77,12 +79,16 @@ private:
 	std::function<void(void)> atRestart;
 	ActorBody body;
 	MessageQueue executorQueue;
+	enum { RUNNING, RESTARTING, STOPPED,} state;
+	std::mutex mutex;
+	std::condition_variable stateChanged;
 	std::unique_ptr<Executor> executor;
 	StatusCode actorExecutor(ActorBody body, MessageQueue::type type, int command, const std::vector<unsigned char> &params);
 	void postError(int i, const std::string &actorName);
 	StatusCode doSupervisorOperation(int code, const std::vector<unsigned char> &params);
 	StatusCode executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params);
 	static void doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std::function<void(void)> op);
+	StatusCode restartMessage(void);
 };
 
 #endif

@@ -48,9 +48,10 @@ ActorRegistry::~ActorRegistry() {
 
 void ActorRegistry::registryBody(const ServerSocket &s) {
 	while (!terminated) {
+		struct sockaddr_in client_addr {};
+		Connection connection;
 		try {
-			struct sockaddr_in client_addr {};
-			auto connection = s.acceptOneConnection(2, &client_addr);
+			connection = s.acceptOneConnection(2, &client_addr);
 			switch (connection.readInt<RegistryCommand>()) {
 				case RegistryCommand::REGISTER_REGISTRY:
 					registryAddresses.insert(connection.readString(), client_addr);

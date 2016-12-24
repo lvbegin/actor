@@ -40,12 +40,14 @@
 
 static int basicActorTest(void) {
 	std::cout << "basicActorTest" << std::endl;
+	static const uint32_t command = 0xaa;
 	Actor a("actor name", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
-	auto val = a.postSync(1);
+	auto val = a.postSync(command);
 	if (StatusCode::ok != val) {
 		std::cout << "post failure" << std::endl;
 		return 1;
 	}
+	a.postSync(Executor::COMMAND_SHUTDOWN);
 	return 0;
 }
 
@@ -64,6 +66,7 @@ static int basicActorWithParamsTest(void) {
 		std::cout << "post failure" << std::endl;
 		return 1;
 	}
+
 	return 0;
 }
 
@@ -72,8 +75,6 @@ void executeSeverProxy(uint16_t port) {
 	auto doNothing = []() { };
 	proxyServer server(actor, ServerSocket::getConnection(port), doNothing);
 }
-
-
 
 static Connection openOneConnection(uint16_t port) {
 	while (true) {
@@ -102,32 +103,33 @@ static int proxyRestartTest(void) {
 	int NbError = (StatusCode::ok == client.postSync(command)) ? 0 : 1;
 	client.restart();
 	NbError += (StatusCode::ok == client.postSync(command)) ? 0 : 1;
-	NbError +=  (StatusCode::shutdown == client.postSync(AbstractActor::COMMAND_SHUTDOWN)) ? 0 : 1;
+	NbError +=  (StatusCode::ok == client.postSync(AbstractActor::COMMAND_SHUTDOWN)) ? 0 : 1;
 	t.join();
 	return NbError;
 }
 
 static int registryConnectTest(void) {
 	std::cout << "registryConnectTest" << std::endl;
-	static const uint16_t port = 6001;
-	ActorRegistry registry(std::string("name"), port);;
+	static const uint16_t port = 4001;
+	ActorRegistry registry(std::string("name"), port);
 	Connection c = openOneConnection(port);
 	return 0;
 }
 
 static int registryAddActorTest(void) {
 	std::cout << "registryAddAtorTest" << std::endl;
-	static const uint16_t port = 6001;
+	static const uint16_t port = 4001;
 	ActorRegistry registry(std::string("name"), port);
 	ActorRef a = Actor::createActorRef("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 
 	registry.registerActor(a);
+
 	return 0;
 }
 
 static int registryAddActorAndRemoveTest(void) {
 	std::cout << "registryAddActorAndRemoveTest" << std::endl;
-	static const uint16_t port = 6001;
+	static const uint16_t port = 4001;
 	ActorRegistry registry(std::string("name"), port);
 	ActorRef a = Actor::createActorRef("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 
@@ -137,6 +139,7 @@ static int registryAddActorAndRemoveTest(void) {
 	    registry.unregisterActor("my actor");
 	    return 1;
 	} catch (std::runtime_error e) { }
+
 	a = Actor::createActorRef("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	registry.registerActor(a);
 	return 0;
@@ -148,8 +151,8 @@ static int registryAddReferenceTest(void) {
 	std::cout << "registryAddReferenceTest" << std::endl;
 	static const std::string name1("name1");
 	static const std::string name2("name2");
-	static const uint16_t port1 = 6001;
-	static const uint16_t port2 = 6002;
+	static const uint16_t port1 = 4001;
+	static const uint16_t port2 = 4002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
 
@@ -163,8 +166,8 @@ static int registryAddReferenceOverrideExistingOneTest(void) {
 	std::cout << "registryAddReferenceOverrideExistingOneTest" << std::endl;
 	static const std::string name1("name1");
 	static const std::string name2("name2");
-	static const uint16_t port1 = 6001;
-	static const uint16_t port2 = 6002;
+	static const uint16_t port1 = 4001;
+	static const uint16_t port2 = 4002;
 	static const uint16_t port3 = 6003;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
@@ -181,7 +184,7 @@ static int registeryAddActorAndFindItBackTest() {
 	std::cout << "registeryAddActorAndFindItBackTest" << std::endl;
 
 	static const std::string actorName("my actor");
-	static const uint16_t port = 6001;
+	static const uint16_t port = 4001;
 	ActorRegistry registry(std::string("name1"), port);
 
 	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
@@ -195,7 +198,7 @@ static int registeryFindUnknownActorTest() {
 	std::cout << "registeryFindUnknownActorTest" << std::endl;
 
 	static const std::string actorName("my actor");
-	static const uint16_t port = 6001;
+	static const uint16_t port = 4001;
 	ActorRegistry registry(std::string("name1"), port);
 
 	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
@@ -211,8 +214,8 @@ static int findActorFromOtherRegistryTest() {
 	static const std::string name1("name1");
 	static const std::string name2("name2");
 	static const std::string actorName("my actor");
-	static const uint16_t port1 = 6001;
-	static const uint16_t port2 = 6002;
+	static const uint16_t port1 = 4001;
+	static const uint16_t port2 = 4002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
 
@@ -229,10 +232,12 @@ static int findActorFromOtherRegistryTest() {
 
 	registry2.registerActor(a);
 	auto actor = registry1.getActor(actorName);
+	if (nullptr == actor.get())
+		return 1;
+	sleep(10); // ensure that the proxy server does not stop after a timeout when no command is sent.
 	if (StatusCode::ok != actor->postSync(dummyCommand))
 		return 1;
-	actor->postSync(AbstractActor::COMMAND_SHUTDOWN);
-	return nullptr != actor.get() ? 0 : 1;
+	return 0;
 }
 
 static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
@@ -242,8 +247,8 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	static const std::string name1("name1");
 	static const std::string name2("name2");
 	static const std::string actorName("my actor");
-	static const uint16_t port1 = 6001;
-	static const uint16_t port2 = 6002;
+	static const uint16_t port1 = 4001;
+	static const uint16_t port2 = 4002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
 
@@ -271,8 +276,8 @@ static int findUnknownActorInMultipleRegistryTest() {
 	static const std::string name1("name1");
 	static const std::string name2("name2");
 	static const std::string actorName("my actor");
-	static const uint16_t port1 = 6001;
-	static const uint16_t port2 = 6002;
+	static const uint16_t port1 = 4001;
+	static const uint16_t port2 = 4002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
 
@@ -294,6 +299,10 @@ static int initSupervisionTest() {
 	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	Actor::registerActor(supervisor, supervised);
 	Actor::unregisterActor(supervisor, supervised);
+
+	supervisor->post(Executor::COMMAND_SHUTDOWN);
+	supervised->post(Executor::COMMAND_SHUTDOWN);
+
 	return 0;
 }
 
@@ -316,6 +325,9 @@ static int supervisorRestartsActorTest() {
 	if (StatusCode::ok != supervised->postSync(otherCommand))
 		std::cout << "other command not ok" << std::endl;
 	Actor::unregisterActor(supervisor, supervised);
+
+	supervisor->post(Executor::COMMAND_SHUTDOWN);
+	supervised->post(Executor::COMMAND_SHUTDOWN);
 
 	return (exceptionThrown) ? 0 : 1;
 }
@@ -353,6 +365,9 @@ static int actorNotifiesErrorToSupervisorTest() {
 		return 1;
 	Actor::unregisterActor(supervisor, supervised1);
 
+	supervisor->post(Executor::COMMAND_SHUTDOWN);
+	supervised1->post(Executor::COMMAND_SHUTDOWN);
+	supervised2->post(Executor::COMMAND_SHUTDOWN);
 	return 0;
 }
 
@@ -367,6 +382,9 @@ static int actorDoesNothingIfNoSupervisorTest() {
 		return 1;
 	if (StatusCode::error != supervised->postSync(someCommand))
 		return 1;
+
+	supervised->post(Executor::COMMAND_SHUTDOWN);
+
 	return 0;
 }
 
@@ -381,12 +399,15 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 		return 1;
 	if (StatusCode::error != supervised->postSync(someCommand))
 		return 1;
+
+	supervised->post(Executor::COMMAND_SHUTDOWN);
+
 	return 0;
 }
 
 /* Improve that test by checking that the Actors restarted */
 static int restartAllActorBySupervisorTest() {
-	std::cout << "actorNotifiesErrorToSupervisorTest" << std::endl;
+	std::cout << "restartAllActorBySupervisorTest" << std::endl;
 	static int someCommand = 0xaa;
 	bool supervisorRestarted = false;
 	bool supervised1Restarted = false;
@@ -422,11 +443,24 @@ static int restartAllActorBySupervisorTest() {
 
 	Actor::unregisterActor(supervisor, supervised1);
 	Actor::unregisterActor(supervisor, supervised2);
+
+	supervisor->post(Executor::COMMAND_SHUTDOWN);
+	supervised1->post(Executor::COMMAND_SHUTDOWN);
+	supervised2->post(Executor::COMMAND_SHUTDOWN);
+
 	return 0;
 }
 
+static int executorTest() {
+	MessageQueue messageQueue;
+	Executor executor([](MessageQueue::type, int, const std::vector<unsigned char> &) { return StatusCode::shutdown; }, &messageQueue);
+	messageQueue.put(MessageQueue::type::COMMAND_MESSAGE, Executor::COMMAND_SHUTDOWN);
+	return 0;
+}
 
 int main() {
+	std::set_terminate(__gnu_cxx::__verbose_terminate_handler);
+
 	int nbFailure = basicActorTest();
 	nbFailure += basicActorWithParamsTest();
 	nbFailure += proxyTest();
@@ -443,10 +477,11 @@ int main() {
 	nbFailure += findUnknownActorInMultipleRegistryTest();
 	nbFailure += initSupervisionTest();
 	nbFailure += supervisorRestartsActorTest();
-	nbFailure += actorNotifiesErrorToSupervisorTest();
+  	nbFailure += actorNotifiesErrorToSupervisorTest();
 	nbFailure += actorDoesNothingIfNoSupervisorTest();
 	nbFailure += actorDoesNothingIfNoSupervisorAndExceptionThrownTest();
 	nbFailure += restartAllActorBySupervisorTest();
+	nbFailure += executorTest();
 	std::cout << ((nbFailure) ? "Failure" : "Success") << std::endl;
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

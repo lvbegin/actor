@@ -64,7 +64,7 @@ public:
 
 		const auto it = map.find(key);
 		if (map.end() == it)
-			THROW(std::runtime_error, "element to erase does not exist.");
+			THROW(std::runtime_error, "element to erase does not exist. WTF");
 		map.erase(it);
 	}
 	T find (K key) const {

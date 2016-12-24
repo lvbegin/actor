@@ -36,10 +36,15 @@ Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy) 
 
 Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
 						name(std::move(name)), restartStrategy(restartStrategy), atRestart(atRestart), body(body), executorQueue(),
-						executor(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
+						state(RUNNING), executor(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
 								{ return this->actorExecutor(this->body, type, command, params); }, &executorQueue)) { }
 
-Actor::~Actor() = default;
+Actor::~Actor() {
+	std::unique_lock<std::mutex> l(mutex);
+	stateChanged.wait(l, [this]() { return RUNNING == this->state; });
+	this->state = STOPPED;
+	executorQueue.put(MessageQueue::type::COMMAND_MESSAGE, Executor::COMMAND_SHUTDOWN);
+};
 
 StatusCode Actor::postSync(int i, std::vector<unsigned char> params) {
 	return executorQueue.putSync(MessageQueue::type::COMMAND_MESSAGE, i, params);
@@ -49,11 +54,33 @@ void Actor::post(int i, std::vector<unsigned char> params) {
 	executorQueue.put(MessageQueue::type::COMMAND_MESSAGE, i, params);
 }
 
-void Actor::restart(void) {
-	executor.reset(); //stop the current thread. Ensure that the new thread does not receive the shutdown
-	atRestart();
-	executor.reset(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
-			{ return this->actorExecutor(this->body, type, command, params); }, &executorQueue));
+void Actor::restart(void) { executorQueue.put(MessageQueue::type::COMMAND_MESSAGE, COMMAND_RESTART); }
+
+StatusCode Actor::restartMessage(void) {
+	std::unique_lock<std::mutex> l(mutex);
+	if (STOPPED == state)
+		return StatusCode::error;
+	state = RESTARTING;
+
+	auto status = std::promise<StatusCode>();
+	auto e = std::promise<std::unique_ptr<Executor> &>();
+	std::unique_ptr<Executor> newExecutor = std::make_unique<Executor>(
+			[this](MessageQueue::type type, int command, const std::vector<unsigned char> &params) {
+				return this->actorExecutor(this->body, type, command, params);
+			}, &executorQueue,
+			[this, &status, & e]() mutable {
+				std::unique_ptr<Executor> &ref = e.get_future().get();
+				std::unique_ptr<Executor> ref2 = std::move(ref);
+				std::swap(this->executor, ref2);
+				this->atRestart();
+				status.set_value(StatusCode::ok); //condition variable ?
+			});
+	e.set_value(newExecutor);
+	auto r = status.get_future().get();
+
+	state = RUNNING;
+	stateChanged.notify_one();
+ 	return r;
 }
 
 std::string Actor::getName(void) const { return name; }
@@ -100,6 +127,11 @@ void Actor::postError(int i, const std::string &actorName) {
 StatusCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int code, const std::vector<unsigned char> &params) {
 	if (MessageQueue::type::ERROR_MESSAGE == type)
 		return doSupervisorOperation(code, params);
+	if (Executor::COMMAND_SHUTDOWN == code)
+		return StatusCode::shutdown;
+	if (COMMAND_RESTART == code) {
+		return (StatusCode::ok == restartMessage()) ? StatusCode::shutdown : StatusCode::error;
+	}
 	return executeActorBody(body, code, params);
 }
 

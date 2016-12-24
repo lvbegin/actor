@@ -88,7 +88,7 @@ const Connection &Connection::writeBytes(const void *buffer, size_t count) const
 }
 
 void Connection::readBytes(void *buffer, size_t count, int timeoutInSeconds) const {
-	waitForRead<std::runtime_error, std::runtime_error>(fd, set, timeoutInSeconds);
+	waitForRead<ConnectionTimeout, std::runtime_error>(fd, set, timeoutInSeconds);
 	readBytesNonBlocking(buffer, count);
 }
 

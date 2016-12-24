@@ -54,7 +54,6 @@ public:
 		q.pop();
 		return message;
 	}
-
 private:
 	std::mutex mutexQueue;
 	std::condition_variable condition;

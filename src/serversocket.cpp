@@ -69,7 +69,7 @@ Connection ServerSocket::acceptOneConnection(int timeout, struct sockaddr_in *cl
 	struct sockaddr_in client_addr_struct { };
 	struct sockaddr_in *client_addr_ptr = (nullptr == client_addr) ? &client_addr_struct : client_addr;
 	socklen_t client_len = sizeof(client_addr);
-	waitForRead<std::runtime_error, std::runtime_error>(acceptFd, set, timeout);
+	waitForRead<ConnectionTimeout, std::runtime_error>(acceptFd, set, timeout);
 	const int newsockfd = accept(acceptFd, (struct sockaddr *)&client_addr_ptr, &client_len);
 	if (-1 == newsockfd)
 		THROW(std::runtime_error, "accept failed.");

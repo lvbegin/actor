@@ -30,26 +30,26 @@
 #include <executor.h>
 #include <exception.h>
 
-Executor::Executor(ExecutorBody body, MessageQueue *queue)  : messageQueue(queue), thread([this, body]() { executeBody(body); }) { }
+Executor::Executor(ExecutorBody body, MessageQueue *queue, std::function<void(void)> atStart) : messageQueue(queue),
+					thread([this, body, atStart]() { atStart(); executeBody(body); }) { }
 
 Executor::~Executor() {
-	messageQueue->put(MessageQueue::type::COMMAND_MESSAGE, COMMAND_SHUTDOWN);
 	thread.join();
 };
 
 void Executor::executeBody(ExecutorBody body) {
+
 	while (true) {
 		struct MessageQueue::message message(messageQueue->get());
-		if (COMMAND_SHUTDOWN == message.code) {
-			message.promise.set_value(StatusCode::shutdown);
-			return;
-		}
-		switch (body(message.type, message.code, std::move(message.params))) {
+		const StatusCode status = (MessageQueue::type::COMMAND_MESSAGE == message.type && Executor::COMMAND_SHUTDOWN == message.code) ?
+				StatusCode::shutdown : body(message.type, message.code, std::move(message.params));
+
+		switch (status) {
 			case StatusCode::ok:
 				message.promise.set_value(StatusCode::ok);
 				break;
 			case StatusCode::shutdown:
-				message.promise.set_value(StatusCode::shutdown);
+				message.promise.set_value(StatusCode::ok);
 				return;
 			default:
 				message.promise.set_value(StatusCode::error);

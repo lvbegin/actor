@@ -42,10 +42,16 @@ proxyServer::~proxyServer() {
 		t.join();
 };
 
+
 void proxyServer::startThread(ActorRef actor, Connection connection, std::function<void(void)> notifyTerminate) {
 	while (true) {
 		uint32_t command;
-		switch (connection.readInt<postType>()) {
+		postType type;
+		try {
+			type = connection.readInt<postType>();
+		} catch (ConnectionTimeout e) { continue ; }
+		  catch (std::runtime_error e) {  return; }
+		switch (type) {
 			case postType::Async:
 				command = connection.readInt<uint32_t>();
 				actor->post(command, connection.readRawData());
