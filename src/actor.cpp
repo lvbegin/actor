@@ -54,9 +54,14 @@ void Actor::post(int i, std::vector<unsigned char> params) {
 
 void Actor::restart(void) { executorQueue.put(MessageQueue::type::COMMAND_MESSAGE, COMMAND_RESTART); }
 
-StatusCode Actor::restartMessage(void) {
+StatusCode Actor::restartSateMachine(void) {
 	stateMachine.moveTo(ActorStateMachine::ActorState::RESTARTING); //move outside
+	const auto rc = doRestart();
+	stateMachine.moveTo(ActorStateMachine::ActorState::RUNNING); //move outside
+	return rc;
+}
 
+StatusCode Actor::doRestart(void) {
 	auto status = std::promise<StatusCode>();
 	auto e = std::promise<std::unique_ptr<Executor> &>();
 	std::unique_ptr<Executor> newExecutor = std::make_unique<Executor>(
@@ -70,10 +75,7 @@ StatusCode Actor::restartMessage(void) {
 				status.set_value(StatusCode::ok);
 			});
 	e.set_value(newExecutor);
-	auto r = status.get_future().get();
-
-	stateMachine.moveTo(ActorStateMachine::ActorState::RUNNING); //move outside
- 	return r;
+	return status.get_future().get();
 }
 
 std::string Actor::getName(void) const { return name; }
@@ -122,7 +124,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int cod
 	if (MessageQueue::type::ERROR_MESSAGE == type)
 		return doSupervisorOperation(code, params);
 	if (COMMAND_RESTART == code) {
-		return (StatusCode::ok == restartMessage()) ? StatusCode::shutdown : StatusCode::error;
+		return (StatusCode::ok == doRestart()) ? StatusCode::shutdown : StatusCode::error;
 	}
 	return executeActorBody(body, code, params);
 }

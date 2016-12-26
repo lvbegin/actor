@@ -87,7 +87,8 @@ private:
 	StatusCode doSupervisorOperation(int code, const std::vector<unsigned char> &params);
 	StatusCode executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params);
 	static void doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std::function<void(void)> op);
-	StatusCode restartMessage(void);
+	StatusCode doRestart(void);
+	StatusCode restartSateMachine(void);
 };
 
 #endif
