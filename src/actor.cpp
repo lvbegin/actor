@@ -64,11 +64,10 @@ StatusCode Actor::restartMessage(void) {
 				return this->actorExecutor(this->body, type, command, params);
 			}, &executorQueue,
 			[this, &status, & e]() mutable {
-				std::unique_ptr<Executor> &ref = e.get_future().get();
-				std::unique_ptr<Executor> ref2 = std::move(ref);
-				std::swap(this->executor, ref2);
+				std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
+				std::swap(this->executor, ref);
 				this->atRestart();
-				status.set_value(StatusCode::ok); //condition variable ?
+				status.set_value(StatusCode::ok);
 			});
 	e.set_value(newExecutor);
 	auto r = status.get_future().get();
