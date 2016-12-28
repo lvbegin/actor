@@ -29,45 +29,47 @@
 
 #include <actor.h>
 #include <actorException.h>
+#include <command.h>
 
 std::function<void(void)> Actor::doNothing = [](void) {};
 
 Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy)  : Actor(name, body, Actor::doNothing, restartStrategy) {}
 
 Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
-						name(std::move(name)), restartStrategy(restartStrategy), atRestart(atRestart), body(body), executorQueue(),
-						executor(new Executor([this](MessageQueue::type type, int command, const std::vector<unsigned char> &params)
-								{ return this->actorExecutor(this->body, type, command, params); }, &executorQueue)) { }
+						name(std::move(name)), executorQueue(new MessageQueue()), restartStrategy(restartStrategy), atRestart(atRestart), body(body),
+						executor(new Executor([this](MessageType type, int command, const std::vector<unsigned char> &params)
+								{ return this->actorExecutor(this->body, type, command, params); }, executorQueue.get())) { }
 
-Actor::~Actor() {
+Actor::~Actor() { /* we must also unregister the actor to the suppervisor */
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
-	executorQueue.put(MessageQueue::type::COMMAND_MESSAGE, Executor::COMMAND_SHUTDOWN);
+	executorQueue->post(MessageType::COMMAND_MESSAGE, Executor::COMMAND_SHUTDOWN);
 };
 
 StatusCode Actor::postSync(int i, std::vector<unsigned char> params) {
-	return executorQueue.putSync(MessageQueue::type::COMMAND_MESSAGE, i, params);
+	return executorQueue->postSync(MessageType::COMMAND_MESSAGE, i, params);
 }
 
 void Actor::post(int i, std::vector<unsigned char> params) {
-	executorQueue.put(MessageQueue::type::COMMAND_MESSAGE, i, params);
+	executorQueue->post(MessageType::COMMAND_MESSAGE, i, params);
 }
 
-void Actor::restart(void) { executorQueue.put(MessageQueue::type::COMMAND_MESSAGE, COMMAND_RESTART); }
+void Actor::restart(void) { executorQueue->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_RESTART); }
 
 StatusCode Actor::restartSateMachine(void) {
-	stateMachine.moveTo(ActorStateMachine::ActorState::RESTARTING); //move outside
+	stateMachine.moveTo(ActorStateMachine::ActorState::RESTARTING);
 	const auto rc = doRestart();
-	stateMachine.moveTo(ActorStateMachine::ActorState::RUNNING); //move outside
+	stateMachine.moveTo(ActorStateMachine::ActorState::RUNNING);
 	return rc;
 }
+
 
 StatusCode Actor::doRestart(void) {
 	auto status = std::promise<StatusCode>();
 	auto e = std::promise<std::unique_ptr<Executor> &>();
 	std::unique_ptr<Executor> newExecutor = std::make_unique<Executor>(
-			[this](MessageQueue::type type, int command, const std::vector<unsigned char> &params) {
+			[this](MessageType type, int command, const std::vector<unsigned char> &params) {
 				return this->actorExecutor(this->body, type, command, params);
-			}, &executorQueue,
+			}, executorQueue.get(),
 			[this, &status, & e]() mutable {
 				std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
 				std::swap(this->executor, ref);
@@ -89,9 +91,13 @@ ActorRef Actor::createActorRefWithRestart(std::string name, ActorBody body, std:
 	return std::make_shared<Actor>(name, body, atRestart, restartStragy);
 }
 
+LinkApi *Actor::getActorLink() { return new ActorLink(name, executorQueue); }
+
+#define QUEUE
+#ifdef QUEUE
 
 void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
-	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.addActor(monitored); } );
+	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.addActor(monitored->getName(), monitored); } );
 }
 
 void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
@@ -107,24 +113,51 @@ void Actor::doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std:
     monitored->supervisor = std::weak_ptr<Actor>(monitor);
     try {
     	op();
-    } catch (std::exception e) {
+    } catch (std::exception &e) {
+    	monitored->supervisor = std::move(tmp);
+    	throw e;
+    }
+}
+#else
+
+void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
+	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored2.addActor(monitored->executorQueue); } );
+}
+
+void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
+	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.removeActor(monitored->getName()); } );
+}
+
+void Actor::doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std::function<void(void)> op) {
+	std::lock(monitor->monitorMutex, monitored->monitorMutex);
+    std::lock_guard<std::mutex> l1(monitor->monitorMutex, std::adopt_lock);
+    std::lock_guard<std::mutex> l2(monitored->monitorMutex, std::adopt_lock);
+
+    auto tmp = std::move(monitored->supervisor2);
+    monitored->supervisor2 = std::weak_ptr<MessageQueue>(monitor->executorQueue); //What happens if ptr is null ...
+    try {
+    	op();
+    } catch (std::exception &e) {
     	monitored->supervisor = std::move(tmp);
     	throw e;
     }
 }
 
+#endif
+
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
 void Actor::postError(int i, const std::string &actorName) {
-	executorQueue.put(MessageQueue::type::ERROR_MESSAGE, i, std::vector<unsigned char>(actorName.begin(), actorName.end()));
+	executorQueue->post(MessageType::ERROR_MESSAGE, i, std::vector<unsigned char>(actorName.begin(), actorName.end()));
 }
 
-StatusCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int code, const std::vector<unsigned char> &params) {
-	/* check that we are indeed in running state */
-	if (MessageQueue::type::ERROR_MESSAGE == type)
+StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, const std::vector<unsigned char> &params) {
+	//stateMachine.ensureState(ActorStateMachine::ActorState::RUNNING);
+
+	if (MessageType::ERROR_MESSAGE == type)
 		return doSupervisorOperation(code, params);
-	if (COMMAND_RESTART == code) {
-		return (StatusCode::ok == doRestart()) ? StatusCode::shutdown : StatusCode::error;
+	if (Command::COMMAND_RESTART == code) {
+		return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
 	}
 	return executeActorBody(body, code, params);
 }
@@ -132,12 +165,12 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageQueue::type type, int cod
 StatusCode Actor::executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params) {
 	try {
 		return body(code, params);
-	} catch (ActorException e) {
+	} catch (ActorException &e) {
 		const auto supervisorRef = supervisor.lock();
 		if (nullptr != supervisorRef.get())
 			supervisorRef->postError(e.getErrorCode(), name);
 		return StatusCode::error;
-	} catch (std::exception e) {
+	} catch (std::exception &e) {
 		const auto supervisorRef = supervisor.lock();
 		if (nullptr != supervisorRef.get())
 			supervisorRef->postError(EXCEPTION_THROWN_ERROR, name);

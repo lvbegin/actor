@@ -35,16 +35,14 @@
 
 #include <future>
 
-
 class MessageQueue {
 public:
-	enum class type:uint32_t { COMMAND_MESSAGE, ERROR_MESSAGE, RESTART_MESSAGE, };
 	struct message {
-		MessageQueue::type type;
+		MessageType type;
 		int code;
 		std::vector<unsigned char> params;
 		std::promise<StatusCode> promise;
-		message(MessageQueue::type type, int c, std::vector<unsigned char> params);
+		message(MessageType type, int c, std::vector<unsigned char> params);
 		~message();
 		message(struct message &&m);
 		message (const struct message &m) = delete;
@@ -53,12 +51,12 @@ public:
 	MessageQueue();
 	~MessageQueue();
 
-	void put(MessageQueue::type type, int code, std::vector<unsigned char> params = std::vector<unsigned char>());
-	StatusCode putSync(MessageQueue::type type, int code, std::vector<unsigned char> params= std::vector<unsigned char>());
+	void post(MessageType type, int code, std::vector<unsigned char> params = std::vector<unsigned char>());
+	StatusCode postSync(MessageType type, int code, std::vector<unsigned char> params= std::vector<unsigned char>());
 
 	message get(void);
 private:
-	std::future<StatusCode> putMessage(MessageQueue::type type, int i, std::vector<unsigned char> params);
+	std::future<StatusCode> putMessage(MessageType type, int i, std::vector<unsigned char> params);
 	SharedQueue<message> queue;
 };
 

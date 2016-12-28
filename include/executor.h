@@ -37,7 +37,7 @@
 #include <thread>
 #include <future>
 
-using ExecutorBody = std::function<StatusCode(MessageQueue::type, int, const std::vector<unsigned char> &)>;
+using ExecutorBody = std::function<StatusCode(MessageType, int, const std::vector<unsigned char> &)>;
 
 class Executor {
 public:

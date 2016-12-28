@@ -35,6 +35,7 @@
 #include <executor.h>
 #include <restartStragegy.h>
 #include <actorStateMachine.h>
+#include <actorLink.h>
 
 #include <functional>
 #include <memory>
@@ -59,6 +60,7 @@ public:
 	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void restart(void);
 	std::string getName(void) const;
+	LinkApi *getActorLink();
 
 	static void notifyError(int e);
 	static ActorRef createActorRef(std::string name, ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);
@@ -69,20 +71,21 @@ public:
 
 private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
-	static const uint32_t COMMAND_RESTART = 1;
 
 	static std::function<void(void)> doNothing;
 	const std::string name;
+	std::shared_ptr<MessageQueue> executorQueue;
 	const RestartStrategy restartStrategy;
 	std::mutex monitorMutex;
 	Controller<ActorRef> monitored;
 	std::weak_ptr<Actor> supervisor;
+	Controller<std::shared_ptr<MessageQueue>> monitored2;
+	std::weak_ptr<MessageQueue> supervisor2;
 	std::function<void(void)> atRestart;
 	ActorBody body;
-	MessageQueue executorQueue;
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
-	StatusCode actorExecutor(ActorBody body, MessageQueue::type type, int command, const std::vector<unsigned char> &params);
+	StatusCode actorExecutor(ActorBody body, MessageType type, int command, const std::vector<unsigned char> &params);
 	void postError(int i, const std::string &actorName);
 	StatusCode doSupervisorOperation(int code, const std::vector<unsigned char> &params);
 	StatusCode executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params);

@@ -30,10 +30,11 @@
 #include <proxyServer.h>
 #include <serverSocket.h>
 #include <proxyContainer.h>
+#include <command.h>
 
 #include <arpa/inet.h>
 
-proxyServer::proxyServer(ActorRef actor, Connection connection, std::function<void(void)> notifyTerminate) :
+proxyServer::proxyServer(GenericActorPtr actor, Connection connection, std::function<void(void)> notifyTerminate) :
 	t([actor, connection {std::move(connection)}, notifyTerminate]() mutable
 						{ startThread(std::move(actor), std::move(connection), notifyTerminate); }) { }
 
@@ -43,14 +44,14 @@ proxyServer::~proxyServer() {
 };
 
 
-void proxyServer::startThread(ActorRef actor, Connection connection, std::function<void(void)> notifyTerminate) {
+void proxyServer::startThread(GenericActorPtr actor, Connection connection, std::function<void(void)> notifyTerminate) {
 	while (true) {
 		uint32_t command;
 		postType type;
 		try {
 			type = connection.readInt<postType>();
-		} catch (ConnectionTimeout e) { continue ; }
-		  catch (std::runtime_error e) {  return; }
+		} catch (ConnectionTimeout &e) { continue ; }
+		  catch (std::runtime_error &e) {  return; }
 		switch (type) {
 			case postType::Async:
 				command = connection.readInt<uint32_t>();
@@ -61,7 +62,7 @@ void proxyServer::startThread(ActorRef actor, Connection connection, std::functi
 				connection.writeInt(actor->postSync(command, connection.readRawData()));
 				break;
 			case postType::Restart:
-				actor->restart();
+				actor->post(Command::COMMAND_RESTART);
 				continue;
 			default:
 				continue;

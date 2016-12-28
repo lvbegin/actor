@@ -34,4 +34,6 @@
 
 enum class StatusCode : uint32_t { ok, shutdown, error, };
 
+enum class MessageType:uint32_t { COMMAND_MESSAGE, ERROR_MESSAGE, RESTART_MESSAGE, };
+
 #endif

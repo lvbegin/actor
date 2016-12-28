@@ -33,17 +33,17 @@
 
 std::atomic<int> ProxyContainer::proxyId { 0 };
 
-ProxyContainer::ProxyContainer() : executor([this](MessageQueue::type, int code, const std::vector<unsigned char> &not_used) { return (this->deleteProxy(code), StatusCode::ok);}, &executorQueue) { }
+ProxyContainer::ProxyContainer() : executor([this](MessageType, int code, const std::vector<unsigned char> &not_used) { return (this->deleteProxy(code), StatusCode::ok);}, &executorQueue) { }
 
 ProxyContainer::~ProxyContainer() {
-	executorQueue.put(MessageQueue::type::COMMAND_MESSAGE, Executor::COMMAND_SHUTDOWN);
+	executorQueue.post(MessageType::COMMAND_MESSAGE, Executor::COMMAND_SHUTDOWN);
 }
 
 int ProxyContainer::newproxyId(void) { return proxyId++; }
 
-void ProxyContainer::createNewProxy(ActorRef actor, Connection connection) {
+void ProxyContainer::createNewProxy(GenericActorPtr actor, Connection connection) {
 	const auto id = newproxyId();
-	const auto terminate = [this, id]() { this->executorQueue.put(MessageQueue::type::RESTART_MESSAGE, id); };
+	const auto terminate = [this, id]() { this->executorQueue.post(MessageType::RESTART_MESSAGE, id); };
 	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id), std::forward_as_tuple(actor, std::move(connection), terminate));
 }
 

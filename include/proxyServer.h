@@ -41,7 +41,7 @@ enum class postType : uint32_t { Sync, Async, Restart, } ;
 
 class proxyServer {
 public:
-	proxyServer(ActorRef actor, Connection connection, std::function<void(void)> notifyTerminate);
+	proxyServer(GenericActorPtr actor, Connection connection, std::function<void(void)> notifyTerminate);
 	~proxyServer();
 
 	proxyServer(const proxyServer &p) = delete;
@@ -51,7 +51,7 @@ public:
 
 private:
 	std::thread t;
-	static void startThread(ActorRef actor, Connection connection, std::function<void(void)> notifyTerminate);
+	static void startThread(GenericActorPtr actor, Connection connection, std::function<void(void)> notifyTerminate);
 };
 
 #endif

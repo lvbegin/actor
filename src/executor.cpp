@@ -41,7 +41,7 @@ void Executor::executeBody(ExecutorBody body) {
 
 	while (true) {
 		struct MessageQueue::message message(messageQueue->get());
-		const StatusCode status = (MessageQueue::type::COMMAND_MESSAGE == message.type && Executor::COMMAND_SHUTDOWN == message.code) ?
+		const StatusCode status = (MessageType::COMMAND_MESSAGE == message.type && Executor::COMMAND_SHUTDOWN == message.code) ?
 				StatusCode::shutdown : body(message.type, message.code, std::move(message.params));
 
 		switch (status) {

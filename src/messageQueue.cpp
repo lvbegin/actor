@@ -30,7 +30,7 @@
 #include <messageQueue.h>
 
 
-MessageQueue::message::message(MessageQueue::type type, int code, std::vector<unsigned char> params) : type(type), code(code), params(params) {}
+MessageQueue::message::message(MessageType type, int code, std::vector<unsigned char> params) : type(type), code(code), params(params) {}
 
 MessageQueue::message::~message() = default;
 MessageQueue::message::message(struct message &&m) = default;
@@ -38,18 +38,18 @@ MessageQueue::message::message(struct message &&m) = default;
 MessageQueue::MessageQueue() = default;
 MessageQueue::~MessageQueue() = default;
 
-std::future<StatusCode> MessageQueue::putMessage(MessageQueue::type type, int code, std::vector<unsigned char> params) {
+std::future<StatusCode> MessageQueue::putMessage(MessageType type, int code, std::vector<unsigned char> params) {
 	struct message  m(type, code, std::move(params));
 	auto future = m.promise.get_future();
 	queue.post(std::move(m));
 	return future;
 }
 
-void MessageQueue::put(MessageQueue::type type, int code, std::vector<unsigned char> params) {
+void MessageQueue::post(MessageType type, int code, std::vector<unsigned char> params) {
 	putMessage(type, code, params);
 }
 
-StatusCode MessageQueue::putSync(MessageQueue::type type, int code, std::vector<unsigned char> params) {
+StatusCode MessageQueue::postSync(MessageType type, int code, std::vector<unsigned char> params) {
 	return putMessage(type, code, params).get();
 }
 

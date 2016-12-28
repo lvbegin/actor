@@ -31,9 +31,9 @@
 #include <proxyServer.h>
 #include <clientSocket.h>
 
-proxyClient::proxyClient(Connection connection) : connection(std::move(connection)) { }
+proxyClient::proxyClient(std::string name, Connection connection) : name(std::move(name)), connection(std::move(connection)) { }
 proxyClient::~proxyClient() = default;
-#include <iostream>
+
 StatusCode proxyClient::postSync(int command, std::vector<unsigned char> params) {
 	connection.writeInt(postType::Sync).writeInt(command).writeRawData(params);
 	return connection.readInt<StatusCode>();
@@ -44,3 +44,9 @@ void proxyClient::post(int command, std::vector<unsigned char> params) {
 }
 
 void proxyClient::restart() { connection.writeInt(postType::Restart); }
+
+std::string proxyClient::getName(void) const { return name; }
+
+LinkApi *proxyClient::getActorLink() {
+	return this ;
+}

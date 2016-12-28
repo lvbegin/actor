@@ -37,13 +37,16 @@
 
 class proxyClient : public AbstractActor {
 public:
-	proxyClient(Connection connection);
+	proxyClient(std::string name, Connection connection);
 	~proxyClient();
 
 	StatusCode postSync(int command, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void post(int command, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void restart(void);
+	std::string getName(void) const;
+	LinkApi *getActorLink();
 private:
+	const std::string name;
 	const Connection connection;
 };
 

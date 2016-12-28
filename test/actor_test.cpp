@@ -80,7 +80,7 @@ static Connection openOneConnection(uint16_t port) {
 	while (true) {
 		try {
 			return ClientSocket::openHostConnection("localhost", port);
-		} catch (std::exception e) {}
+		} catch (std::exception &e) {}
 	}
 }
 
@@ -88,7 +88,7 @@ static int proxyTest(void) {
 	std::cout << "proxyTest" << std::endl;
 	static const uint16_t port = 4011;
 	std::thread t(executeSeverProxy, port);
-	proxyClient client(openOneConnection(port));
+	proxyClient client("proxyName", openOneConnection(port));
 	client.postSync(AbstractActor::COMMAND_SHUTDOWN);
 	t.join();
 	return 0;
@@ -99,7 +99,7 @@ static int proxyRestartTest(void) {
 	static const uint16_t port = 4003;
 	static const int command = 0x33;
 	std::thread t(executeSeverProxy, port);
-	proxyClient client(openOneConnection(port));
+	proxyClient client("proxyName", openOneConnection(port));
 	int NbError = (StatusCode::ok == client.postSync(command)) ? 0 : 1;
 	client.restart();
 	NbError += (StatusCode::ok == client.postSync(command)) ? 0 : 1;
@@ -138,7 +138,7 @@ static int registryAddActorAndRemoveTest(void) {
 	try {
 	    registry.unregisterActor("my actor");
 	    return 1;
-	} catch (std::runtime_error e) { }
+	} catch (std::runtime_error &e) { }
 
 	a = Actor::createActorRef("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	registry.registerActor(a);
@@ -453,14 +453,12 @@ static int restartAllActorBySupervisorTest() {
 
 static int executorTest() {
 	MessageQueue messageQueue;
-	Executor executor([](MessageQueue::type, int, const std::vector<unsigned char> &) { return StatusCode::shutdown; }, &messageQueue);
-	messageQueue.put(MessageQueue::type::COMMAND_MESSAGE, Executor::COMMAND_SHUTDOWN);
+	Executor executor([](MessageType, int, const std::vector<unsigned char> &) { return StatusCode::shutdown; }, &messageQueue);
+	messageQueue.post(MessageType::COMMAND_MESSAGE, Executor::COMMAND_SHUTDOWN);
 	return 0;
 }
 
 int main() {
-	std::set_terminate(__gnu_cxx::__verbose_terminate_handler);
-
 	int nbFailure = basicActorTest();
 	nbFailure += basicActorWithParamsTest();
 	nbFailure += proxyTest();
@@ -477,7 +475,7 @@ int main() {
 	nbFailure += findUnknownActorInMultipleRegistryTest();
 	nbFailure += initSupervisionTest();
 	nbFailure += supervisorRestartsActorTest();
-  	nbFailure += actorNotifiesErrorToSupervisorTest();
+ 	nbFailure += actorNotifiesErrorToSupervisorTest();
 	nbFailure += actorDoesNothingIfNoSupervisorTest();
 	nbFailure += actorDoesNothingIfNoSupervisorAndExceptionThrownTest();
 	nbFailure += restartAllActorBySupervisorTest();

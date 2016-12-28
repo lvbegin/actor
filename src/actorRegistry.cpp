@@ -70,7 +70,7 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 					THROW(std::runtime_error, "unknown case.");
 			}
 		}
-		catch (std::exception e) { }
+		catch (std::exception &e) { }
 	}
 }
 
@@ -85,14 +85,14 @@ std::string ActorRegistry::addReference(std::string host, uint16_t port) {
 
 void ActorRegistry::removeReference(std::string registryName) { registryAddresses.erase(registryName); }
 
-void ActorRegistry::registerActor(ActorRef actor) { actors.insert(actor->getName(), actor); }
+void ActorRegistry::registerActor(GenericActorPtr actor) { actors.insert(actor->getName(), actor); }
 
 void ActorRegistry::unregisterActor(std::string name) { actors.erase(name); }
 
 GenericActorPtr  ActorRegistry::getActor(std::string name) const {
 	try {
 		return getLocalActor(name);
-	} catch (std::out_of_range e) {
+	} catch (std::out_of_range &e) {
 		return getRemoteActor(name);
 	}
 }
@@ -105,7 +105,7 @@ GenericActorPtr ActorRegistry::getRemoteActor(const std::string &name) const {
 		auto connection = ClientSocket::openHostConnection(c.second);
 		connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
 		if (ACTOR_FOUND == connection.readInt<uint32_t>())
-			actor.reset(new proxyClient(std::move(connection)));
+			actor.reset(new proxyClient(name, std::move(connection)));
 	});
 	return actor;
 }

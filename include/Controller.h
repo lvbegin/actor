@@ -34,6 +34,7 @@
 
 #include <algorithm>
 #include <mutex>
+#include <map>
 #include <functional>
 
 template <typename T>
@@ -42,18 +43,16 @@ public:
 	Controller() = default;
 	~Controller() = default;
 
-	void addActor(T actor) { actors.push_back(actor); }
-	void removeActor(const std::string &name) { applyOn(name, [this](const typename std::vector<T>::const_iterator &it) { this->actors.erase(it); }); }
-	void restartOne(const std::string &name) const { applyOn(name, [](const typename std::vector<T>::const_iterator &it) { (*it)->restart(); }); }
-	void restartAll() const { std::for_each(actors.begin(), actors.end(), [](const T &actor){ actor->restart();} ); }
-private:
-	void applyOn(const std::string & name, std::function<void(const typename std::vector<T>::const_iterator &)> op) const {
-		typename std::vector<T>::const_iterator it = std::find_if(actors.begin(), actors.end(), [&name](const T &actors) { return (0 == name.compare(actors->getName())); });
+	void addActor(std::string name, T actor) { actors.insert(std::pair<std::string, T>(std::move(name), actor)); }
+	void removeActor(const std::string &name) { actors.erase(name); }
+	void restartOne(const std::string &name) const {
+		auto it = actors.find(name);
 		if (actors.end() != it)
-			op(it);
+			it->second->restart();
 	}
-
-	std::vector<T> actors;
+	void restartAll() const { std::for_each(actors.begin(), actors.end(), [](const std::pair<std::string, T> &e) { e.second->restart();} ); }
+private:
+	std::map<std::string, T> actors;
 };
 
 #endif
