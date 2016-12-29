@@ -55,9 +55,7 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 			connection = s.acceptOneConnection(2, &client_addr);
 			switch (connection.readInt<RegistryCommand>()) {
 				case RegistryCommand::REGISTER_REGISTRY: {
-					struct sockaddr_in addr;
-					memcpy(&addr, &client_addr.ai_addr, sizeof(addr));
-					registryAddresses.insert(connection.readString(), addr);
+					registryAddresses.insert(connection.readString(), client_addr);
 					connection.writeString(this->name);
 					break;
 				}
@@ -83,7 +81,7 @@ std::string ActorRegistry::addReference(const std::string &host, uint16_t port) 
 	connection.writeInt(RegistryCommand::REGISTER_REGISTRY).writeString(name);
 	//should read status...and react in consequence: what if failure returned?
 	const std::string otherName = connection.readString();
-	registryAddresses.insert(otherName, ClientSocket::toSockAddr(host, port));
+	registryAddresses.insert(otherName, ClientSocket::toNetAddr(host, port));
 	return otherName;
 }
 
@@ -105,7 +103,7 @@ std::shared_ptr<LinkApi> ActorRegistry::getLocalActor(const std::string &name) c
 
 std::shared_ptr<LinkApi> ActorRegistry::getRemoteActor(const std::string &name) const {
 	GenericActorPtr actor;
-	registryAddresses.for_each([&actor, &name](const std::pair<const std::string, struct sockaddr_in> &c) {
+	registryAddresses.for_each([&actor, &name](const std::pair<const std::string, struct NetAddr> &c) {
 		auto connection = ClientSocket::openHostConnection(c.second);
 		connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
 		if (ACTOR_FOUND == connection.readInt<uint32_t>())

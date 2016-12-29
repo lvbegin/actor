@@ -61,24 +61,3 @@ struct NetAddr ClientSocket::toNetAddr(const std::string &host, uint16_t port) {
 	freeaddrinfo(addr);
 	return rc;
 }
-
-
-Connection ClientSocket::openHostConnection(const struct sockaddr_in &sin) {
-	const int fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (-1 == fd)
-		THROW(std::runtime_error, "socket creation failed.");
-	if (-1 == connect(fd, reinterpret_cast<const sockaddr*>(&sin), sizeof(struct sockaddr_in)))
-		THROW(std::runtime_error, "cannot connect.");
-	return Connection(fd);
-}
-
-struct sockaddr_in ClientSocket::toSockAddr(const std::string &host, uint16_t port) {
-	sockaddr_in sin;
-	hostent *he = gethostbyname(host.c_str()); //not thread safe ...
-	if (nullptr == he)
-		THROW(std::runtime_error, "cannot convert hostname.");
-	memcpy(&sin.sin_addr.s_addr, he->h_addr, he->h_length);
-	sin.sin_family = AF_INET;
-	sin.sin_port = htons(port);
-	return sin;
-}

@@ -44,9 +44,6 @@ public:
 	static Connection openHostConnection(const std::string &host, uint16_t port);
 	static Connection openHostConnection(const struct NetAddr &sin);
 	static struct NetAddr toNetAddr(const std::string &host, uint16_t port);
-
-	static struct sockaddr_in toSockAddr(const std::string &host, uint16_t port);
-	static Connection openHostConnection(const struct sockaddr_in &sin);
 };
 
 
