@@ -32,6 +32,7 @@
 #include <proxyServer.h>
 #include <actorRegistry.h>
 #include <clientSocket.h>
+#include <command.h>
 
 #include <cstdlib>
 #include <iostream>

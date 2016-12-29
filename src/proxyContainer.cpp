@@ -28,6 +28,7 @@
  */
 
 #include <proxyContainer.h>
+#include <command.h>
 
 #include <tuple>
 
