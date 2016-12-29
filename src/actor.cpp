@@ -88,16 +88,19 @@ ActorRef Actor::createActorRef(std::string name, ActorBody body, RestartStrategy
 
 ActorRef Actor::createActorRefWithRestart(std::string name, ActorBody body, std::function<void(void)> atRestart,
 											RestartStrategy restartStragy) {
-	return std::make_shared<Actor>(name, body, atRestart, restartStragy);
+	return std::make_unique<Actor>(name, body, atRestart, restartStragy);
 }
 
 LinkApi *Actor::getActorLink() { return new ActorLink(name, executorQueue); }
 
-void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
+std::shared_ptr<LinkApi> Actor::getActorLinkRef() { return std::make_shared<ActorLink>(name, executorQueue); }
+
+
+void Actor::registerActor(ActorRef &monitor, ActorRef &monitored) {
 	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.add(monitored->getName(), monitored->executorQueue); } );
 }
 
-void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
+void Actor::unregisterActor(ActorRef &monitor, ActorRef &monitored) {
 	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.remove(monitored->getName()); } );
 }
 

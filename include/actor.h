@@ -41,7 +41,7 @@
 #include <mutex>
 
 class Actor;
-using ActorRef = std::shared_ptr<Actor>;
+using ActorRef = std::unique_ptr<Actor>;
 
 using ActorBody = std::function<StatusCode(int, const std::vector<unsigned char> &)>;
 
@@ -60,13 +60,14 @@ public:
 	void restart(void);
 	std::string getName(void) const;
 	LinkApi *getActorLink();
+	std::shared_ptr<LinkApi> getActorLinkRef();
 
 	static void notifyError(int e);
 	static ActorRef createActorRef(std::string name, ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);
 	static ActorRef createActorRefWithRestart(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStragy = defaultRestartStrategy);
 
-	static void registerActor(ActorRef monitor, ActorRef monitored);
-	static void unregisterActor(ActorRef monitor, ActorRef monitored);
+	static void registerActor(ActorRef &monitor, ActorRef &monitored);
+	static void unregisterActor(ActorRef &monitor, ActorRef &monitored);
 
 private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
