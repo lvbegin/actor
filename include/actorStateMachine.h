@@ -10,7 +10,7 @@ public:
 	ActorStateMachine();
 	~ActorStateMachine();
 	void moveTo(ActorState newState);
-	void ensureState(ActorState state);
+	bool isIn(ActorState state);
 private:
 	std::mutex mutex;
 	std::condition_variable stateChanged;

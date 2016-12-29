@@ -42,7 +42,7 @@ Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atResta
 
 Actor::~Actor() { /* we must also unregister the actor to the suppervisor */
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
-	executorQueue->post(MessageType::COMMAND_MESSAGE, Executor::COMMAND_SHUTDOWN);
+	executorQueue->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);
 };
 
 StatusCode Actor::postSync(int i, std::vector<unsigned char> params) {
@@ -93,15 +93,12 @@ ActorRef Actor::createActorRefWithRestart(std::string name, ActorBody body, std:
 
 LinkApi *Actor::getActorLink() { return new ActorLink(name, executorQueue); }
 
-#define QUEUE
-#ifdef QUEUE
-
 void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
-	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.addActor(monitored->getName(), monitored); } );
+	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.add(monitored->getName(), monitored->executorQueue); } );
 }
 
 void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
-	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.removeActor(monitored->getName()); } );
+	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.remove(monitored->getName()); } );
 }
 
 void Actor::doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std::function<void(void)> op) {
@@ -110,7 +107,7 @@ void Actor::doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std:
     std::lock_guard<std::mutex> l2(monitored->monitorMutex, std::adopt_lock);
 
     auto tmp = std::move(monitored->supervisor);
-    monitored->supervisor = std::weak_ptr<Actor>(monitor);
+    monitored->supervisor = std::weak_ptr<MessageQueue>(monitor->executorQueue);
     try {
     	op();
     } catch (std::exception &e) {
@@ -118,41 +115,12 @@ void Actor::doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std:
     	throw e;
     }
 }
-#else
-
-void Actor::registerActor(ActorRef monitor, ActorRef monitored) {
-	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored2.addActor(monitored->executorQueue); } );
-}
-
-void Actor::unregisterActor(ActorRef monitor, ActorRef monitored) {
-	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.removeActor(monitored->getName()); } );
-}
-
-void Actor::doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std::function<void(void)> op) {
-	std::lock(monitor->monitorMutex, monitored->monitorMutex);
-    std::lock_guard<std::mutex> l1(monitor->monitorMutex, std::adopt_lock);
-    std::lock_guard<std::mutex> l2(monitored->monitorMutex, std::adopt_lock);
-
-    auto tmp = std::move(monitored->supervisor2);
-    monitored->supervisor2 = std::weak_ptr<MessageQueue>(monitor->executorQueue); //What happens if ptr is null ...
-    try {
-    	op();
-    } catch (std::exception &e) {
-    	monitored->supervisor = std::move(tmp);
-    	throw e;
-    }
-}
-
-#endif
 
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
-void Actor::postError(int i, const std::string &actorName) {
-	executorQueue->post(MessageType::ERROR_MESSAGE, i, std::vector<unsigned char>(actorName.begin(), actorName.end()));
-}
-
 StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, const std::vector<unsigned char> &params) {
-	//stateMachine.ensureState(ActorStateMachine::ActorState::RUNNING);
+	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED))
+		return StatusCode::ok;
 
 	if (MessageType::ERROR_MESSAGE == type)
 		return doSupervisorOperation(code, params);
@@ -168,12 +136,12 @@ StatusCode Actor::executeActorBody(ActorBody body, int code, const std::vector<u
 	} catch (ActorException &e) {
 		const auto supervisorRef = supervisor.lock();
 		if (nullptr != supervisorRef.get())
-			supervisorRef->postError(e.getErrorCode(), name);
+			supervisorRef->post(MessageType::ERROR_MESSAGE,e.getErrorCode(), std::vector<unsigned char>(name.begin(), name.end()));
 		return StatusCode::error;
 	} catch (std::exception &e) {
 		const auto supervisorRef = supervisor.lock();
 		if (nullptr != supervisorRef.get())
-			supervisorRef->postError(EXCEPTION_THROWN_ERROR, name);
+			supervisorRef->post(MessageType::ERROR_MESSAGE, EXCEPTION_THROWN_ERROR, std::vector<unsigned char>(name.begin(), name.end()));
 		return StatusCode::error;
 	}
 }

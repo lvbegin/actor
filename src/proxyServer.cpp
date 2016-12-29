@@ -67,7 +67,7 @@ void proxyServer::startThread(GenericActorPtr actor, Connection connection, std:
 			default:
 				continue;
 		}
-		if (AbstractActor::COMMAND_SHUTDOWN == command) {
+		if (Command::COMMAND_SHUTDOWN == command) {
 			notifyTerminate();
 			return;
 		}

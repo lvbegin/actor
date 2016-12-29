@@ -30,12 +30,12 @@
 #ifndef PROXY_CLIENT_H__
 #define PROXY_CLIENT_H__
 
-#include <AbstractActor.h>
+#include <actorLink.h>
 #include <connection.h>
 
 #include <string>
 
-class proxyClient : public AbstractActor {
+class proxyClient : public LinkApi {
 public:
 	proxyClient(std::string name, Connection connection);
 	~proxyClient();

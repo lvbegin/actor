@@ -29,6 +29,7 @@
 
 #include <executor.h>
 #include <exception.h>
+#include <command.h>
 
 Executor::Executor(ExecutorBody body, MessageQueue *queue, std::function<void(void)> atStart) : messageQueue(queue),
 					thread([this, body, atStart]() { atStart(); executeBody(body); }) { }
@@ -41,7 +42,7 @@ void Executor::executeBody(ExecutorBody body) {
 
 	while (true) {
 		struct MessageQueue::message message(messageQueue->get());
-		const StatusCode status = (MessageType::COMMAND_MESSAGE == message.type && Executor::COMMAND_SHUTDOWN == message.code) ?
+		const StatusCode status = (MessageType::COMMAND_MESSAGE == message.type && Command::COMMAND_SHUTDOWN == message.code) ?
 				StatusCode::shutdown : body(message.type, message.code, std::move(message.params));
 
 		switch (status) {

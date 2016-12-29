@@ -30,13 +30,12 @@
 #ifndef ACTOR_H__
 #define ACTOR_H__
 
-#include <AbstractActor.h>
-#include <Controller.h>
+#include <actorController.h>
+#include <actorLink.h>
 #include <executor.h>
 #include <restartStragegy.h>
 #include <actorStateMachine.h>
 #include <actorLink.h>
-
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -46,7 +45,7 @@ using ActorRef = std::shared_ptr<Actor>;
 
 using ActorBody = std::function<StatusCode(int, const std::vector<unsigned char> &)>;
 
-class Actor : public AbstractActor {
+class Actor : public LinkApi {
 public:
 	Actor(std::string name, ActorBody body, RestartStrategy restartStrategy = defaultRestartStrategy);
 	Actor(std::string name, ActorBody body,
@@ -77,16 +76,13 @@ private:
 	std::shared_ptr<MessageQueue> executorQueue;
 	const RestartStrategy restartStrategy;
 	std::mutex monitorMutex;
-	Controller<ActorRef> monitored;
-	std::weak_ptr<Actor> supervisor;
-	Controller<std::shared_ptr<MessageQueue>> monitored2;
-	std::weak_ptr<MessageQueue> supervisor2;
+	ActorController monitored;
+	std::weak_ptr<MessageQueue> supervisor;
 	std::function<void(void)> atRestart;
 	ActorBody body;
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
 	StatusCode actorExecutor(ActorBody body, MessageType type, int command, const std::vector<unsigned char> &params);
-	void postError(int i, const std::string &actorName);
 	StatusCode doSupervisorOperation(int code, const std::vector<unsigned char> &params);
 	StatusCode executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params);
 	static void doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std::function<void(void)> op);

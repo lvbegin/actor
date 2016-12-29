@@ -47,7 +47,7 @@ static int basicActorTest(void) {
 		std::cout << "post failure" << std::endl;
 		return 1;
 	}
-	a.postSync(Executor::COMMAND_SHUTDOWN);
+	a.postSync(Command::COMMAND_SHUTDOWN);
 	return 0;
 }
 
@@ -89,7 +89,7 @@ static int proxyTest(void) {
 	static const uint16_t port = 4011;
 	std::thread t(executeSeverProxy, port);
 	proxyClient client("proxyName", openOneConnection(port));
-	client.postSync(AbstractActor::COMMAND_SHUTDOWN);
+	client.postSync(Command::COMMAND_SHUTDOWN);
 	t.join();
 	return 0;
 }
@@ -103,7 +103,7 @@ static int proxyRestartTest(void) {
 	int NbError = (StatusCode::ok == client.postSync(command)) ? 0 : 1;
 	client.restart();
 	NbError += (StatusCode::ok == client.postSync(command)) ? 0 : 1;
-	NbError +=  (StatusCode::ok == client.postSync(AbstractActor::COMMAND_SHUTDOWN)) ? 0 : 1;
+	NbError +=  (StatusCode::ok == client.postSync(Command::COMMAND_SHUTDOWN)) ? 0 : 1;
 	t.join();
 	return NbError;
 }
@@ -266,7 +266,7 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	auto actor = registry1.getActor(actorName);
 	if (StatusCode::ok != actor->postSync(dummyCommand, std::vector<unsigned char>(paramValue.begin(), paramValue.end())))
 		return 1;
-	actor->postSync(AbstractActor::COMMAND_SHUTDOWN);
+	actor->postSync(Command::COMMAND_SHUTDOWN);
 	return nullptr != actor.get() ? 0 : 1;
 }
 
@@ -300,8 +300,8 @@ static int initSupervisionTest() {
 	Actor::registerActor(supervisor, supervised);
 	Actor::unregisterActor(supervisor, supervised);
 
-	supervisor->post(Executor::COMMAND_SHUTDOWN);
-	supervised->post(Executor::COMMAND_SHUTDOWN);
+	supervisor->post(Command::COMMAND_SHUTDOWN);
+	supervised->post(Command::COMMAND_SHUTDOWN);
 
 	return 0;
 }
@@ -326,8 +326,8 @@ static int supervisorRestartsActorTest() {
 		std::cout << "other command not ok" << std::endl;
 	Actor::unregisterActor(supervisor, supervised);
 
-	supervisor->post(Executor::COMMAND_SHUTDOWN);
-	supervised->post(Executor::COMMAND_SHUTDOWN);
+	supervisor->post(Command::COMMAND_SHUTDOWN);
+	supervised->post(Command::COMMAND_SHUTDOWN);
 
 	return (exceptionThrown) ? 0 : 1;
 }
@@ -365,9 +365,9 @@ static int actorNotifiesErrorToSupervisorTest() {
 		return 1;
 	Actor::unregisterActor(supervisor, supervised1);
 
-	supervisor->post(Executor::COMMAND_SHUTDOWN);
-	supervised1->post(Executor::COMMAND_SHUTDOWN);
-	supervised2->post(Executor::COMMAND_SHUTDOWN);
+	supervisor->post(Command::COMMAND_SHUTDOWN);
+	supervised1->post(Command::COMMAND_SHUTDOWN);
+	supervised2->post(Command::COMMAND_SHUTDOWN);
 	return 0;
 }
 
@@ -383,7 +383,7 @@ static int actorDoesNothingIfNoSupervisorTest() {
 	if (StatusCode::error != supervised->postSync(someCommand))
 		return 1;
 
-	supervised->post(Executor::COMMAND_SHUTDOWN);
+	supervised->post(Command::COMMAND_SHUTDOWN);
 
 	return 0;
 }
@@ -400,7 +400,7 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 	if (StatusCode::error != supervised->postSync(someCommand))
 		return 1;
 
-	supervised->post(Executor::COMMAND_SHUTDOWN);
+	supervised->post(Command::COMMAND_SHUTDOWN);
 
 	return 0;
 }
@@ -444,9 +444,9 @@ static int restartAllActorBySupervisorTest() {
 	Actor::unregisterActor(supervisor, supervised1);
 	Actor::unregisterActor(supervisor, supervised2);
 
-	supervisor->post(Executor::COMMAND_SHUTDOWN);
-	supervised1->post(Executor::COMMAND_SHUTDOWN);
-	supervised2->post(Executor::COMMAND_SHUTDOWN);
+	supervisor->post(Command::COMMAND_SHUTDOWN);
+	supervised1->post(Command::COMMAND_SHUTDOWN);
+	supervised2->post(Command::COMMAND_SHUTDOWN);
 
 	return 0;
 }
@@ -454,7 +454,7 @@ static int restartAllActorBySupervisorTest() {
 static int executorTest() {
 	MessageQueue messageQueue;
 	Executor executor([](MessageType, int, const std::vector<unsigned char> &) { return StatusCode::shutdown; }, &messageQueue);
-	messageQueue.post(MessageType::COMMAND_MESSAGE, Executor::COMMAND_SHUTDOWN);
+	messageQueue.post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);
 	return 0;
 }
 
@@ -473,6 +473,7 @@ int main() {
 	nbFailure += findActorFromOtherRegistryTest();
 	nbFailure += findActorFromOtherRegistryAndSendCommandWithParamsTest();
 	nbFailure += findUnknownActorInMultipleRegistryTest();
+
 	nbFailure += initSupervisionTest();
 	nbFailure += supervisorRestartsActorTest();
  	nbFailure += actorNotifiesErrorToSupervisorTest();

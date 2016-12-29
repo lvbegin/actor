@@ -4,8 +4,6 @@
 ActorStateMachine::ActorStateMachine() : state(ActorState::RUNNING) { }
 ActorStateMachine::~ActorStateMachine() = default;
 
-#include <iostream>
-
 void ActorStateMachine::moveTo(ActorState newState) {
 	std::unique_lock<std::mutex> l(mutex);
 
@@ -22,10 +20,6 @@ void ActorStateMachine::moveTo(ActorState newState) {
 			state = newState;
 			break;
 		case ActorState::STOPPED:
-//			std::cout << "state= " << (this->state == ActorState::RUNNING ? "RUNNING" :
-//										this->state == ActorState::RESTARTING ? "RESTARTING" :
-//												"STOPPED")
-//			  	  	  << std::endl;
 			if (ActorState::STOPPED == state)
 				THROW(std::runtime_error, "actor cannot move to stopped state.");
 			stateChanged.wait(l, [this]() { return ActorState::RUNNING == this->state; });
@@ -36,7 +30,4 @@ void ActorStateMachine::moveTo(ActorState newState) {
 	}
 }
 
-void ActorStateMachine::ensureState(ActorState state) {
-	if (!(this->state == state))
-		THROW(std::runtime_error, "bad Actor state machine state.");
-}
+bool ActorStateMachine::isIn(ActorState state) { return (this->state == state); }

@@ -49,8 +49,6 @@ public:
 	Executor &operator=(const Executor &a) = delete;
 	Executor(Executor &&a) = delete;
 	Executor &operator=(Executor &&a) = delete;
-
-	static const uint32_t COMMAND_SHUTDOWN = 0;
 private:
 	void executeBody(ExecutorBody body);
 	bool started;

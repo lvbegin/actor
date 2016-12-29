@@ -31,28 +31,45 @@
 #define ACTOR_CONTROLLER_H__
 
 #include <exception.h>
+#include <command.h>
+#include <messageQueue.h>
 
 #include <algorithm>
 #include <mutex>
 #include <map>
 #include <functional>
 
-template <typename T>
-class Controller {
+class ActorController {
 public:
-	Controller() = default;
-	~Controller() = default;
+	ActorController() = default;
+	~ActorController() = default;
 
-	void addActor(std::string name, T actor) { actors.insert(std::pair<std::string, T>(std::move(name), actor)); }
-	void removeActor(const std::string &name) { actors.erase(name); }
+	void add(std::string name, std::shared_ptr<MessageQueue> actorLink) {
+		std::unique_lock<std::mutex> l(mutex);
+
+		actors.insert(std::pair<std::string, std::shared_ptr<MessageQueue>>(std::move(name), std::move(actorLink)));
+	}
+	void remove(const std::string &name) {
+		std::unique_lock<std::mutex> l(mutex);
+
+		actors.erase(name);
+	}
 	void restartOne(const std::string &name) const {
+		std::unique_lock<std::mutex> l(mutex);
+
 		auto it = actors.find(name);
 		if (actors.end() != it)
-			it->second->restart();
+			restart(it->second);
 	}
-	void restartAll() const { std::for_each(actors.begin(), actors.end(), [](const std::pair<std::string, T> &e) { e.second->restart();} ); }
+	void restartAll() const {
+		std::unique_lock<std::mutex> l(mutex);
+
+		std::for_each(actors.begin(), actors.end(), [](const std::pair<std::string, std::shared_ptr<MessageQueue>> &e) { restart(e.second);} );
+	}
 private:
-	std::map<std::string, T> actors;
+	mutable std::mutex mutex;
+	std::map<std::string, std::shared_ptr<MessageQueue>> actors;
+	static void restart(const std::shared_ptr<MessageQueue> &link) { link->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_RESTART); }
 };
 
 #endif
