@@ -85,11 +85,11 @@ std::string ActorRegistry::addReference(std::string host, uint16_t port) {
 
 void ActorRegistry::removeReference(std::string registryName) { registryAddresses.erase(registryName); }
 
-void ActorRegistry::registerActor(GenericActorPtr actor) { actors.insert(actor->getName(), actor); }
+void ActorRegistry::registerActor(std::string name, std::shared_ptr<LinkApi> actor) { actors.insert(name, actor); }
 
 void ActorRegistry::unregisterActor(std::string name) { actors.erase(name); }
 
-GenericActorPtr  ActorRegistry::getActor(std::string name) const {
+std::shared_ptr<LinkApi>  ActorRegistry::getActor(std::string name) const {
 	try {
 		return getLocalActor(name);
 	} catch (std::out_of_range &e) {
@@ -97,9 +97,9 @@ GenericActorPtr  ActorRegistry::getActor(std::string name) const {
 	}
 }
 
-GenericActorPtr ActorRegistry::getLocalActor(const std::string &name) const { return actors.find(name); }
+std::shared_ptr<LinkApi> ActorRegistry::getLocalActor(const std::string &name) const { return actors.find(name); }
 
-GenericActorPtr ActorRegistry::getRemoteActor(const std::string &name) const {
+std::shared_ptr<LinkApi> ActorRegistry::getRemoteActor(const std::string &name) const {
 	GenericActorPtr actor;
 	registryAddresses.for_each([&actor, &name](const std::pair<const std::string, struct sockaddr_in> &c) {
 		auto connection = ClientSocket::openHostConnection(c.second);
