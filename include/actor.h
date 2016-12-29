@@ -79,8 +79,8 @@ private:
 	std::mutex monitorMutex;
 	ActorController monitored;
 	std::weak_ptr<MessageQueue> supervisor;
-	std::function<void(void)> atRestart;
-	ActorBody body;
+	const std::function<void(void)> atRestart;
+	const ActorBody body;
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
 	StatusCode actorExecutor(ActorBody body, MessageType type, int command, const std::vector<unsigned char> &params);
