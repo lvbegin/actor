@@ -38,18 +38,13 @@
 
 #include <memory.h>
 
-struct netAddr{
-	  struct sockaddr ai_addr;
-	  size_t ai_addrlen;
-	  netAddr(struct sockaddr ai_addr, size_t ai_addrlen) : ai_addr(ai_addr), ai_addrlen(ai_addrlen) { }
-};
 
-Connection ClientSocket::openHostConnection(std::string host, uint16_t port) {
-	struct netAddr addr = toNetAddr(host, port);
+Connection ClientSocket::openHostConnection(const std::string &host, uint16_t port) {
+	struct NetAddr addr = toNetAddr(host, port);
 	return openHostConnection(addr);
 }
 
-Connection ClientSocket::openHostConnection(const struct netAddr &sin) {
+Connection ClientSocket::openHostConnection(const struct NetAddr &sin) {
 	const int fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == fd)
 		THROW(std::runtime_error, "socket creation failed.");
@@ -58,11 +53,11 @@ Connection ClientSocket::openHostConnection(const struct netAddr &sin) {
 	return Connection(fd);
 }
 
-struct netAddr ClientSocket::toNetAddr(std::string host, uint16_t port) {
+struct NetAddr ClientSocket::toNetAddr(const std::string &host, uint16_t port) {
 	struct addrinfo *addr;
 	if (0 > getaddrinfo(host.c_str(), std::to_string(port).c_str(), NULL, &addr))
 		THROW(std::runtime_error, "cannot convert hostname.");
-	const auto rc = netAddr(*addr->ai_addr, addr->ai_addrlen);
+	const auto rc = NetAddr(*addr->ai_addr, addr->ai_addrlen);
 	freeaddrinfo(addr);
 	return rc;
 }
@@ -77,7 +72,7 @@ Connection ClientSocket::openHostConnection(const struct sockaddr_in &sin) {
 	return Connection(fd);
 }
 
-struct sockaddr_in ClientSocket::toSockAddr(std::string host, uint16_t port) {
+struct sockaddr_in ClientSocket::toSockAddr(const std::string &host, uint16_t port) {
 	sockaddr_in sin;
 	hostent *he = gethostbyname(host.c_str()); //not thread safe ...
 	if (nullptr == he)

@@ -46,17 +46,21 @@ ActorRegistry::~ActorRegistry() {
 	t.join();
 }
 
+#include <string.h>
 void ActorRegistry::registryBody(const ServerSocket &s) {
 	while (!terminated) {
-		struct sockaddr_in client_addr {};
+		struct NetAddr client_addr;
 		Connection connection;
 		try {
 			connection = s.acceptOneConnection(2, &client_addr);
 			switch (connection.readInt<RegistryCommand>()) {
-				case RegistryCommand::REGISTER_REGISTRY:
-					registryAddresses.insert(connection.readString(), client_addr);
+				case RegistryCommand::REGISTER_REGISTRY: {
+					struct sockaddr_in addr;
+					memcpy(&addr, &client_addr.ai_addr, sizeof(addr));
+					registryAddresses.insert(connection.readString(), addr);
 					connection.writeString(this->name);
 					break;
+				}
 				case RegistryCommand::SEARCH_ACTOR:
 					try {
 						auto actor = actors.find(connection.readString());
@@ -74,7 +78,7 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 	}
 }
 
-std::string ActorRegistry::addReference(std::string host, uint16_t port) {
+std::string ActorRegistry::addReference(const std::string &host, uint16_t port) {
 	const auto connection = ClientSocket::openHostConnection(host, port);
 	connection.writeInt(RegistryCommand::REGISTER_REGISTRY).writeString(name);
 	//should read status...and react in consequence: what if failure returned?
@@ -83,11 +87,11 @@ std::string ActorRegistry::addReference(std::string host, uint16_t port) {
 	return otherName;
 }
 
-void ActorRegistry::removeReference(std::string registryName) { registryAddresses.erase(registryName); }
+void ActorRegistry::removeReference(std::string registryName) { registryAddresses.erase(std::move(registryName)); }
 
-void ActorRegistry::registerActor(std::string name, std::shared_ptr<LinkApi> actor) { actors.insert(name, actor); }
+void ActorRegistry::registerActor(std::string name, std::shared_ptr<LinkApi> actor) { actors.insert(std::move(name), std::move(actor)); }
 
-void ActorRegistry::unregisterActor(std::string name) { actors.erase(name); }
+void ActorRegistry::unregisterActor(std::string name) { actors.erase(std::move(name)); }
 
 std::shared_ptr<LinkApi>  ActorRegistry::getActor(std::string name) const {
 	try {

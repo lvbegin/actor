@@ -27,33 +27,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SERVER_SOCKET_H__
-#define SERVER_SOCKET_H__
+#ifndef NET_ADDR_H__
+#define NET_ADDR_H__
 
-#include <connection.h>
-#include <netAddr.h>
-#include <cstdint>
-#include <cstddef>
-#include <string>
+#include <arpa/inet.h>
 
-class ServerSocket {
-public:
-	static Connection getConnection(int port);
-	ServerSocket(uint16_t port);
-
-	ServerSocket(const ServerSocket &s) = delete;
-	ServerSocket &operator=(const ServerSocket &s) = delete;
-
-	ServerSocket(ServerSocket&& s);
-	ServerSocket &operator=(ServerSocket&& s);
-
-	~ServerSocket();
-	Connection acceptOneConnection(int timeout = 2, struct NetAddr *client_addr = NULL) const;
-private:
-	static int listenOnSocket(uint16_t port);
-	void closeSocket(void);
-	int acceptFd;
-	fd_set set;
+struct NetAddr{
+	  struct sockaddr ai_addr;
+	  size_t ai_addrlen;
+	  NetAddr(struct sockaddr ai_addr, size_t ai_addrlen) : ai_addr(ai_addr), ai_addrlen(ai_addrlen) { }
+	  NetAddr() = default;
 };
 
 #endif

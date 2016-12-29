@@ -65,14 +65,15 @@ void ServerSocket::closeSocket(void) {
 
 Connection ServerSocket::getConnection(int port) { return ServerSocket(port).acceptOneConnection(); }
 
-Connection ServerSocket::acceptOneConnection(int timeout, struct sockaddr_in *client_addr) const {
-	struct sockaddr_in client_addr_struct { };
-	struct sockaddr_in *client_addr_ptr = (nullptr == client_addr) ? &client_addr_struct : client_addr;
-	socklen_t client_len = sizeof(client_addr);
+Connection ServerSocket::acceptOneConnection(int timeout, struct NetAddr *client_addr) const {
+	struct NetAddr client_addr_struct { };
+	struct NetAddr *NetAddr_ptr = (nullptr == client_addr) ? &client_addr_struct : client_addr;
+	socklen_t length = sizeof(NetAddr_ptr->ai_addr);
 	waitForRead<ConnectionTimeout, std::runtime_error>(acceptFd, set, timeout);
-	const int newsockfd = accept(acceptFd, (struct sockaddr *)&client_addr_ptr, &client_len);
+	const int newsockfd = accept(acceptFd, &NetAddr_ptr->ai_addr, &length);
 	if (-1 == newsockfd)
 		THROW(std::runtime_error, "accept failed.");
+	NetAddr_ptr->ai_addrlen = length;
 	return Connection(newsockfd);
 }
 
