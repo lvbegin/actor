@@ -57,8 +57,8 @@ public:
 
 	StatusCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
-	LinkApi *getActorLink();
-	std::shared_ptr<LinkApi> getActorLinkRef();
+	LinkApi *getActorLink() const;
+	std::shared_ptr<LinkApi> getActorLinkRef() const;
 
 	static void notifyError(int e);
 	static ActorRef createActorRef(std::string name, ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);

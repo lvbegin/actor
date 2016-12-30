@@ -60,7 +60,6 @@ StatusCode Actor::restartSateMachine(void) {
 	return rc;
 }
 
-
 StatusCode Actor::doRestart(void) {
 	auto status = std::promise<StatusCode>();
 	auto e = std::promise<std::unique_ptr<Executor> &>();
@@ -89,10 +88,9 @@ ActorRef Actor::createActorRefWithRestart(std::string name, ActorBody body, std:
 	return std::make_unique<Actor>(name, body, atRestart, restartStragy);
 }
 
-LinkApi *Actor::getActorLink() { return new ActorQueue(executorQueue); }
+LinkApi *Actor::getActorLink() const { return new ActorQueue(executorQueue); }
 
-std::shared_ptr<LinkApi> Actor::getActorLinkRef() { return std::make_shared<ActorQueue>(executorQueue); }
-
+std::shared_ptr<LinkApi> Actor::getActorLinkRef() const { return std::make_shared<ActorQueue>(executorQueue); }
 
 void Actor::registerActor(ActorRef &monitor, ActorRef &monitored) {
 	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.add(monitored->getName(), monitored->executorQueue); } );
