@@ -57,8 +57,6 @@ public:
 
 	StatusCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
-	void restart(void);
-	std::string getName(void) const;
 	LinkApi *getActorLink();
 	std::shared_ptr<LinkApi> getActorLinkRef();
 
@@ -70,6 +68,7 @@ public:
 	static void unregisterActor(ActorRef &monitor, ActorRef &monitored);
 
 private:
+	std::string getName(void) const;
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
 
 	static std::function<void(void)> doNothing;

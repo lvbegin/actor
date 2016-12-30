@@ -53,8 +53,6 @@ void Actor::post(int i, std::vector<unsigned char> params) {
 	executorQueue->post(MessageType::COMMAND_MESSAGE, i, params);
 }
 
-void Actor::restart(void) { executorQueue->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_RESTART); }
-
 StatusCode Actor::restartSateMachine(void) {
 	stateMachine.moveTo(ActorStateMachine::ActorState::RESTARTING);
 	const auto rc = doRestart();

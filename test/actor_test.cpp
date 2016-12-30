@@ -120,10 +120,11 @@ static int registryConnectTest(void) {
 static int registryAddActorTest(void) {
 	std::cout << "registryAddAtorTest" << std::endl;
 	static const uint16_t port = 4001;
+	static const std::string actorName("my actor");
 	ActorRegistry registry(std::string("name"), port);
-	auto a = Actor::createActorRef("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 
-	registry.registerActor(a->getName(), a->getActorLinkRef());
+	registry.registerActor(actorName, a->getActorLinkRef());
 
 	return 0;
 }
@@ -131,18 +132,19 @@ static int registryAddActorTest(void) {
 static int registryAddActorAndRemoveTest(void) {
 	std::cout << "registryAddActorAndRemoveTest" << std::endl;
 	static const uint16_t port = 4001;
+	static const std::string actorName("my actor");
 	ActorRegistry registry(std::string("name"), port);
-	auto a = Actor::createActorRef("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 
-	registry.registerActor(a->getName(), a->getActorLinkRef());
-	registry.unregisterActor("my actor");
+	registry.registerActor(actorName, a->getActorLinkRef());
+	registry.unregisterActor(actorName);
 	try {
-	    registry.unregisterActor("my actor");
+	    registry.unregisterActor(actorName);
 	    return 1;
 	} catch (std::runtime_error &e) { }
 
-	a = Actor::createActorRef("my actor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
-	registry.registerActor(a->getName(), a->getActorLinkRef());
+	a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	registry.registerActor(actorName, a->getActorLinkRef());
 	return 0;
 }
 
@@ -190,7 +192,7 @@ static int registeryAddActorAndFindItBackTest() {
 
 	auto a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	auto actorRefLink = a->getActorLinkRef();
-	registry.registerActor(a->getName(), actorRefLink);
+	registry.registerActor(actorName, actorRefLink);
 
 	std::shared_ptr<LinkApi> b = registry.getActor(actorName);
 
@@ -205,7 +207,7 @@ static int registeryFindUnknownActorTest() {
 	ActorRegistry registry(std::string("name1"), port);
 
 	auto a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
-	registry.registerActor(a->getName(), a->getActorLinkRef());
+	registry.registerActor(actorName, a->getActorLinkRef());
 
 	ActorLink b = registry.getActor(std::string("wrong name"));
 	return (nullptr == b.get()) ? 0 : 1;
@@ -233,7 +235,7 @@ static int findActorFromOtherRegistryTest() {
 		else
 			return StatusCode::error;} );
 
-	registry2.registerActor(a->getName(), a->getActorLinkRef());
+	registry2.registerActor(actorName, a->getActorLinkRef());
 	auto actor = registry1.getActor(actorName);
 	if (nullptr == actor.get())
 		return 1;
@@ -265,7 +267,7 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 							return StatusCode::ok;
 						else
 							return StatusCode::error;} );
-	registry2.registerActor(a->getName(), a->getActorLinkRef());
+	registry2.registerActor(actorName, a->getActorLinkRef());
 	auto actor = registry1.getActor(actorName);
 	if (StatusCode::ok != actor->postSync(dummyCommand, std::vector<unsigned char>(paramValue.begin(), paramValue.end())))
 		return 1;
@@ -290,7 +292,7 @@ static int findUnknownActorInMultipleRegistryTest() {
 	if (name2.compare(name))
 		return 1;
 	auto a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
-	registry2.registerActor(a->getName(), a->getActorLinkRef());
+	registry2.registerActor(actorName, a->getActorLinkRef());
 	auto actor = registry1.getActor("unknown actor");
 	return nullptr == actor.get() ? 0 : 1;
 }
