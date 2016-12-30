@@ -27,21 +27,11 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ACTOR_LINK_H__
-#define ACTOR_LINK_H__
+#ifndef ACTOR_QUEUE_H__
+#define ACTOR_QUEUE_H__
 
+#include <actorAPI.h>
 #include <messageQueue.h>
-
-class LinkApi {
-public:
-	virtual ~LinkApi() = default;
-	virtual StatusCode postSync(int code, std::vector<unsigned char> params = std::vector<unsigned char>()) = 0;
-	virtual void post(int code, std::vector<unsigned char> params = std::vector<unsigned char>()) = 0;
-protected:
-	LinkApi() = default;
-};
-
-using ActorLink = std::shared_ptr<LinkApi>;
 
 class ActorQueue : public LinkApi {
 public:

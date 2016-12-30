@@ -42,5 +42,3 @@ StatusCode proxyClient::postSync(int command, std::vector<unsigned char> params)
 void proxyClient::post(int command, std::vector<unsigned char> params) {
 	connection.writeInt(postType::Async).writeInt(command).writeRawData(params);
 }
-
-void proxyClient::restart() { connection.writeInt(postType::Restart); }

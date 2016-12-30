@@ -30,7 +30,7 @@
 #ifndef PROXY_CLIENT_H__
 #define PROXY_CLIENT_H__
 
-#include <actorQueue.h>
+#include <actorAPI.h>
 #include <connection.h>
 
 #include <string>
@@ -42,7 +42,6 @@ public:
 
 	StatusCode postSync(int command, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void post(int command, std::vector<unsigned char> params = std::vector<unsigned char>());
-	void restart(void);
 private:
 	const Connection connection;
 };

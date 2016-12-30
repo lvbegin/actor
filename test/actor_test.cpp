@@ -102,7 +102,7 @@ static int proxyRestartTest(void) {
 	std::thread t(executeSeverProxy, port);
 	proxyClient client(openOneConnection(port));
 	int NbError = (StatusCode::ok == client.postSync(command)) ? 0 : 1;
-	client.restart();
+	client.post(Command::COMMAND_RESTART);
 	NbError += (StatusCode::ok == client.postSync(command)) ? 0 : 1;
 	NbError +=  (StatusCode::ok == client.postSync(Command::COMMAND_SHUTDOWN)) ? 0 : 1;
 	t.join();
