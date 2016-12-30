@@ -45,7 +45,7 @@ using ActorRef = std::unique_ptr<Actor>;
 
 using ActorBody = std::function<StatusCode(int, const std::vector<unsigned char> &)>;
 
-class Actor : public LinkApi {
+class Actor {
 public:
 	Actor(std::string name, ActorBody body, RestartStrategy restartStrategy = defaultRestartStrategy);
 	Actor(std::string name, ActorBody body,

@@ -72,9 +72,9 @@ static int basicActorWithParamsTest(void) {
 }
 
 void executeSeverProxy(uint16_t port) {
-	auto actor = std::make_shared<Actor>("actor name", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto actor = Actor::createActorRef("actor name", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	auto doNothing = []() { };
-	proxyServer server(actor, ServerSocket::getConnection(port), doNothing);
+	proxyServer server(actor->getActorLinkRef(), ServerSocket::getConnection(port), doNothing);
 }
 
 static Connection openOneConnection(uint16_t port) {
