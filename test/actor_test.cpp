@@ -89,7 +89,7 @@ static int proxyTest(void) {
 	std::cout << "proxyTest" << std::endl;
 	static const uint16_t port = 4011;
 	std::thread t(executeSeverProxy, port);
-	proxyClient client("proxyName", openOneConnection(port));
+	proxyClient client(openOneConnection(port));
 	client.postSync(Command::COMMAND_SHUTDOWN);
 	t.join();
 	return 0;
@@ -100,7 +100,7 @@ static int proxyRestartTest(void) {
 	static const uint16_t port = 4003;
 	static const int command = 0x33;
 	std::thread t(executeSeverProxy, port);
-	proxyClient client("proxyName", openOneConnection(port));
+	proxyClient client(openOneConnection(port));
 	int NbError = (StatusCode::ok == client.postSync(command)) ? 0 : 1;
 	client.restart();
 	NbError += (StatusCode::ok == client.postSync(command)) ? 0 : 1;
@@ -207,7 +207,7 @@ static int registeryFindUnknownActorTest() {
 	ActorRef a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	registry.registerActor(a->getName(), a->getActorLinkRef());
 
-	GenericActorPtr b = registry.getActor(std::string("wrong name"));
+	ActorLink b = registry.getActor(std::string("wrong name"));
 	return (nullptr == b.get()) ? 0 : 1;
 }
 

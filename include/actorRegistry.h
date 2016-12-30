@@ -30,8 +30,8 @@
 #ifndef ACTOR_REGISTRY_H__
 #define ACTOR_REGISTRY_H__
 
-#include <actorLink.h>
 #include <actor.h>
+#include <actorQueue.h>
 #include <cstdint>
 #include <thread>
 #include <memory>

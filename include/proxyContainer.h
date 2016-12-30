@@ -41,7 +41,7 @@ class ProxyContainer {
 public:
 	ProxyContainer();
 	~ProxyContainer();
-	void createNewProxy(GenericActorPtr actor, Connection connection);
+	void createNewProxy(ActorLink actor, Connection connection);
 	void deleteProxy(int i);
 private:
 	SharedMap<int, proxyServer> proxies;

@@ -91,9 +91,9 @@ ActorRef Actor::createActorRefWithRestart(std::string name, ActorBody body, std:
 	return std::make_unique<Actor>(name, body, atRestart, restartStragy);
 }
 
-LinkApi *Actor::getActorLink() { return new ActorLink(name, executorQueue); }
+LinkApi *Actor::getActorLink() { return new ActorQueue(executorQueue); }
 
-std::shared_ptr<LinkApi> Actor::getActorLinkRef() { return std::make_shared<ActorLink>(name, executorQueue); }
+std::shared_ptr<LinkApi> Actor::getActorLinkRef() { return std::make_shared<ActorQueue>(executorQueue); }
 
 
 void Actor::registerActor(ActorRef &monitor, ActorRef &monitored) {

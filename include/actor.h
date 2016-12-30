@@ -31,11 +31,11 @@
 #define ACTOR_H__
 
 #include <actorController.h>
-#include <actorLink.h>
+#include <actorQueue.h>
+#include <actorQueue.h>
 #include <executor.h>
 #include <restartStragegy.h>
 #include <actorStateMachine.h>
-#include <actorLink.h>
 #include <functional>
 #include <memory>
 #include <mutex>

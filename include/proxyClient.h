@@ -30,23 +30,20 @@
 #ifndef PROXY_CLIENT_H__
 #define PROXY_CLIENT_H__
 
-#include <actorLink.h>
+#include <actorQueue.h>
 #include <connection.h>
 
 #include <string>
 
 class proxyClient : public LinkApi {
 public:
-	proxyClient(std::string name, Connection connection);
+	proxyClient(Connection connection);
 	~proxyClient();
 
 	StatusCode postSync(int command, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void post(int command, std::vector<unsigned char> params = std::vector<unsigned char>());
 	void restart(void);
-	std::string getName(void) const;
-	LinkApi *getActorLink();
 private:
-	const std::string name;
 	const Connection connection;
 };
 

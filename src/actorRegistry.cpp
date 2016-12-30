@@ -102,12 +102,12 @@ std::shared_ptr<LinkApi>  ActorRegistry::getActor(std::string name) const {
 std::shared_ptr<LinkApi> ActorRegistry::getLocalActor(const std::string &name) const { return actors.find(name); }
 
 std::shared_ptr<LinkApi> ActorRegistry::getRemoteActor(const std::string &name) const {
-	GenericActorPtr actor;
+	ActorLink actor;
 	registryAddresses.for_each([&actor, &name](const std::pair<const std::string, struct NetAddr> &c) {
 		auto connection = ClientSocket::openHostConnection(c.second);
 		connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
 		if (ACTOR_FOUND == connection.readInt<uint32_t>())
-			actor.reset(new proxyClient(name, std::move(connection)));
+			actor.reset(new proxyClient(std::move(connection)));
 	});
 	return actor;
 }
