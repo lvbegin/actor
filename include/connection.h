@@ -34,10 +34,10 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 #include <arpa/inet.h>
 
-#include <iostream>
 
 class ConnectionTimeout : public std::runtime_error {
 public:
