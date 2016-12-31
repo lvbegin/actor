@@ -311,6 +311,21 @@ static int initSupervisionTest() {
 	return 0;
 }
 
+
+static int unregisterToSupervisorWhenActorDestroyedTest() {
+	std::cout << "unregisterToSupervisorWhenActorDestroyedTest" << std::endl;
+
+	auto supervisor = Actor::createActorRef("supervisor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	Actor::registerActor(supervisor, supervised);
+
+	supervised->post(Command::COMMAND_SHUTDOWN);
+	supervised.reset();
+	supervisor->post(Command::COMMAND_SHUTDOWN);
+
+	return 0;
+}
+
 static int supervisorRestartsActorTest() {
 	std::cout << "supervisorRestartsActorTest" << std::endl;
 	static bool exceptionThrown = false;
@@ -329,7 +344,6 @@ static int supervisorRestartsActorTest() {
 		std::cout << "error not returned" << std::endl;
 	if (StatusCode::ok != supervised->postSync(otherCommand))
 		std::cout << "other command not ok" << std::endl;
-	Actor::unregisterActor(supervisor, supervised);
 
 	supervisor->post(Command::COMMAND_SHUTDOWN);
 	supervised->post(Command::COMMAND_SHUTDOWN);
@@ -368,7 +382,6 @@ static int actorNotifiesErrorToSupervisorTest() {
 		sleep(1);
 	if (supervisorRestarted || !supervised1Restarted || supervised2Restarted)
 		return 1;
-	Actor::unregisterActor(supervisor, supervised1);
 
 	supervisor->post(Command::COMMAND_SHUTDOWN);
 	supervised1->post(Command::COMMAND_SHUTDOWN);
@@ -410,7 +423,6 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 	return 0;
 }
 
-/* Improve that test by checking that the Actors restarted */
 static int restartAllActorBySupervisorTest() {
 	std::cout << "restartAllActorBySupervisorTest" << std::endl;
 	static int someCommand = 0xaa;
@@ -446,9 +458,6 @@ static int restartAllActorBySupervisorTest() {
 	if (supervisorRestarted || !supervised1Restarted || !supervised2Restarted)
 		return 1;
 
-	Actor::unregisterActor(supervisor, supervised1);
-	Actor::unregisterActor(supervisor, supervised2);
-
 	supervisor->post(Command::COMMAND_SHUTDOWN);
 	supervised1->post(Command::COMMAND_SHUTDOWN);
 	supervised2->post(Command::COMMAND_SHUTDOWN);
@@ -479,6 +488,7 @@ int main() {
 	nbFailure += findActorFromOtherRegistryAndSendCommandWithParamsTest();
 	nbFailure += findUnknownActorInMultipleRegistryTest();
 	nbFailure += initSupervisionTest();
+	nbFailure += unregisterToSupervisorWhenActorDestroyedTest();
 	nbFailure += supervisorRestartsActorTest();
  	nbFailure += actorNotifiesErrorToSupervisorTest();
 	nbFailure += actorDoesNothingIfNoSupervisorTest();

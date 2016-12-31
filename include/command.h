@@ -35,7 +35,7 @@ public:
 	Command() = delete;
 	static const uint32_t COMMAND_SHUTDOWN = 0;
 	static const uint32_t COMMAND_RESTART = 1;
-
+	static const uint32_t COMMAND_UNREGISTER_ACTOR = 2;
 };
 
 #endif

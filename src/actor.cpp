@@ -40,8 +40,12 @@ Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atResta
 						executor(new Executor([this](MessageType type, int command, const std::vector<unsigned char> &params)
 								{ return this->actorExecutor(this->body, type, command, params); }, executorQueue.get())) { }
 
-Actor::~Actor() { /* we must also unregister the actor to the suppervisor */
+Actor::~Actor() {
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
+	/* supervisor */
+	auto supervisorRef = supervisor.lock();
+	if (nullptr != supervisorRef)
+		supervisorRef->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_UNREGISTER_ACTOR, std::vector<unsigned char>(getName().begin(), getName().end()));
 	executorQueue->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);
 };
 
@@ -125,6 +129,10 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 		return doSupervisorOperation(code, params);
 	if (Command::COMMAND_RESTART == code) {
 		return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
+	}
+	if (Command::COMMAND_UNREGISTER_ACTOR == code) {
+		monitored.remove(std::string(params.begin(), params.end()));
+		return StatusCode::ok;
 	}
 	return executeActorBody(body, code, params);
 }
