@@ -34,6 +34,7 @@
 #include <sharedMap.h>
 #include <proxyServer.h>
 #include <actor.h>
+#include <uniqueId.h>
 
 #include <atomic>
 
@@ -47,8 +48,6 @@ private:
 	SharedMap<int, proxyServer> proxies;
 	MessageQueue executorQueue;
 	Executor executor;
-	static std::atomic<int> proxyId;
-	static int newproxyId(void);
 };
 
 #endif

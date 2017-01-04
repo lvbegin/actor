@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,22 +27,17 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <proxyContainer.h>
-#include <command.h>
-#include <uniqueId.h>
+#ifndef UNIQUE_ID_H__
+#define UNIQUE_ID_H__
 
-#include <tuple>
+template <typename N>
+class UniqueId {
+public:
+	static int newId(void) { return id++; }
+private:
+	static std::atomic<int> id;
+};
 
-ProxyContainer::ProxyContainer() : executor([this](MessageType, int code, const std::vector<unsigned char> &not_used) { return (this->deleteProxy(code), StatusCode::ok);}, &executorQueue) { }
-
-ProxyContainer::~ProxyContainer() {
-	executorQueue.post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);
-}
-
-void ProxyContainer::createNewProxy(ActorLink actor, Connection connection) {
-	const auto id = UniqueId<ProxyContainer>::newId();
-	const auto terminate = [this, id]() { this->executorQueue.post(MessageType::RESTART_MESSAGE, id); };
-	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id), std::forward_as_tuple(actor, std::move(connection), terminate));
-}
-
-void ProxyContainer::deleteProxy(int i) { proxies.erase(i); }
+template <typename N>
+std::atomic<int> UniqueId<N>::id { 0 };
+#endif
