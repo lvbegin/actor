@@ -36,6 +36,8 @@
 #include <executor.h>
 #include <restartStragegy.h>
 #include <actorStateMachine.h>
+#include <supervisor.h>
+
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -68,24 +70,19 @@ public:
 	static void unregisterActor(ActorRef &monitor, ActorRef &monitored);
 
 private:
-	std::string getName(void) const;
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
-
 	static std::function<void(void)> doNothing;
-	const std::string name;
+
 	std::shared_ptr<MessageQueue> executorQueue;
-	const RestartStrategy restartStrategy;
-	std::mutex monitorMutex;
-	ActorController monitored;
-	std::weak_ptr<MessageQueue> supervisor;
+	Supervisor s;
 	const std::function<void(void)> atRestart;
 	const ActorBody body;
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
-	StatusCode actorExecutor(ActorBody body, MessageType type, int command, const std::vector<unsigned char> &params);
+
+	StatusCode actorExecutor(ActorBody body, MessageType type, int code, const std::vector<unsigned char> &params);
 	StatusCode doSupervisorOperation(int code, const std::vector<unsigned char> &params);
 	StatusCode executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params);
-	static void doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std::function<void(void)> op);
 	StatusCode doRestart(void);
 	StatusCode restartSateMachine(void);
 };

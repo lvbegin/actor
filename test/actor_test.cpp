@@ -466,6 +466,8 @@ static int restartAllActorBySupervisorTest() {
 }
 
 static int executorTest() {
+	std::cout << "executorTest" << std::endl;
+
 	MessageQueue messageQueue;
 	Executor executor([](MessageType, int, const std::vector<unsigned char> &) { return StatusCode::shutdown; }, &messageQueue);
 	messageQueue.post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);

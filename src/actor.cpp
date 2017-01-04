@@ -36,16 +36,13 @@ std::function<void(void)> Actor::doNothing = [](void) {};
 Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy)  : Actor(name, body, Actor::doNothing, restartStrategy) {}
 
 Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
-						name(std::move(name)), executorQueue(new MessageQueue()), restartStrategy(restartStrategy), atRestart(atRestart), body(body),
+						executorQueue(new MessageQueue()), s(std::move(name), std::move(restartStrategy)), atRestart(atRestart), body(body),
 						executor(new Executor([this](MessageType type, int command, const std::vector<unsigned char> &params)
 								{ return this->actorExecutor(this->body, type, command, params); }, executorQueue.get())) { }
 
 Actor::~Actor() {
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
-	/* supervisor */
-	auto supervisorRef = supervisor.lock();
-	if (nullptr != supervisorRef)
-		supervisorRef->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_UNREGISTER_ACTOR, std::vector<unsigned char>(getName().begin(), getName().end()));
+	s.notifySupervisor(Command::COMMAND_UNREGISTER_ACTOR);
 	executorQueue->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);
 };
 
@@ -81,8 +78,6 @@ StatusCode Actor::doRestart(void) {
 	return status.get_future().get();
 }
 
-std::string Actor::getName(void) const { return name; }
-
 ActorRef Actor::createActorRef(std::string name, ActorBody body, RestartStrategy restartStragy) {
 	return createActorRefWithRestart(name, body, Actor::doNothing, restartStragy);
 }
@@ -97,26 +92,11 @@ LinkApi *Actor::getActorLink() const { return new ActorQueue(executorQueue); }
 std::shared_ptr<LinkApi> Actor::getActorLinkRef() const { return std::make_shared<ActorQueue>(executorQueue); }
 
 void Actor::registerActor(ActorRef &monitor, ActorRef &monitored) {
-	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.add(monitored->getName(), monitored->executorQueue); } );
+	Supervisor::registerMonitored(monitor->executorQueue, monitor->s, monitored->executorQueue, monitored->s);
 }
 
 void Actor::unregisterActor(ActorRef &monitor, ActorRef &monitored) {
-	doRegistrationOperation(monitor, monitored, [&monitor, &monitored](void) { monitor->monitored.remove(monitored->getName()); } );
-}
-
-void Actor::doRegistrationOperation(ActorRef &monitor, ActorRef &monitored, std::function<void(void)> op) {
-	std::lock(monitor->monitorMutex, monitored->monitorMutex);
-    std::lock_guard<std::mutex> l1(monitor->monitorMutex, std::adopt_lock);
-    std::lock_guard<std::mutex> l2(monitored->monitorMutex, std::adopt_lock);
-
-    auto tmp = std::move(monitored->supervisor);
-    monitored->supervisor = std::weak_ptr<MessageQueue>(monitor->executorQueue);
-    try {
-    	op();
-    } catch (std::exception &e) {
-    	monitored->supervisor = std::move(tmp);
-    	throw e;
-    }
+	Supervisor::unregisterMonitored(monitor->s, monitored->s);
 }
 
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
@@ -131,7 +111,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 		return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
 	}
 	if (Command::COMMAND_UNREGISTER_ACTOR == code) {
-		monitored.remove(std::string(params.begin(), params.end()));
+		s.removeSupervised(std::string(params.begin(), params.end()));
 		return StatusCode::ok;
 	}
 	return executeActorBody(body, code, params);
@@ -141,33 +121,15 @@ StatusCode Actor::executeActorBody(ActorBody body, int code, const std::vector<u
 	try {
 		return body(code, params);
 	} catch (ActorException &e) {
-		const auto supervisorRef = supervisor.lock();
-		if (nullptr != supervisorRef.get())
-			supervisorRef->post(MessageType::ERROR_MESSAGE,e.getErrorCode(), std::vector<unsigned char>(name.begin(), name.end()));
+		s.sendErrorToSupervisor(e.getErrorCode());
 		return StatusCode::error;
 	} catch (std::exception &e) {
-		const auto supervisorRef = supervisor.lock();
-		if (nullptr != supervisorRef.get())
-			supervisorRef->post(MessageType::ERROR_MESSAGE, EXCEPTION_THROWN_ERROR, std::vector<unsigned char>(name.begin(), name.end()));
+		s.sendErrorToSupervisor(EXCEPTION_THROWN_ERROR);
 		return StatusCode::error;
 	}
 }
 
 StatusCode Actor::doSupervisorOperation(int code, const std::vector<unsigned char> &params) {
-	std::lock_guard<std::mutex> l(monitorMutex);
-
-	switch (restartStrategy())
-	{
-		case RestartType::RESTART_ONE:
-			monitored.restartOne(std::string(params.begin(), params.end()));
-			break;
-		case RestartType::RESTART_ALL:
-			monitored.restartAll();
-			break;
-		default:
-			/* should escalate to supervisor */
-			throw std::runtime_error("unexpected case.");
-
-	}
+	s.doSupervisorOperation(code, params);
 	return StatusCode::ok;
 }
