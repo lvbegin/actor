@@ -45,4 +45,4 @@ void ProxyContainer::createNewProxy(ActorLink actor, Connection connection) {
 	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id), std::forward_as_tuple(actor, std::move(connection), terminate));
 }
 
-void ProxyContainer::deleteProxy(int i) { proxies.erase(i); }
+void ProxyContainer::deleteProxy(uint32_t i) { proxies.erase(i); }

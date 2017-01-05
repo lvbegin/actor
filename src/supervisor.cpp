@@ -40,24 +40,26 @@ void Supervisor::sendToSupervisor(MessageType type, uint32_t code) {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
 	auto ref = supervisorRef.lock();
-	if (nullptr != ref.get())
-		ref->post(type, code, std::vector<unsigned char>(name.begin(), name.end()));
+	if (nullptr != ref.get()) {
+		const void *idPtr = &id;
+		ref->post(type, code, std::vector<unsigned char>(static_cast<const uint8_t *>(idPtr), static_cast<const uint8_t *>(idPtr) + sizeof(id)));
+	}
 }
 
-
-void Supervisor::removeSupervised(const std::string &name) {
+void Supervisor::removeSupervised(const uint32_t toRemove) {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
-	supervisedRefs.remove(name);
+	supervisedRefs.remove(toRemove);
 }
 
-void Supervisor::doSupervisorOperation(int code, const std::vector<unsigned char> &params) {
+void Supervisor::doSupervisorOperation(int code, const std::vector<uint8_t> &params) {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
 	switch (restartStrategy())
 	{
 		case RestartType::RESTART_ONE:
-			supervisedRefs.restartOne(std::string(params.begin(), params.end()));
+			/* check size */
+			supervisedRefs.restartOne(*(uint32_t *)params.data());
 			break;
 		case RestartType::RESTART_ALL:
 			supervisedRefs.restartAll();
@@ -69,12 +71,12 @@ void Supervisor::doSupervisorOperation(int code, const std::vector<unsigned char
 }
 
 void Supervisor::registerMonitored(const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitoredQueue, Supervisor &monitored) {
-	doRegistrationOperation(monitor, monitorQueue, monitored, [&monitor, &monitored, &monitoredQueue](void) { monitor.supervisedRefs.add(monitored.name, monitoredQueue); } );
+	doRegistrationOperation(monitor, monitorQueue, monitored, [&monitor, &monitored, &monitoredQueue](void) { monitor.supervisedRefs.add(monitored.id, monitoredQueue); } );
 }
 
 void Supervisor::unregisterMonitored(Supervisor &monitor, Supervisor &monitored) {
 	static const std::shared_ptr<MessageQueue> noQueue {};
-	doRegistrationOperation(monitor, noQueue, monitored, [&monitor, &monitored](void) { monitor.supervisedRefs.remove(monitored.name); } );
+	doRegistrationOperation(monitor, noQueue, monitored, [&monitor, &monitored](void) { monitor.supervisedRefs.remove(monitored.id); } );
 }
 
 void Supervisor::doRegistrationOperation(const Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitored, std::function<void(void)> op) {

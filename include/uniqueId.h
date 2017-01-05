@@ -30,14 +30,16 @@
 #ifndef UNIQUE_ID_H__
 #define UNIQUE_ID_H__
 
+#include <cstdint>
+
 template <typename N>
 class UniqueId {
 public:
-	static int newId(void) { return id++; }
+	static uint32_t newId(void) { return id++; }
 private:
-	static std::atomic<int> id;
+	static std::atomic<uint32_t> id;
 };
 
 template <typename N>
-std::atomic<int> UniqueId<N>::id { 0 };
+std::atomic<uint32_t> UniqueId<N>::id { 0 };
 #endif

@@ -111,7 +111,9 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 		return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
 	}
 	if (Command::COMMAND_UNREGISTER_ACTOR == code) {
-		s.removeSupervised(std::string(params.begin(), params.end()));
+		// check size.
+		const int toRemove = *(int *)params.data(); //do better ?
+		s.removeSupervised(toRemove);
 		return StatusCode::ok;
 	}
 	return executeActorBody(body, code, params);

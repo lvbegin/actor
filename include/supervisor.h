@@ -43,14 +43,14 @@ public:
 
 	void notifySupervisor(uint32_t code);
 	void sendErrorToSupervisor(uint32_t code);
-	void removeSupervised(const std::string &name);
-	void doSupervisorOperation(int code, const std::vector<unsigned char> &params);
+	void removeSupervised(const uint32_t toRemove);
+	void doSupervisorOperation(int code, const std::vector<uint8_t> &params);
 	static void registerMonitored(const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitoredQueue, Supervisor &monitored);
 	static void unregisterMonitored(Supervisor &monitor, Supervisor &monitored);
 private:
 	mutable std::mutex monitorMutex;
 	const std::string name; //should be removed
-	const int id;
+	const uint32_t id;
 	const RestartStrategy restartStrategy;
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;
