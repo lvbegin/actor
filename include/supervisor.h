@@ -33,82 +33,30 @@
 #include <actorController.h>
 #include <messageQueue.h>
 #include <command.h>
+#include <uniqueId.h>
+#include <restartStragegy.h>
 
 class Supervisor {
 public:
-	Supervisor(std::string name, RestartStrategy strategy) : name(std::move(name)), restartStrategy(std::move(strategy)) { }
-	~Supervisor() = default;
+	Supervisor(std::string name, RestartStrategy strategy);
+	~Supervisor();
 
-	void notifySupervisor(uint32_t code) {
-		std::unique_lock<std::mutex> l(monitorMutex);
-
-		auto ref = supervisorRef.lock();
-		if (nullptr != ref.get())
-			ref->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_UNREGISTER_ACTOR, std::vector<unsigned char>(name.begin(), name.end()));
-	}
-
-	void sendErrorToSupervisor(uint32_t code) {
-		std::unique_lock<std::mutex> l(monitorMutex);
-
-		auto ref = supervisorRef.lock();
-		if (nullptr != ref.get())
-			ref->post(MessageType::ERROR_MESSAGE, code, std::vector<unsigned char>(name.begin(), name.end()));
-	}
-
-	void removeSupervised(const std::string &name) {
-		std::unique_lock<std::mutex> l(monitorMutex);
-
-		supervisedRefs.remove(name);
-	}
-
-	void doSupervisorOperation(int code, const std::vector<unsigned char> &params) {
-		std::unique_lock<std::mutex> l(monitorMutex);
-
-		switch (restartStrategy())
-		{
-			case RestartType::RESTART_ONE:
-				supervisedRefs.restartOne(std::string(params.begin(), params.end()));
-				break;
-			case RestartType::RESTART_ALL:
-				supervisedRefs.restartAll();
-				break;
-			default:
-				/* should escalate to supervisor */
-				throw std::runtime_error("unexpected case.");
-
-		}
-	}
-
-	static void registerMonitored(const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitoredQueue, Supervisor &monitored) {
-		doRegistrationOperation(monitor, monitorQueue, monitored, [&monitor, &monitored, &monitoredQueue](void) { monitor.supervisedRefs.add(monitored.name, monitoredQueue); } );
-	}
-
-	static void unregisterMonitored(Supervisor &monitor, Supervisor &monitored) {
-		static const std::shared_ptr<MessageQueue> noQueue {};
-		doRegistrationOperation(monitor, noQueue, monitored, [&monitor, &monitored](void) { monitor.supervisedRefs.remove(monitored.name); } );
-	}
-
-	static void doRegistrationOperation(const Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitored, std::function<void(void)> op) {
-		std::lock(monitor.monitorMutex, monitored.monitorMutex);
-	    std::lock_guard<std::mutex> l1(monitor.monitorMutex, std::adopt_lock);
-	    std::lock_guard<std::mutex> l2(monitored.monitorMutex, std::adopt_lock);
-
-	    auto tmp = std::move(monitored.supervisorRef);
-	    monitored.supervisorRef = std::weak_ptr<MessageQueue>(monitorQueue);
-	    try {
-	    	op();
-	    } catch (std::exception &e) {
-	    	monitored.supervisorRef = std::move(tmp);
-	    	throw e;
-	    }
-	}
-
+	void notifySupervisor(uint32_t code);
+	void sendErrorToSupervisor(uint32_t code);
+	void removeSupervised(const std::string &name);
+	void doSupervisorOperation(int code, const std::vector<unsigned char> &params);
+	static void registerMonitored(const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitoredQueue, Supervisor &monitored);
+	static void unregisterMonitored(Supervisor &monitor, Supervisor &monitored);
 private:
 	mutable std::mutex monitorMutex;
-	const std::string name;
+	const std::string name; //should be removed
+	const int id;
 	const RestartStrategy restartStrategy;
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;
+
+	void sendToSupervisor(MessageType type, uint32_t code);
+	static void doRegistrationOperation(const Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitored, std::function<void(void)> op);
 };
 
 #endif
