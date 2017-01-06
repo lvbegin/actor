@@ -106,7 +106,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 		return StatusCode::ok;
 
 	if (MessageType::ERROR_MESSAGE == type)
-		return doSupervisorOperation(code, params);
+		return (supervisor.doSupervisorOperation(code, params), StatusCode::ok);
 	if (Command::COMMAND_RESTART == code) {
 		return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
 	}
@@ -129,9 +129,4 @@ StatusCode Actor::executeActorBody(ActorBody body, int code, const std::vector<u
 		supervisor.sendErrorToSupervisor(EXCEPTION_THROWN_ERROR);
 		return StatusCode::error;
 	}
-}
-
-StatusCode Actor::doSupervisorOperation(int code, const std::vector<unsigned char> &params) {
-	supervisor.doSupervisorOperation(code, params);
-	return StatusCode::ok;
 }

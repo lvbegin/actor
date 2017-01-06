@@ -81,7 +81,6 @@ private:
 	std::unique_ptr<Executor> executor;
 
 	StatusCode actorExecutor(ActorBody body, MessageType type, int code, const std::vector<unsigned char> &params);
-	StatusCode doSupervisorOperation(int code, const std::vector<unsigned char> &params);
 	StatusCode executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params);
 	StatusCode doRestart(void);
 	StatusCode restartSateMachine(void);
