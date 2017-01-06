@@ -37,7 +37,7 @@ Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy) 
 
 Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
 						executorQueue(new MessageQueue()), supervisor(std::move(restartStrategy)), atRestart(atRestart), body(body),
-						executor(new Executor([this](MessageType type, int command, const std::vector<unsigned char> &params)
+						executor(new Executor([this](MessageType type, int command, const std::vector<uint8_t> &params)
 								{ return this->actorExecutor(this->body, type, command, params); }, executorQueue.get())) { }
 
 Actor::~Actor() {
@@ -46,11 +46,11 @@ Actor::~Actor() {
 	executorQueue->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);
 };
 
-StatusCode Actor::postSync(int i, std::vector<unsigned char> params) {
+StatusCode Actor::postSync(int i, std::vector<uint8_t> params) {
 	return executorQueue->postSync(MessageType::COMMAND_MESSAGE, i, params);
 }
 
-void Actor::post(int i, std::vector<unsigned char> params) {
+void Actor::post(int i, std::vector<uint8_t> params) {
 	executorQueue->post(MessageType::COMMAND_MESSAGE, i, params);
 }
 
@@ -65,7 +65,7 @@ StatusCode Actor::doRestart(void) {
 	auto status = std::promise<StatusCode>();
 	auto e = std::promise<std::unique_ptr<Executor> &>();
 	std::unique_ptr<Executor> newExecutor = std::make_unique<Executor>(
-			[this](MessageType type, int command, const std::vector<unsigned char> &params) {
+			[this](MessageType type, int command, const std::vector<uint8_t> &params) {
 				return this->actorExecutor(this->body, type, command, params);
 			}, executorQueue.get(),
 			[this, &status, & e]() mutable {
@@ -101,7 +101,7 @@ void Actor::unregisterActor(ActorRef &monitor, ActorRef &monitored) {
 
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
-StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, const std::vector<unsigned char> &params) {
+StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, const std::vector<uint8_t> &params) {
 	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED))
 		return StatusCode::ok;
 
@@ -119,7 +119,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 	return executeActorBody(body, code, params);
 }
 
-StatusCode Actor::executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params) {
+StatusCode Actor::executeActorBody(ActorBody body, int code, const std::vector<uint8_t> &params) {
 	try {
 		return body(code, params);
 	} catch (ActorException &e) {

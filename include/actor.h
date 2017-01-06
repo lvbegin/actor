@@ -45,7 +45,7 @@
 class Actor;
 using ActorRef = std::unique_ptr<Actor>;
 
-using ActorBody = std::function<StatusCode(int, const std::vector<unsigned char> &)>;
+using ActorBody = std::function<StatusCode(int, const std::vector<uint8_t> &)>;
 
 class Actor {
 public:
@@ -57,8 +57,8 @@ public:
 	Actor(const Actor &a) = delete;
 	Actor &operator=(const Actor &a) = delete;
 
-	StatusCode postSync(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
-	void post(int i, std::vector<unsigned char> params = std::vector<unsigned char>());
+	StatusCode postSync(int i, std::vector<uint8_t> params = std::vector<uint8_t>());
+	void post(int i, std::vector<uint8_t> params = std::vector<uint8_t>());
 	LinkApi *getActorLink() const;
 	std::shared_ptr<LinkApi> getActorLinkRef() const;
 
@@ -80,8 +80,8 @@ private:
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
 
-	StatusCode actorExecutor(ActorBody body, MessageType type, int code, const std::vector<unsigned char> &params);
-	StatusCode executeActorBody(ActorBody body, int code, const std::vector<unsigned char> &params);
+	StatusCode actorExecutor(ActorBody body, MessageType type, int code, const std::vector<uint8_t> &params);
+	StatusCode executeActorBody(ActorBody body, int code, const std::vector<uint8_t> &params);
 	StatusCode doRestart(void);
 	StatusCode restartSateMachine(void);
 };
