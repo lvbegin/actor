@@ -38,7 +38,7 @@
 
 class Supervisor {
 public:
-	Supervisor(std::string name, RestartStrategy strategy);
+	Supervisor(RestartStrategy strategy);
 	~Supervisor();
 
 	void notifySupervisor(uint32_t code);
@@ -49,7 +49,6 @@ public:
 	static void unregisterMonitored(Supervisor &monitor, Supervisor &monitored);
 private:
 	mutable std::mutex monitorMutex;
-	const std::string name; //should be removed
 	const uint32_t id;
 	const RestartStrategy restartStrategy;
 	ActorController supervisedRefs;

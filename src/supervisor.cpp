@@ -29,7 +29,7 @@
 
 #include <supervisor.h>
 
-Supervisor::Supervisor(std::string name, RestartStrategy strategy) : name(std::move(name)), id(UniqueId<Supervisor>::newId()), restartStrategy(std::move(strategy)) { }
+Supervisor::Supervisor(RestartStrategy strategy) : id(UniqueId<Supervisor>::newId()), restartStrategy(std::move(strategy)) { }
 Supervisor::~Supervisor() = default;
 
 void Supervisor::notifySupervisor(uint32_t code) { sendToSupervisor(MessageType::COMMAND_MESSAGE, code); }
