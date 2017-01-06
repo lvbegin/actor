@@ -74,7 +74,7 @@ private:
 	static std::function<void(void)> doNothing;
 
 	std::shared_ptr<MessageQueue> executorQueue;
-	Supervisor s;
+	Supervisor supervisor;
 	const std::function<void(void)> atRestart;
 	const ActorBody body;
 	ActorStateMachine stateMachine;

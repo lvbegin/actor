@@ -36,13 +36,13 @@ std::function<void(void)> Actor::doNothing = [](void) {};
 Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy)  : Actor(name, body, Actor::doNothing, restartStrategy) {}
 
 Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
-						executorQueue(new MessageQueue()), s(std::move(restartStrategy)), atRestart(atRestart), body(body),
+						executorQueue(new MessageQueue()), supervisor(std::move(restartStrategy)), atRestart(atRestart), body(body),
 						executor(new Executor([this](MessageType type, int command, const std::vector<unsigned char> &params)
 								{ return this->actorExecutor(this->body, type, command, params); }, executorQueue.get())) { }
 
 Actor::~Actor() {
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
-	s.notifySupervisor(Command::COMMAND_UNREGISTER_ACTOR);
+	supervisor.notifySupervisor(Command::COMMAND_UNREGISTER_ACTOR);
 	executorQueue->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);
 };
 
@@ -92,11 +92,11 @@ LinkApi *Actor::getActorLink() const { return new ActorQueue(executorQueue); }
 std::shared_ptr<LinkApi> Actor::getActorLinkRef() const { return std::make_shared<ActorQueue>(executorQueue); }
 
 void Actor::registerActor(ActorRef &monitor, ActorRef &monitored) {
-	Supervisor::registerMonitored(monitor->executorQueue, monitor->s, monitored->executorQueue, monitored->s);
+	Supervisor::registerMonitored(monitor->executorQueue, monitor->supervisor, monitored->executorQueue, monitored->supervisor);
 }
 
 void Actor::unregisterActor(ActorRef &monitor, ActorRef &monitored) {
-	Supervisor::unregisterMonitored(monitor->s, monitored->s);
+	Supervisor::unregisterMonitored(monitor->supervisor, monitored->supervisor);
 }
 
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
@@ -113,7 +113,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 	if (Command::COMMAND_UNREGISTER_ACTOR == code) {
 		// check size.
 		const int toRemove = *(int *)params.data(); //do better ?
-		s.removeSupervised(toRemove);
+		supervisor.removeSupervised(toRemove);
 		return StatusCode::ok;
 	}
 	return executeActorBody(body, code, params);
@@ -123,15 +123,15 @@ StatusCode Actor::executeActorBody(ActorBody body, int code, const std::vector<u
 	try {
 		return body(code, params);
 	} catch (ActorException &e) {
-		s.sendErrorToSupervisor(e.getErrorCode());
+		supervisor.sendErrorToSupervisor(e.getErrorCode());
 		return StatusCode::error;
 	} catch (std::exception &e) {
-		s.sendErrorToSupervisor(EXCEPTION_THROWN_ERROR);
+		supervisor.sendErrorToSupervisor(EXCEPTION_THROWN_ERROR);
 		return StatusCode::error;
 	}
 }
 
 StatusCode Actor::doSupervisorOperation(int code, const std::vector<unsigned char> &params) {
-	s.doSupervisorOperation(code, params);
+	supervisor.doSupervisorOperation(code, params);
 	return StatusCode::ok;
 }
