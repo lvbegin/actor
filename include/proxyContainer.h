@@ -43,7 +43,7 @@ public:
 	ProxyContainer();
 	~ProxyContainer();
 	void createNewProxy(ActorLink actor, Connection connection);
-	void deleteProxy(uint32_t i);
+	void deleteProxy(uint32_t id);
 private:
 	SharedMap<uint32_t, proxyServer> proxies;
 	MessageQueue executorQueue;
