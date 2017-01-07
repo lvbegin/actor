@@ -32,11 +32,11 @@
 Supervisor::Supervisor(RestartStrategy strategy) : id(UniqueId<Supervisor>::newId()), restartStrategy(std::move(strategy)) { }
 Supervisor::~Supervisor() = default;
 
-void Supervisor::notifySupervisor(uint32_t code) { sendToSupervisor(MessageType::COMMAND_MESSAGE, code); }
+void Supervisor::notifySupervisor(uint32_t code) const{ sendToSupervisor(MessageType::COMMAND_MESSAGE, code); }
 
-void Supervisor::sendErrorToSupervisor(uint32_t code) { sendToSupervisor(MessageType::ERROR_MESSAGE, code); }
+void Supervisor::sendErrorToSupervisor(uint32_t code) const { sendToSupervisor(MessageType::ERROR_MESSAGE, code); }
 
-void Supervisor::sendToSupervisor(MessageType type, uint32_t code) {
+void Supervisor::sendToSupervisor(MessageType type, uint32_t code) const {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
 	auto ref = supervisorRef.lock();
@@ -46,7 +46,7 @@ void Supervisor::sendToSupervisor(MessageType type, uint32_t code) {
 	}
 }
 
-void Supervisor::removeSupervised(const uint32_t toRemove) {
+void Supervisor::removeSupervised(uint32_t toRemove) {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
 	supervisedRefs.remove(toRemove);

@@ -41,9 +41,9 @@ public:
 	Supervisor(RestartStrategy strategy);
 	~Supervisor();
 
-	void notifySupervisor(uint32_t code);
-	void sendErrorToSupervisor(uint32_t code);
-	void removeSupervised(const uint32_t toRemove);
+	void notifySupervisor(uint32_t code) const;
+	void sendErrorToSupervisor(uint32_t code) const;
+	void removeSupervised(uint32_t toRemove);
 	void doSupervisorOperation(int code, const std::vector<uint8_t> &params);
 	static void registerMonitored(const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitoredQueue, Supervisor &monitored);
 	static void unregisterMonitored(Supervisor &monitor, Supervisor &monitored);
@@ -54,7 +54,7 @@ private:
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;
 
-	void sendToSupervisor(MessageType type, uint32_t code);
+	void sendToSupervisor(MessageType type, uint32_t code) const;
 	static void doRegistrationOperation(const Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitored, std::function<void(void)> op);
 };
 
