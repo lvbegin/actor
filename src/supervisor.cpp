@@ -52,7 +52,7 @@ void Supervisor::removeSupervised(uint32_t toRemove) {
 	supervisedRefs.remove(toRemove);
 }
 
-void Supervisor::doSupervisorOperation(int code, const std::vector<uint8_t> &params) {
+void Supervisor::doSupervisorOperation(int code, const RawData &params) {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
 	switch (restartStrategy())

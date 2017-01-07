@@ -40,9 +40,9 @@ public:
 	struct message {
 		MessageType type;
 		int code;
-		std::vector<unsigned char> params;
+		RawData params;
 		std::promise<StatusCode> promise;
-		message(MessageType type, int c, std::vector<unsigned char> params);
+		message(MessageType type, int c, RawData params);
 		~message();
 		message(struct message &&m);
 		message (const struct message &m) = delete;
@@ -51,12 +51,12 @@ public:
 	MessageQueue();
 	~MessageQueue();
 
-	void post(MessageType type, int code, std::vector<unsigned char> params = std::vector<unsigned char>());
-	StatusCode postSync(MessageType type, int code, std::vector<unsigned char> params= std::vector<unsigned char>());
+	void post(MessageType type, int code, RawData params = RawData());
+	StatusCode postSync(MessageType type, int code, RawData params = RawData());
 
 	message get(void);
 private:
-	std::future<StatusCode> putMessage(MessageType type, int i, std::vector<unsigned char> params);
+	std::future<StatusCode> putMessage(MessageType type, int i, RawData params);
 	SharedQueue<message> queue;
 };
 

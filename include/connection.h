@@ -30,6 +30,8 @@
 #ifndef CONNECTION_H__
 #define CONNECTION_H__
 
+#include <rc.h>
+
 #include <cstdint>
 #include <unistd.h>
 #include <string>
@@ -67,8 +69,8 @@ public:
 	}
 	const Connection &writeString(const std::string &hostValue) const;
 	std::string readString(void) const;
-	const Connection &writeRawData(const std::vector<uint8_t> &data) const;
-	std::vector<uint8_t> readRawData(void) const;
+	const Connection &writeRawData(const RawData &data) const;
+	RawData readRawData(void) const;
 	const Connection &writeBytes(const void *buffer, size_t count) const;
 	void readBytes(void *buffer, size_t count, int timeout = 5) const;
 private:

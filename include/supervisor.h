@@ -44,7 +44,7 @@ public:
 	void notifySupervisor(uint32_t code) const;
 	void sendErrorToSupervisor(uint32_t code) const;
 	void removeSupervised(uint32_t toRemove);
-	void doSupervisorOperation(int code, const std::vector<uint8_t> &params);
+	void doSupervisorOperation(int code, const RawData &params);
 	static void registerMonitored(const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitoredQueue, Supervisor &monitored);
 	static void unregisterMonitored(Supervisor &monitor, Supervisor &monitored);
 private:

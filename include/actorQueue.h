@@ -37,8 +37,8 @@ class ActorQueue : public LinkApi {
 public:
 	ActorQueue(std::shared_ptr<MessageQueue> queue);
 	~ActorQueue();
-	StatusCode postSync(int code, std::vector<uint8_t> params = std::vector<uint8_t>()) const;
-	void post(int code, std::vector<uint8_t> params = std::vector<uint8_t>()) const;
+	StatusCode postSync(int code, RawData params = RawData()) const;
+	void post(int code, RawData params = RawData()) const;
 private:
 	std::shared_ptr<MessageQueue> queue;
 };
