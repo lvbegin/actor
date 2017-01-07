@@ -35,10 +35,10 @@
 
 class ActorQueue : public LinkApi {
 public:
-	ActorQueue(std::shared_ptr<MessageQueue> queue) : queue(std::move(queue)) {}
-	~ActorQueue() = default;
-	StatusCode postSync(int code, std::vector<uint8_t> params = std::vector<uint8_t>()) const { return queue->postSync(MessageType::COMMAND_MESSAGE, code, params); }
-	void post(int code, std::vector<uint8_t> params = std::vector<uint8_t>()) const { queue->post(MessageType::COMMAND_MESSAGE, code, params); };
+	ActorQueue(std::shared_ptr<MessageQueue> queue);
+	~ActorQueue();
+	StatusCode postSync(int code, std::vector<uint8_t> params = std::vector<uint8_t>()) const;
+	void post(int code, std::vector<uint8_t> params = std::vector<uint8_t>()) const;
 private:
 	std::shared_ptr<MessageQueue> queue;
 };
