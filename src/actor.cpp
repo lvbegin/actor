@@ -112,7 +112,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 	}
 	if (Command::COMMAND_UNREGISTER_ACTOR == code) {
 		// check size.
-		const int toRemove = *(int *)params.data(); //do better ?
+		const uint32_t toRemove { *(uint32_t *)params.data() }; //do better ?
 		supervisor.removeSupervised(toRemove);
 		return StatusCode::ok;
 	}
