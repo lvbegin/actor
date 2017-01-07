@@ -49,9 +49,8 @@ using ActorBody = std::function<StatusCode(int, const std::vector<uint8_t> &)>;
 
 class Actor {
 public:
-	Actor(std::string name, ActorBody body, RestartStrategy restartStrategy = defaultRestartStrategy);
-	Actor(std::string name, ActorBody body,
-					std::function<void(void)> atRestart, RestartStrategy restartStrategy = defaultRestartStrategy);
+	Actor(ActorBody body, RestartStrategy restartStrategy = defaultRestartStrategy);
+	Actor(ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy = defaultRestartStrategy);
 	~Actor();
 
 	Actor(const Actor &a) = delete;
@@ -63,8 +62,8 @@ public:
 	std::shared_ptr<LinkApi> getActorLinkRef() const;
 
 	static void notifyError(int e);
-	static ActorRef createActorRef(std::string name, ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);
-	static ActorRef createActorRefWithRestart(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStragy = defaultRestartStrategy);
+	static ActorRef createActorRef(ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);
+	static ActorRef createActorRefWithRestart(ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStragy = defaultRestartStrategy);
 
 	static void registerActor(ActorRef &monitor, ActorRef &monitored);
 	static void unregisterActor(ActorRef &monitor, ActorRef &monitored);

@@ -33,9 +33,9 @@
 
 std::function<void(void)> Actor::doNothing = [](void) {};
 
-Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy)  : Actor(name, body, Actor::doNothing, restartStrategy) {}
+Actor::Actor(ActorBody body, RestartStrategy restartStrategy)  : Actor(body, Actor::doNothing, restartStrategy) {}
 
-Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
+Actor::Actor(ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
 						executorQueue(new MessageQueue()), supervisor(std::move(restartStrategy)), atRestart(atRestart), body(body),
 						executor(new Executor([this](MessageType type, int command, const std::vector<uint8_t> &params)
 								{ return this->actorExecutor(this->body, type, command, params); }, executorQueue.get())) { }
@@ -78,13 +78,13 @@ StatusCode Actor::doRestart(void) {
 	return status.get_future().get();
 }
 
-ActorRef Actor::createActorRef(std::string name, ActorBody body, RestartStrategy restartStragy) {
-	return createActorRefWithRestart(name, body, Actor::doNothing, restartStragy);
+ActorRef Actor::createActorRef(ActorBody body, RestartStrategy restartStragy) {
+	return createActorRefWithRestart(body, Actor::doNothing, restartStragy);
 }
 
-ActorRef Actor::createActorRefWithRestart(std::string name, ActorBody body, std::function<void(void)> atRestart,
+ActorRef Actor::createActorRefWithRestart(ActorBody body, std::function<void(void)> atRestart,
 											RestartStrategy restartStragy) {
-	return std::make_unique<Actor>(name, body, atRestart, restartStragy);
+	return std::make_unique<Actor>(body, atRestart, restartStragy);
 }
 
 LinkApi *Actor::getActorLink() const { return new ActorQueue(executorQueue); }

@@ -42,7 +42,7 @@
 static int basicActorTest(void) {
 	std::cout << "basicActorTest" << std::endl;
 	static const uint32_t command = 0xaa;
-	Actor a("actor name", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	Actor a([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	auto val = a.postSync(command);
 	if (StatusCode::ok != val) {
 		std::cout << "post failure" << std::endl;
@@ -57,7 +57,7 @@ static int basicActorWithParamsTest(void) {
 	static const std::string paramValue("Hello World");
 	std::vector<unsigned char> params(paramValue.begin(), paramValue.end());
 
-	Actor a("actor name", [](int i, const std::vector<unsigned char> &params) {
+	Actor a([](int i, const std::vector<unsigned char> &params) {
 				if (0 == paramValue.compare(std::string(params.begin(), params.end())))
 					return StatusCode::ok;
 				else
@@ -72,7 +72,7 @@ static int basicActorWithParamsTest(void) {
 }
 
 void executeSeverProxy(uint16_t port) {
-	auto actor = Actor::createActorRef("actor name", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto actor = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	auto doNothing = []() { };
 	proxyServer server(actor->getActorLinkRef(), ServerSocket::getConnection(port), doNothing);
 }
@@ -122,7 +122,7 @@ static int registryAddActorTest(void) {
 	static const uint16_t port = 4001;
 	static const std::string actorName("my actor");
 	ActorRegistry registry(std::string("name"), port);
-	auto a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto a = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 
 	registry.registerActor(actorName, a->getActorLinkRef());
 
@@ -134,7 +134,7 @@ static int registryAddActorAndRemoveTest(void) {
 	static const uint16_t port = 4001;
 	static const std::string actorName("my actor");
 	ActorRegistry registry(std::string("name"), port);
-	auto a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto a = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 
 	registry.registerActor(actorName, a->getActorLinkRef());
 	registry.unregisterActor(actorName);
@@ -143,7 +143,7 @@ static int registryAddActorAndRemoveTest(void) {
 	    return 1;
 	} catch (std::runtime_error &e) { }
 
-	a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	a = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	registry.registerActor(actorName, a->getActorLinkRef());
 	return 0;
 }
@@ -190,7 +190,7 @@ static int registeryAddActorAndFindItBackTest() {
 	static const uint16_t port = 4001;
 	ActorRegistry registry(std::string("name1"), port);
 
-	auto a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto a = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	auto actorRefLink = a->getActorLinkRef();
 	registry.registerActor(actorName, actorRefLink);
 
@@ -206,7 +206,7 @@ static int registeryFindUnknownActorTest() {
 	static const uint16_t port = 4001;
 	ActorRegistry registry(std::string("name1"), port);
 
-	auto a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto a = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	registry.registerActor(actorName, a->getActorLinkRef());
 
 	ActorLink b = registry.getActor(std::string("wrong name"));
@@ -229,7 +229,7 @@ static int findActorFromOtherRegistryTest() {
 	const std::string name = registry1.addReference("localhost", port2);
 	if (name2.compare(name))
 		return 1;
-	auto a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) {
+	auto a = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) {
 		if (i == dummyCommand && 0 == params.size())
 			return StatusCode::ok;
 		else
@@ -262,7 +262,7 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	const std::string name = registry1.addReference("localhost", port2);
 	if (name2.compare(name))
 		return 1;
-	auto a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) {
+	auto a = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) {
 		if (i == dummyCommand && 0 == paramValue.compare(std::string(params.begin(), params.end())))
 							return StatusCode::ok;
 						else
@@ -291,7 +291,7 @@ static int findUnknownActorInMultipleRegistryTest() {
 	const std::string name = registry1.addReference("localhost", port2);
 	if (name2.compare(name))
 		return 1;
-	auto a = Actor::createActorRef(actorName, [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto a = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	registry2.registerActor(actorName, a->getActorLinkRef());
 	auto actor = registry1.getActor("unknown actor");
 	return nullptr == actor.get() ? 0 : 1;
@@ -300,8 +300,8 @@ static int findUnknownActorInMultipleRegistryTest() {
 static int initSupervisionTest() {
 	std::cout << "initSupervisionTest" << std::endl;
 
-	auto supervisor = Actor::createActorRef("supervisor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
-	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto supervisor = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto supervised = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	Actor::registerActor(supervisor, supervised);
 	Actor::unregisterActor(supervisor, supervised);
 
@@ -315,8 +315,8 @@ static int initSupervisionTest() {
 static int unregisterToSupervisorWhenActorDestroyedTest() {
 	std::cout << "unregisterToSupervisorWhenActorDestroyedTest" << std::endl;
 
-	auto supervisor = Actor::createActorRef("supervisor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
-	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto supervisor = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto supervised = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	Actor::registerActor(supervisor, supervised);
 
 	supervised->post(Command::COMMAND_SHUTDOWN);
@@ -331,8 +331,8 @@ static int supervisorRestartsActorTest() {
 	static bool exceptionThrown = false;
 	static int restartCommand = 0x99;
 	static int otherCommand = 0xaa;
-	auto supervisor = Actor::createActorRef("supervisor", [](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
-	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) {
+	auto supervisor = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+	auto supervised = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) {
 		if (i == restartCommand) {
 			exceptionThrown = true;
 			throw std::runtime_error("some error");
@@ -357,16 +357,16 @@ static int actorNotifiesErrorToSupervisorTest() {
 	bool supervisorRestarted = false;
 	bool supervised1Restarted = false;
 	bool supervised2Restarted = false;
-	auto supervisor = Actor::createActorRefWithRestart("supervisor",
+	auto supervisor = Actor::createActorRefWithRestart(
 			[](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; },
 			[&supervisorRestarted](void) { supervisorRestarted = true; } );
-	auto supervised1 = Actor::createActorRefWithRestart("supervised1",
+	auto supervised1 = Actor::createActorRefWithRestart(
 			[](int i, const std::vector<unsigned char> &params) {
 				Actor::notifyError(0x69);
 				return StatusCode::ok;
 	 	 	 },
 			 [&supervised1Restarted](void) { supervised1Restarted = true; } );
-	auto supervised2 = Actor::createActorRefWithRestart("supervised2",
+	auto supervised2 = Actor::createActorRefWithRestart(
 			[](int i, const std::vector<unsigned char> &params) { return StatusCode::ok; },
 			[&supervised2Restarted](void) { supervised2Restarted = true; } );
 
@@ -392,7 +392,7 @@ static int actorNotifiesErrorToSupervisorTest() {
 static int actorDoesNothingIfNoSupervisorTest() {
 	std::cout << "actorDoesNothingIfNoSupervisorTest" << std::endl;
 	static int someCommand = 0xaa;
-	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) {
+	auto supervised = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) {
 		Actor::notifyError(0x69);
 		return StatusCode::ok;
 	 });
@@ -409,7 +409,7 @@ static int actorDoesNothingIfNoSupervisorTest() {
 static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 	std::cout << "actorDoesNothingIfNoSupervisorAndExceptionThrownTest" << std::endl;
 	static int someCommand = 0xaa;
-	auto supervised = Actor::createActorRef("supervised", [](int i, const std::vector<unsigned char> &params) {
+	auto supervised = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) {
 		throw std::runtime_error("some error");
 		return StatusCode::ok; //remove that ?
 	 });
@@ -429,17 +429,17 @@ static int restartAllActorBySupervisorTest() {
 	bool supervisorRestarted = false;
 	bool supervised1Restarted = false;
 	bool supervised2Restarted = false;
-	auto supervisor = Actor::createActorRefWithRestart("supervisor",
+	auto supervisor = Actor::createActorRefWithRestart(
 			[](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; },
 			[&supervisorRestarted](void) { supervisorRestarted = true; },
 			[](void) { return RestartType::RESTART_ALL; });
-	auto supervised1 = Actor::createActorRefWithRestart("supervised1",
+	auto supervised1 = Actor::createActorRefWithRestart(
 			[](int i, const std::vector<unsigned char> &params) {
 				Actor::notifyError(0x69);
 				return StatusCode::ok;
 	 	 	 },
 			 [&supervised1Restarted](void) { supervised1Restarted = true; });
-	auto supervised2 = Actor::createActorRefWithRestart("supervised2",
+	auto supervised2 = Actor::createActorRefWithRestart(
 			[](int i, const std::vector<unsigned char> &params) { return StatusCode::ok; },
 			[&supervised2Restarted](void) { supervised2Restarted = true; });
 
