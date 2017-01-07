@@ -53,10 +53,10 @@ Connection &Connection::operator=(Connection &&connection) {
 	return *this;
 }
 
-const Connection &Connection::writeRawData(const std::vector<unsigned char> &data) const { return writeInt(data.size()).writeBytes(data.data(), data.size()); }
+const Connection &Connection::writeRawData(const std::vector<uint8_t> &data) const { return writeInt(data.size()).writeBytes(data.data(), data.size()); }
 
-std::vector<unsigned char> Connection::readRawData(void) const {
-	std::vector<unsigned char> data(readInt<size_t>());
+std::vector<uint8_t> Connection::readRawData(void) const {
+	std::vector<uint8_t> data(readInt<size_t>());
 	if (0 < data.capacity())
 		readBytesNonBlocking(data.data(), data.capacity());
 	return data;
