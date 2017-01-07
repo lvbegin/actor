@@ -46,7 +46,6 @@ ActorRegistry::~ActorRegistry() {
 	t.join();
 }
 
-#include <string.h>
 void ActorRegistry::registryBody(const ServerSocket &s) {
 	while (!terminated) {
 		struct NetAddr client_addr;
