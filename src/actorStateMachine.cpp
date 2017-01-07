@@ -60,4 +60,4 @@ void ActorStateMachine::moveTo(ActorState newState) {
 	}
 }
 
-bool ActorStateMachine::isIn(ActorState state) { return (this->state == state); }
+bool ActorStateMachine::isIn(ActorState state) const { return (this->state == state); }
