@@ -56,8 +56,8 @@ public:
 	Actor(const Actor &a) = delete;
 	Actor &operator=(const Actor &a) = delete;
 
-	StatusCode postSync(int i, std::vector<uint8_t> params = std::vector<uint8_t>());
-	void post(int i, std::vector<uint8_t> params = std::vector<uint8_t>());
+	StatusCode postSync(int i, std::vector<uint8_t> params = std::vector<uint8_t>()) const;
+	void post(int i, std::vector<uint8_t> params = std::vector<uint8_t>()) const;
 	LinkApi *getActorLink() const;
 	std::shared_ptr<LinkApi> getActorLinkRef() const;
 

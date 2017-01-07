@@ -46,11 +46,11 @@ Actor::~Actor() {
 	executorQueue->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);
 };
 
-StatusCode Actor::postSync(int i, std::vector<uint8_t> params) {
+StatusCode Actor::postSync(int i, std::vector<uint8_t> params) const {
 	return executorQueue->postSync(MessageType::COMMAND_MESSAGE, i, params);
 }
 
-void Actor::post(int i, std::vector<uint8_t> params) {
+void Actor::post(int i, std::vector<uint8_t> params) const {
 	executorQueue->post(MessageType::COMMAND_MESSAGE, i, params);
 }
 

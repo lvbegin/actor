@@ -40,8 +40,8 @@ public:
 	proxyClient(Connection connection);
 	~proxyClient();
 
-	StatusCode postSync(int command, std::vector<unsigned char> params = std::vector<unsigned char>());
-	void post(int command, std::vector<unsigned char> params = std::vector<unsigned char>());
+	StatusCode postSync(int command, std::vector<unsigned char> params = std::vector<unsigned char>()) const;
+	void post(int command, std::vector<unsigned char> params = std::vector<unsigned char>()) const;
 private:
 	const Connection connection;
 };
