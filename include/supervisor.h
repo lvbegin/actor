@@ -38,25 +38,27 @@
 
 class Supervisor {
 public:
-	Supervisor(RestartStrategy strategy, MessageQueue &self);
+	Supervisor(RestartStrategy strategy, std::shared_ptr<MessageQueue> self);
 	~Supervisor();
 
 	void notifySupervisor(uint32_t code) const;
 	void sendErrorToSupervisor(uint32_t code) const;
 	void removeSupervised(uint32_t toRemove);
 	void doSupervisorOperation(int code, const RawData &params);
-	static void registerMonitored(const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitoredQueue, Supervisor &monitored);
-	static void unregisterMonitored(Supervisor &monitor, Supervisor &monitored);
+
+	void registerMonitored(Supervisor &monitored);
+	void unregisterMonitored(Supervisor &monitored);
+
 private:
 	mutable std::mutex monitorMutex;
 	const uint32_t id;
 	const RestartStrategy restartStrategy;
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;
-	MessageQueue &self;
+	std::shared_ptr<MessageQueue> self;
 
 	void sendToSupervisor(MessageType type, uint32_t code) const;
-	static void doRegistrationOperation(const Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitored, std::function<void(void)> op);
+	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
 };
 
 #endif

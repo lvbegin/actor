@@ -29,8 +29,8 @@
 
 #include <supervisor.h>
 
-Supervisor::Supervisor(RestartStrategy strategy, MessageQueue &self) : id(UniqueId<Supervisor>::newId()),
-						restartStrategy(std::move(strategy)), self(self) { }
+Supervisor::Supervisor(RestartStrategy strategy, std::shared_ptr<MessageQueue> self) : id(UniqueId<Supervisor>::newId()),
+						restartStrategy(std::move(strategy)), self(std::move(self)) { }
 Supervisor::~Supervisor() = default;
 
 void Supervisor::notifySupervisor(uint32_t code) const{ sendToSupervisor(MessageType::COMMAND_MESSAGE, code); }
@@ -71,22 +71,21 @@ void Supervisor::doSupervisorOperation(int code, const RawData &params) {
 	}
 }
 
-void Supervisor::registerMonitored(const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitoredQueue, Supervisor &monitored) {
-	doRegistrationOperation(monitor, monitorQueue, monitored, [&monitor, &monitored, &monitoredQueue](void) { monitor.supervisedRefs.add(monitored.id, monitoredQueue); } );
+void Supervisor::registerMonitored(Supervisor &monitored) {
+	doRegistrationOperation(monitored, [this, &monitored](void) { this->supervisedRefs.add(monitored.id, monitored.self); } );
 }
 
-void Supervisor::unregisterMonitored(Supervisor &monitor, Supervisor &monitored) {
-	static const std::shared_ptr<MessageQueue> noQueue {};
-	doRegistrationOperation(monitor, noQueue, monitored, [&monitor, &monitored](void) { monitor.supervisedRefs.remove(monitored.id); } );
+void Supervisor::unregisterMonitored(Supervisor &monitored) {
+	doRegistrationOperation(monitored, [this, &monitored](void) { this->supervisedRefs.remove(monitored.id); } );
 }
 
-void Supervisor::doRegistrationOperation(const Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitored, std::function<void(void)> op) {
-	std::lock(monitor.monitorMutex, monitored.monitorMutex);
-	std::lock_guard<std::mutex> l1(monitor.monitorMutex, std::adopt_lock);
+void Supervisor::doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const {
+	std::lock(this->monitorMutex, monitored.monitorMutex);
+	std::lock_guard<std::mutex> l1(this->monitorMutex, std::adopt_lock);
 	std::lock_guard<std::mutex> l2(monitored.monitorMutex, std::adopt_lock);
 
 	auto tmp = std::move(monitored.supervisorRef);
-	monitored.supervisorRef = std::weak_ptr<MessageQueue>(monitorQueue);
+	monitored.supervisorRef = std::weak_ptr<MessageQueue>(this->self);
 	try {
 		op();
 	} catch (std::exception &e) {

@@ -61,12 +61,13 @@ public:
 	LinkApi *getActorLink() const;
 	std::shared_ptr<LinkApi> getActorLinkRef() const;
 
+	void registerActor(ActorRef &monitored);
+	void unregisterActor(ActorRef &monitored);
+
 	static void notifyError(int e);
 	static ActorRef createActorRef(ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);
 	static ActorRef createActorRefWithRestart(ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStragy = defaultRestartStrategy);
 
-	static void registerActor(ActorRef &monitor, ActorRef &monitored);
-	static void unregisterActor(ActorRef &monitor, ActorRef &monitored);
 
 private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;

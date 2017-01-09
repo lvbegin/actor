@@ -302,8 +302,8 @@ static int initSupervisionTest() {
 
 	auto supervisor = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	auto supervised = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
-	Actor::registerActor(supervisor, supervised);
-	Actor::unregisterActor(supervisor, supervised);
+	supervisor->registerActor(supervised);
+	supervisor->unregisterActor(supervised);
 
 	supervisor->post(Command::COMMAND_SHUTDOWN);
 	supervised->post(Command::COMMAND_SHUTDOWN);
@@ -317,7 +317,7 @@ static int unregisterToSupervisorWhenActorDestroyedTest() {
 
 	auto supervisor = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
 	auto supervised = Actor::createActorRef([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
-	Actor::registerActor(supervisor, supervised);
+	supervisor->registerActor(supervised);
 
 	supervised->post(Command::COMMAND_SHUTDOWN);
 	supervised.reset();
@@ -339,7 +339,7 @@ static int supervisorRestartsActorTest() {
 		}
 		/* do something */ return StatusCode::ok;
 	 });
-	Actor::registerActor(supervisor, supervised);
+	supervisor->registerActor(supervised);
 	if (StatusCode::error != supervised->postSync(restartCommand))
 		std::cout << "error not returned" << std::endl;
 	if (StatusCode::ok != supervised->postSync(otherCommand))
@@ -370,8 +370,8 @@ static int actorNotifiesErrorToSupervisorTest() {
 			[](int i, const std::vector<unsigned char> &params) { return StatusCode::ok; },
 			[&supervised2Restarted](void) { supervised2Restarted = true; } );
 
-	Actor::registerActor(supervisor, supervised1);
-	Actor::registerActor(supervisor, supervised2);
+	supervisor->registerActor(supervised1);
+	supervisor->registerActor(supervised2);
 
 	if (StatusCode::error != supervised1->postSync(someCommand))
 		return 1;
@@ -443,8 +443,8 @@ static int restartAllActorBySupervisorTest() {
 			[](int i, const std::vector<unsigned char> &params) { return StatusCode::ok; },
 			[&supervised2Restarted](void) { supervised2Restarted = true; });
 
-	Actor::registerActor(supervisor, supervised1);
-	Actor::registerActor(supervisor, supervised2);
+	supervisor->registerActor(supervised1);
+	supervisor->registerActor(supervised2);
 
 	if (StatusCode::error != supervised1->postSync(someCommand))
 		return 1;
