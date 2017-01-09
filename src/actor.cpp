@@ -36,9 +36,9 @@ std::function<void(void)> Actor::doNothing = [](void) {};
 Actor::Actor(ActorBody body, RestartStrategy restartStrategy)  : Actor(body, Actor::doNothing, restartStrategy) {}
 
 Actor::Actor(ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
-						executorQueue(new MessageQueue()), supervisor(std::move(restartStrategy)), atRestart(atRestart), body(body),
+						executorQueue(new MessageQueue()), supervisor(std::move(restartStrategy), *executorQueue), atRestart(atRestart), body(body),
 						executor(new Executor([this](MessageType type, int command, const RawData &params)
-								{ return this->actorExecutor(this->body, type, command, params); }, executorQueue.get())) { }
+								{ return this->actorExecutor(this->body, type, command, params); }, *executorQueue)) { }
 
 Actor::~Actor() {
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
@@ -67,7 +67,7 @@ StatusCode Actor::doRestart(void) {
 	std::unique_ptr<Executor> newExecutor = std::make_unique<Executor>(
 			[this](MessageType type, int command, const RawData &params) {
 				return this->actorExecutor(this->body, type, command, params);
-			}, executorQueue.get(),
+			}, *executorQueue,
 			[this, &status, & e]() mutable {
 				std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
 				std::swap(this->executor, ref);

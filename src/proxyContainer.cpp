@@ -33,7 +33,7 @@
 
 #include <tuple>
 
-ProxyContainer::ProxyContainer() : executor([this](MessageType, int code, const RawData &not_used) { return (this->deleteProxy(code), StatusCode::ok);}, &executorQueue) { }
+ProxyContainer::ProxyContainer() : executor([this](MessageType, int code, const RawData &not_used) { return (this->deleteProxy(code), StatusCode::ok);}, executorQueue) { }
 
 ProxyContainer::~ProxyContainer() {
 	executorQueue.post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);

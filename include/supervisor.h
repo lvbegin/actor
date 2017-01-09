@@ -38,7 +38,7 @@
 
 class Supervisor {
 public:
-	Supervisor(RestartStrategy strategy);
+	Supervisor(RestartStrategy strategy, MessageQueue &self);
 	~Supervisor();
 
 	void notifySupervisor(uint32_t code) const;
@@ -53,6 +53,7 @@ private:
 	const RestartStrategy restartStrategy;
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;
+	MessageQueue &self;
 
 	void sendToSupervisor(MessageType type, uint32_t code) const;
 	static void doRegistrationOperation(const Supervisor &monitor, const std::shared_ptr<MessageQueue> &monitorQueue, Supervisor &monitored, std::function<void(void)> op);

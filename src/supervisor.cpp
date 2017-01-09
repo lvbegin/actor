@@ -29,7 +29,8 @@
 
 #include <supervisor.h>
 
-Supervisor::Supervisor(RestartStrategy strategy) : id(UniqueId<Supervisor>::newId()), restartStrategy(std::move(strategy)) { }
+Supervisor::Supervisor(RestartStrategy strategy, MessageQueue &self) : id(UniqueId<Supervisor>::newId()),
+						restartStrategy(std::move(strategy)), self(self) { }
 Supervisor::~Supervisor() = default;
 
 void Supervisor::notifySupervisor(uint32_t code) const{ sendToSupervisor(MessageType::COMMAND_MESSAGE, code); }

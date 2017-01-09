@@ -41,7 +41,7 @@ using ExecutorBody = std::function<StatusCode(MessageType, int, const RawData &)
 
 class Executor {
 public:
-	Executor(ExecutorBody body, MessageQueue *queue, std::function<void(void)> atStart = ([](void) {}));
+	Executor(ExecutorBody body, MessageQueue &queue, std::function<void(void)> atStart = ([](void) {}));
 	~Executor();
 
 	Executor() = delete;
@@ -52,7 +52,7 @@ public:
 private:
 	void executeBody(ExecutorBody body);
 	bool started;
-	MessageQueue *messageQueue;
+	MessageQueue &messageQueue;
 	std::thread thread;
 
 };
