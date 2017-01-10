@@ -36,7 +36,7 @@ std::function<void(void)> Actor::doNothing = [](void) {};
 Actor::Actor(ActorBody body, RestartStrategy restartStrategy)  : Actor(body, Actor::doNothing, restartStrategy) {}
 
 Actor::Actor(ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
-						executorQueue(new MessageQueue()), supervisor(std::move(restartStrategy), *executorQueue), atRestart(atRestart), body(body),
+						executorQueue(new MessageQueue()), supervisor(std::move(restartStrategy), executorQueue), atRestart(atRestart), body(body),
 						executor(new Executor([this](MessageType type, int command, const RawData &params)
 								{ return this->actorExecutor(this->body, type, command, params); }, *executorQueue)) { }
 
@@ -91,13 +91,9 @@ LinkApi *Actor::getActorLink() const { return new ActorQueue(executorQueue); }
 
 std::shared_ptr<LinkApi> Actor::getActorLinkRef() const { return std::make_shared<ActorQueue>(executorQueue); }
 
-void Actor::registerActor(ActorRef &monitor, ActorRef &monitored) {
-	Supervisor::registerMonitored(monitor->executorQueue, monitor->supervisor, monitored->executorQueue, monitored->supervisor);
-}
+void Actor::registerActor(ActorRef &monitored) { supervisor.registerMonitored(monitored->supervisor); }
 
-void Actor::unregisterActor(ActorRef &monitor, ActorRef &monitored) {
-	Supervisor::unregisterMonitored(monitor->supervisor, monitored->supervisor);
-}
+void Actor::unregisterActor(ActorRef &monitored) { supervisor.unregisterMonitored(monitored->supervisor); }
 
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
