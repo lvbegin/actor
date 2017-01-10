@@ -34,11 +34,11 @@
 proxyClient::proxyClient(Connection connection) : connection(std::move(connection)) { }
 proxyClient::~proxyClient() = default;
 
-StatusCode proxyClient::postSync(int command, RawData params) const {
+StatusCode proxyClient::postSync(int command, RawData params) {
 	connection.writeInt(postType::Sync).writeInt(command).writeRawData(params);
 	return connection.readInt<StatusCode>();
 }
 
-void proxyClient::post(int command, RawData params) const {
+void proxyClient::post(int command, RawData params) {
 	connection.writeInt(postType::Async).writeInt(command).writeRawData(params);
 }

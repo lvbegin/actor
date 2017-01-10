@@ -29,15 +29,14 @@
 
 #include <actorQueue.h>
 
-ActorQueue::ActorQueue(std::shared_ptr<MessageQueue> queue) : queue(std::move(queue)) { }
+ActorQueue::ActorQueue() = default;
 
 ActorQueue::~ActorQueue() = default;
 
-StatusCode ActorQueue::postSync(int code, RawData params) const {
-	return queue->postSync(MessageType::COMMAND_MESSAGE, code, params);
-}
+StatusCode ActorQueue::postSync(int code, RawData params) { return MessageQueue::postSync(MessageType::COMMAND_MESSAGE, code, params); }
 
-void ActorQueue::post(int code, RawData params) const {
-	queue->post(MessageType::COMMAND_MESSAGE, code, params);
-}
+void ActorQueue::post(int code, RawData params) { MessageQueue::post(MessageType::COMMAND_MESSAGE, code, params); }
 
+void ActorQueue::post(MessageType type, int code, RawData params) { MessageQueue::post(type, code, params); }
+
+StatusCode ActorQueue::postSync(MessageType type, int code, RawData params) { return MessageQueue::postSync(type, code, params); }

@@ -40,8 +40,8 @@ public:
 	proxyClient(Connection connection);
 	~proxyClient();
 
-	StatusCode postSync(int command, RawData params = RawData()) const;
-	void post(int command, RawData params = RawData()) const;
+	StatusCode postSync(int command, RawData params = RawData());
+	void post(int command, RawData params = RawData());
 private:
 	const Connection connection;
 };

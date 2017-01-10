@@ -58,7 +58,6 @@ public:
 
 	StatusCode postSync(int i, RawData params = RawData()) const;
 	void post(int i, RawData params = RawData()) const;
-	LinkApi *getActorLink() const;
 	std::shared_ptr<LinkApi> getActorLinkRef() const;
 
 	void registerActor(ActorRef &monitored);
@@ -73,7 +72,7 @@ private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
 	static std::function<void(void)> doNothing;
 
-	std::shared_ptr<MessageQueue> executorQueue;
+	std::shared_ptr<ActorQueue> executorQueue;
 	Supervisor supervisor;
 	const std::function<void(void)> atRestart;
 	const ActorBody body;

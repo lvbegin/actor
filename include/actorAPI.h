@@ -37,8 +37,8 @@
 
 class LinkApi {
 public:
-	virtual StatusCode postSync(int code, std::vector<uint8_t> params = std::vector<uint8_t>()) const = 0;
-	virtual void post(int code, std::vector<uint8_t> params = std::vector<uint8_t>()) const = 0;
+	virtual StatusCode postSync(int code, std::vector<uint8_t> params = std::vector<uint8_t>()) = 0;
+	virtual void post(int code, std::vector<uint8_t> params = std::vector<uint8_t>()) = 0;
 protected:
 	LinkApi() = default;
 	virtual ~LinkApi() = default;

@@ -33,14 +33,16 @@
 #include <actorAPI.h>
 #include <messageQueue.h>
 
-class ActorQueue : public LinkApi {
+class ActorQueue : public LinkApi, public MessageQueue {
 public:
-	ActorQueue(std::shared_ptr<MessageQueue> queue);
+	ActorQueue();
 	~ActorQueue();
-	StatusCode postSync(int code, RawData params = RawData()) const;
-	void post(int code, RawData params = RawData()) const;
-private:
-	std::shared_ptr<MessageQueue> queue;
+	StatusCode postSync(int code, RawData params = RawData());
+	void post(int code, RawData params = RawData());
+
+	void post(MessageType type, int code, RawData params = RawData());
+	StatusCode postSync(MessageType type, int code, RawData params = RawData());
+
 };
 
 #endif
