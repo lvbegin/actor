@@ -36,7 +36,7 @@
 class ActorQueue : public LinkApi, public MessageQueue {
 public:
 	ActorQueue();
-	~ActorQueue();
+	virtual ~ActorQueue();
 	StatusCode postSync(int code, RawData params = RawData());
 	void post(int code, RawData params = RawData());
 

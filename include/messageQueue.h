@@ -49,7 +49,7 @@ public:
 		struct message &operator=(const struct message &m) = delete;
 	};
 	MessageQueue();
-	~MessageQueue();
+	virtual ~MessageQueue();
 
 	void post(MessageType type, int code, RawData params = RawData());
 	StatusCode postSync(MessageType type, int code, RawData params = RawData());
