@@ -40,9 +40,8 @@ public:
 	StatusCode postSync(int code, RawData params = RawData());
 	void post(int code, RawData params = RawData());
 
-	void post(MessageType type, int code, RawData params = RawData());
-	StatusCode postSync(MessageType type, int code, RawData params = RawData());
-
+	using MessageQueue::post;
+	using MessageQueue::postSync;
 };
 
 #endif
