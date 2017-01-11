@@ -43,16 +43,12 @@ Actor::Actor(ActorBody body, std::function<void(void)> atRestart, RestartStrateg
 Actor::~Actor() {
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
 	supervisor.notifySupervisor(Command::COMMAND_UNREGISTER_ACTOR);
-	executorQueue->post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);
+	executorQueue->post(Command::COMMAND_SHUTDOWN);
 };
 
-StatusCode Actor::postSync(int i, RawData params) const {
-	return executorQueue->postSync(MessageType::COMMAND_MESSAGE, i, params);
-}
+StatusCode Actor::postSync(int i, RawData params) const { return executorQueue->postSync(i, params); }
 
-void Actor::post(int i, RawData params) const {
-	executorQueue->post(MessageType::COMMAND_MESSAGE, i, params);
-}
+void Actor::post(int i, RawData params) const { executorQueue->post(i, params); }
 
 StatusCode Actor::restartSateMachine(void) {
 	stateMachine.moveTo(ActorStateMachine::ActorState::RESTARTING);
@@ -92,16 +88,16 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 
 	if (MessageType::ERROR_MESSAGE == type)
 		return (supervisor.doSupervisorOperation(code, params), StatusCode::ok);
-	if (Command::COMMAND_RESTART == code) {
-		return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
+	switch (code) {
+		case Command::COMMAND_RESTART:
+			return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
+		case Command::COMMAND_UNREGISTER_ACTOR:
+			// check size.
+			supervisor.removeSupervised(uint32_t(*(uint32_t *)params.data()));
+			return StatusCode::ok;
+		default:
+			return executeActorBody(body, code, params);
 	}
-	if (Command::COMMAND_UNREGISTER_ACTOR == code) {
-		// check size.
-		const uint32_t toRemove { *(uint32_t *)params.data() }; //do better ?
-		supervisor.removeSupervised(toRemove);
-		return StatusCode::ok;
-	}
-	return executeActorBody(body, code, params);
 }
 
 StatusCode Actor::executeActorBody(ActorBody body, int code, const RawData &params) {
