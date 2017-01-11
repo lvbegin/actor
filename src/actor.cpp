@@ -78,20 +78,11 @@ StatusCode Actor::doRestart(void) {
 	return status.get_future().get();
 }
 
-ActorRef Actor::createActorRef(ActorBody body, RestartStrategy restartStragy) {
-	return createActorRefWithRestart(body, Actor::doNothing, restartStragy);
-}
-
-ActorRef Actor::createActorRefWithRestart(ActorBody body, std::function<void(void)> atRestart,
-											RestartStrategy restartStragy) {
-	return std::make_unique<Actor>(body, atRestart, restartStragy);
-}
-
 std::shared_ptr<LinkApi> Actor::getActorLinkRef() const { return executorQueue; }
 
-void Actor::registerActor(ActorRef &monitored) { supervisor.registerMonitored(monitored->supervisor); }
+void Actor::registerActor(Actor &monitored) { supervisor.registerMonitored(monitored.supervisor); }
 
-void Actor::unregisterActor(ActorRef &monitored) { supervisor.unregisterMonitored(monitored->supervisor); }
+void Actor::unregisterActor(Actor &monitored) { supervisor.unregisterMonitored(monitored.supervisor); }
 
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 

@@ -40,9 +40,6 @@
 #include <memory>
 #include <mutex>
 
-class Actor;
-using ActorRef = std::unique_ptr<Actor>;
-
 using ActorBody = std::function<StatusCode(int, const RawData &)>;
 
 class Actor {
@@ -58,13 +55,10 @@ public:
 	void post(int i, RawData params = RawData()) const;
 	std::shared_ptr<LinkApi> getActorLinkRef() const;
 
-	void registerActor(ActorRef &monitored);
-	void unregisterActor(ActorRef &monitored);
+	void registerActor(Actor &monitored);
+	void unregisterActor(Actor &monitored);
 
 	static void notifyError(int e);
-	static ActorRef createActorRef(ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);
-	static ActorRef createActorRefWithRestart(ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStragy = defaultRestartStrategy);
-
 private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
 	static std::function<void(void)> doNothing;
