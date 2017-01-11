@@ -53,7 +53,7 @@ public:
 
 	StatusCode postSync(int i, RawData params = RawData()) const;
 	void post(int i, RawData params = RawData()) const;
-	std::shared_ptr<LinkApi> getActorLinkRef() const;
+	ActorLink getActorLinkRef() const;
 
 	void registerActor(Actor &monitored);
 	void unregisterActor(Actor &monitored);

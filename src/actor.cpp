@@ -78,7 +78,7 @@ StatusCode Actor::doRestart(void) {
 	return status.get_future().get();
 }
 
-std::shared_ptr<LinkApi> Actor::getActorLinkRef() const { return executorQueue; }
+ActorLink Actor::getActorLinkRef() const { return executorQueue; }
 
 void Actor::registerActor(Actor &monitored) { supervisor.registerMonitored(monitored.supervisor); }
 
