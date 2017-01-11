@@ -31,8 +31,6 @@
 #define ACTOR_H__
 
 #include <actorController.h>
-#include <actorQueue.h>
-#include <actorQueue.h>
 #include <executor.h>
 #include <restartStragegy.h>
 #include <actorStateMachine.h>
@@ -67,12 +65,11 @@ public:
 	static ActorRef createActorRef(ActorBody body, RestartStrategy restartStragy = defaultRestartStrategy);
 	static ActorRef createActorRefWithRestart(ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStragy = defaultRestartStrategy);
 
-
 private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
 	static std::function<void(void)> doNothing;
 
-	std::shared_ptr<ActorQueue> executorQueue;
+	std::shared_ptr<MessageQueue> executorQueue;
 	Supervisor supervisor;
 	const std::function<void(void)> atRestart;
 	const ActorBody body;

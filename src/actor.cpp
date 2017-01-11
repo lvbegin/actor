@@ -36,7 +36,7 @@ std::function<void(void)> Actor::doNothing = [](void) {};
 Actor::Actor(ActorBody body, RestartStrategy restartStrategy)  : Actor(body, Actor::doNothing, restartStrategy) {}
 
 Actor::Actor(ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
-						executorQueue(new ActorQueue()), supervisor(std::move(restartStrategy), executorQueue), atRestart(atRestart), body(body),
+						executorQueue(new MessageQueue()), supervisor(std::move(restartStrategy), executorQueue), atRestart(atRestart), body(body),
 						executor(new Executor([this](MessageType type, int command, const RawData &params)
 								{ return this->actorExecutor(this->body, type, command, params); }, *executorQueue)) { }
 

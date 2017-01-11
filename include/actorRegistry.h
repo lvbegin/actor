@@ -31,7 +31,6 @@
 #define ACTOR_REGISTRY_H__
 
 #include <actor.h>
-#include <actorQueue.h>
 #include <cstdint>
 #include <thread>
 #include <memory>

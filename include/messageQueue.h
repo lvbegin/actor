@@ -32,10 +32,11 @@
 
 #include <sharedQueue.h>
 #include <rc.h>
+#include <actorAPI.h>
 
 #include <future>
 
-class MessageQueue {
+class MessageQueue : public LinkApi {
 public:
 	struct message {
 		MessageType type;
@@ -51,6 +52,8 @@ public:
 	MessageQueue();
 	virtual ~MessageQueue();
 
+	StatusCode postSync(int code, RawData params = RawData());
+	void post(int code, RawData params = RawData());
 	void post(MessageType type, int code, RawData params = RawData());
 	StatusCode postSync(MessageType type, int code, RawData params = RawData());
 

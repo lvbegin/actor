@@ -45,6 +45,10 @@ std::future<StatusCode> MessageQueue::putMessage(MessageType type, int code, Raw
 	return future;
 }
 
+StatusCode MessageQueue::postSync(int code, RawData params) { return postSync(MessageType::COMMAND_MESSAGE, code, params); }
+
+void MessageQueue::post(int code, RawData params) { post(MessageType::COMMAND_MESSAGE, code, params); }
+
 void MessageQueue::post(MessageType type, int code, RawData params) {
 	putMessage(type, code, params);
 }
