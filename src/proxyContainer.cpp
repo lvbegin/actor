@@ -41,7 +41,7 @@ ProxyContainer::~ProxyContainer() {
 
 void ProxyContainer::createNewProxy(ActorLink actor, Connection connection) {
 	const auto id = UniqueId<ProxyContainer>::newId();
-	const auto terminate = [this, id]() { this->executorQueue.post(MessageType::RESTART_MESSAGE, id); };
+	const auto terminate = [this, id]() { this->executorQueue.post(MessageType::MANAGEMENT_MESSAGE, id); };
 	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id), std::forward_as_tuple(actor, std::move(connection), terminate));
 }
 
