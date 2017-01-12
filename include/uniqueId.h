@@ -42,7 +42,7 @@ class UniqueId {
 public:
 	static Id newId(void) { return id++; }
 
-	static std::vector<uint8_t> serialize(uint32_t value) {
+	static std::vector<uint8_t> serialize(Id value) {
 		void *ptr = &value;
 		return std::vector<uint8_t>(static_cast<uint8_t *>(ptr), static_cast<uint8_t *>(ptr) + 4);
 	}
