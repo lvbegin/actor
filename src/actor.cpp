@@ -93,7 +93,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 			return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
 		case Command::COMMAND_UNREGISTER_ACTOR:
 			// check size.
-			supervisor.removeSupervised(uint32_t(*(uint32_t *)params.data()));
+			supervisor.removeSupervised(UniqueId::unserialize(params));
 			return StatusCode::ok;
 		default:
 			return executeActorBody(body, code, params);
