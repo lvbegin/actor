@@ -43,7 +43,7 @@ public:
 	ProxyContainer();
 	~ProxyContainer();
 	void createNewProxy(ActorLink actor, Connection connection);
-	void deleteProxy(uint32_t id);
+	void deleteProxy(Id id);
 private:
 	static const uint32_t USELESS_CODE = 0;
 	SharedMap<uint32_t, proxyServer> proxies;

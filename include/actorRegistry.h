@@ -48,9 +48,9 @@ public:
 	~ActorRegistry();
 	std::string addReference(const std::string &host, uint16_t port);
 	void removeReference(std::string registryName);
-	void registerActor(std::string name, std::shared_ptr<LinkApi> actor);
+	void registerActor(std::string name, ActorLink actor);
 	void unregisterActor(std::string name);
-	std::shared_ptr<LinkApi>  getActor(std::string name) const;
+	ActorLink  getActor(std::string name) const;
 
 private:
 	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY, SEARCH_ACTOR, };
@@ -64,8 +64,8 @@ private:
 	std::thread t;
 
 	void registryBody(const ServerSocket &s);
-	std::shared_ptr<LinkApi> getLocalActor(const std::string &name) const;
-	std::shared_ptr<LinkApi> getRemoteActor(const std::string &name) const;
+	ActorLink getLocalActor(const std::string &name) const;
+	ActorLink getRemoteActor(const std::string &name) const;
 };
 
 #endif

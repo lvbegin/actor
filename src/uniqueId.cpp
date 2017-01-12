@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,21 +27,28 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <proxyContainer.h>
-#include <command.h>
 #include <uniqueId.h>
 
-#include <tuple>
+#include <algorithm>
+#include <exception.h>
 
-ProxyContainer::ProxyContainer() :
-	executor([this](MessageType, int, const RawData &id) { return (this->deleteProxy(UniqueId::unserialize(id)), StatusCode::ok);}, executorQueue) { }
+std::atomic<Id> UniqueId::id { 0 };
 
-ProxyContainer::~ProxyContainer() { executorQueue.post(Command::COMMAND_SHUTDOWN); }
+Id UniqueId::newId(void) { return UniqueId::id++; }
 
-void ProxyContainer::createNewProxy(ActorLink actor, Connection connection) {
-	const auto id = UniqueId::newId();
-	const auto terminate = [this, id]() { this->executorQueue.post(MessageType::MANAGEMENT_MESSAGE, USELESS_CODE, UniqueId::serialize(id)); };
-	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id), std::forward_as_tuple(actor, std::move(connection), terminate));
+RawData UniqueId::serialize(Id value) {
+	void *ptr = &value;
+	return std::vector<uint8_t>(static_cast<uint8_t *>(ptr), static_cast<uint8_t *>(ptr) + sizeof(value));
 }
 
-void ProxyContainer::deleteProxy(Id id) { proxies.erase(id); }
+Id UniqueId::unserialize(const RawData &value) {
+	Id rc;
+
+	if (sizeof(rc) != value.size())
+		THROW(std::runtime_error, "serialized unteger does not have correct size.");
+	void *ptr = &rc;
+	const uint8_t *first = static_cast<const uint8_t *>(ptr);
+	std::for_each(static_cast<uint8_t *>(ptr), static_cast<uint8_t *>(ptr) + 4, [first, &value](uint8_t &p) { p = value[&p - first]; });
+	return rc;
+}
+

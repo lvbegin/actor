@@ -477,8 +477,8 @@ static int executorTest() {
 static int serializationTest() {
 	static const uint32_t expected_value = 0x11223344;
 
-	auto s = UniqueId<int>::serialize(expected_value);
-	return (expected_value == UniqueId<int>::unserialize(s)) ? 0 : 1;
+	auto s = UniqueId::serialize(expected_value);
+	return (expected_value == UniqueId::unserialize(s)) ? 0 : 1;
 }
 
 int main() {

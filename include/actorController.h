@@ -41,13 +41,13 @@ public:
 	ActorController();
 	~ActorController();
 
-	void add(uint32_t id, std::shared_ptr<MessageQueue> actorLink);
-	void remove(uint32_t id);
-	void restartOne(uint32_t id) const;
-	void restartAll() const;
+	void add(Id id, std::shared_ptr<MessageQueue> actorLink);
+	void remove(Id id);
+	void restartOne(Id id) const;
+	void restartAll(void) const;
 private:
 	mutable std::mutex mutex;
-	std::map<uint32_t, std::shared_ptr<MessageQueue>> actors;
+	std::map<Id, std::shared_ptr<MessageQueue>> actors;
 	static void restart(const std::shared_ptr<MessageQueue> &link);
 };
 

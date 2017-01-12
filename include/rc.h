@@ -39,4 +39,6 @@ enum class MessageType:uint32_t { COMMAND_MESSAGE, ERROR_MESSAGE, RESTART_MESSAG
 
 typedef std::vector<uint8_t> RawData;
 
+typedef uint32_t Id;
+
 #endif
