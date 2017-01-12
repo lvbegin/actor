@@ -33,15 +33,14 @@
 
 #include <tuple>
 
-ProxyContainer::ProxyContainer() : executor([this](MessageType, int code, const RawData &not_used) { return (this->deleteProxy(code), StatusCode::ok);}, executorQueue) { }
+ProxyContainer::ProxyContainer() :
+	executor([this](MessageType, int code, const RawData &id) { return (this->deleteProxy(UniqueId<ProxyContainer>::unserialize(id)), StatusCode::ok);}, executorQueue) { }
 
-ProxyContainer::~ProxyContainer() {
-	executorQueue.post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);
-}
+ProxyContainer::~ProxyContainer() { executorQueue.post(Command::COMMAND_SHUTDOWN); }
 
 void ProxyContainer::createNewProxy(ActorLink actor, Connection connection) {
 	const auto id = UniqueId<ProxyContainer>::newId();
-	const auto terminate = [this, id]() { this->executorQueue.post(MessageType::MANAGEMENT_MESSAGE, id); };
+	const auto terminate = [this, id]() { this->executorQueue.post(MessageType::MANAGEMENT_MESSAGE, USELESS_CODE, UniqueId<ProxyContainer>::serialize(id)); };
 	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id), std::forward_as_tuple(actor, std::move(connection), terminate));
 }
 

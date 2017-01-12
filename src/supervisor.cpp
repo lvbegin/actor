@@ -28,6 +28,7 @@
  */
 
 #include <supervisor.h>
+#include <uniqueId.h>
 
 Supervisor::Supervisor(RestartStrategy strategy, std::shared_ptr<MessageQueue> self) : id(UniqueId<Supervisor>::newId()),
 						restartStrategy(std::move(strategy)), self(std::move(self)) { }
@@ -41,10 +42,8 @@ void Supervisor::sendToSupervisor(MessageType type, uint32_t code) const {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
 	auto ref = supervisorRef.lock();
-	if (nullptr != ref.get()) {
-		const void *idPtr = &id;
-		ref->post(type, code, std::vector<unsigned char>(static_cast<const uint8_t *>(idPtr), static_cast<const uint8_t *>(idPtr) + sizeof(id)));
-	}
+	if (nullptr != ref.get())
+		ref->post(type, code, UniqueId<Supervisor>::serialize(id));
 }
 
 void Supervisor::removeSupervised(uint32_t toRemove) {
@@ -60,7 +59,7 @@ void Supervisor::doSupervisorOperation(int code, const RawData &params) {
 	{
 		case RestartType::RESTART_ONE:
 			/* check size */
-			supervisedRefs.restartOne(*(uint32_t *)params.data());
+			supervisedRefs.restartOne(UniqueId<Supervisor>::unserialize(params));
 			break;
 		case RestartType::RESTART_ALL:
 			supervisedRefs.restartAll();

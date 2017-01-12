@@ -474,6 +474,13 @@ static int executorTest() {
 	return 0;
 }
 
+static int serializationTest() {
+	static const uint32_t expected_value = 0x11223344;
+
+	auto s = UniqueId<int>::serialize(expected_value);
+	return (expected_value == UniqueId<int>::unserialize(s)) ? 0 : 1;
+}
+
 int main() {
 	int nbFailure = basicActorTest();
 	nbFailure += basicActorWithParamsTest();
@@ -497,6 +504,7 @@ int main() {
 	nbFailure += actorDoesNothingIfNoSupervisorAndExceptionThrownTest();
 	nbFailure += restartAllActorBySupervisorTest();
 	nbFailure += executorTest();
+	nbFailure += serializationTest();
 	std::cout << ((nbFailure) ? "Failure" : "Success") << std::endl;
 	return (nbFailure) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

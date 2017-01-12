@@ -31,15 +31,38 @@
 #define UNIQUE_ID_H__
 
 #include <cstdint>
+#include <vector>
+#include <algorithm>
+#include <exception.h>
+
+typedef uint32_t Id;
 
 template <typename N>
 class UniqueId {
 public:
-	static uint32_t newId(void) { return id++; }
+	static Id newId(void) { return id++; }
+
+	static std::vector<uint8_t> serialize(uint32_t value) {
+		void *ptr = &value;
+		return std::vector<uint8_t>(static_cast<uint8_t *>(ptr), static_cast<uint8_t *>(ptr) + 4);
+	}
+
+	static Id unserialize(const std::vector<uint8_t> &value) {
+		if (4 != value.size())
+			THROW(std::runtime_error, "serialized unteger does not have correct size.");
+		uint32_t rc;
+		void *ptr = &rc;
+		const uint8_t *first = static_cast<const uint8_t *>(ptr);
+		std::for_each(static_cast<uint8_t *>(ptr), static_cast<uint8_t *>(ptr) + 4, [first, &value](uint8_t &p) { p = value[&p - first]; });
+		return rc;
+	}
 private:
 	static std::atomic<uint32_t> id;
 };
 
 template <typename N>
 std::atomic<uint32_t> UniqueId<N>::id { 0 };
+
+
 #endif
+

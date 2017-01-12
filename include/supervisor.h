@@ -51,7 +51,7 @@ public:
 
 private:
 	mutable std::mutex monitorMutex;
-	const uint32_t id;
+	const Id id;
 	const RestartStrategy restartStrategy;
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;
