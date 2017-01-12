@@ -58,7 +58,6 @@ void Supervisor::doSupervisorOperation(int code, const RawData &params) {
 	switch (restartStrategy())
 	{
 		case RestartType::RESTART_ONE:
-			/* check size */
 			supervisedRefs.restartOne(UniqueId<Supervisor>::unserialize(params));
 			break;
 		case RestartType::RESTART_ALL:
