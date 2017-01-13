@@ -53,6 +53,7 @@ void ActorController::restartOne(Id id) const {
 	if (actors.end() != it)
 		restart(it->second);
 }
+
 void ActorController::restartAll(void) const {
 	std::unique_lock<std::mutex> l(mutex);
 

@@ -46,10 +46,10 @@ void Supervisor::sendToSupervisor(MessageType type, uint32_t code) const {
 		ref->post(type, code, UniqueId::serialize(id));
 }
 
-void Supervisor::removeSupervised(uint32_t toRemove) {
+void Supervisor::removeSupervised(Id id) {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
-	supervisedRefs.remove(toRemove);
+	supervisedRefs.remove(id);
 }
 
 void Supervisor::doSupervisorOperation(int code, const RawData &params) {

@@ -83,7 +83,7 @@ void Actor::unregisterActor(Actor &monitored) { supervisor.unregisterMonitored(m
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
 StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, const RawData &params) {
-	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED))
+	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED)) //FIX: race condition when the actor is stopped just after.
 		return StatusCode::ok;
 
 	if (MessageType::ERROR_MESSAGE == type)

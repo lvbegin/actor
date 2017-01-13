@@ -43,7 +43,7 @@ public:
 
 	void notifySupervisor(uint32_t code) const;
 	void sendErrorToSupervisor(uint32_t code) const;
-	void removeSupervised(uint32_t toRemove);
+	void removeSupervised(Id id);
 	void doSupervisorOperation(int code, const RawData &params);
 
 	void registerMonitored(Supervisor &monitored);
