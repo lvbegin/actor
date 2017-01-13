@@ -56,7 +56,8 @@ void ActorController::restartOne(Id id) const {
 void ActorController::restartAll(void) const {
 	std::unique_lock<std::mutex> l(mutex);
 
-	std::for_each(actors.begin(), actors.end(), [](const std::pair<Id, std::shared_ptr<MessageQueue>> &e) { restart(e.second);} );
+	std::for_each(actors.begin(), actors.end(),
+			[](const std::pair<const Id, const std::shared_ptr<MessageQueue>> &e) { restart(e.second);} );
 }
 
 void ActorController::restart(const std::shared_ptr<MessageQueue> &link) { link->post(Command::COMMAND_RESTART); }
