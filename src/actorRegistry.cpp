@@ -102,7 +102,7 @@ ActorLink ActorRegistry::getLocalActor(const std::string &name) const { return a
 
 ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
 	ActorLink actor;
-	registryAddresses.for_each([&actor, &name](const std::pair<const std::string, struct NetAddr> &c) {
+	registryAddresses.for_each([&actor, &name](const std::pair<const std::string, const struct NetAddr> &c) {
 		auto connection = ClientSocket::openHostConnection(c.second);
 		connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
 		if (ACTOR_FOUND == connection.readInt<uint32_t>())

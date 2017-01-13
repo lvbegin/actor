@@ -58,8 +58,8 @@ private:
 	static const int ACTOR_FOUND = 1;
 	const std::string name;
 	bool terminated;
-	SharedMap<std::string, struct NetAddr> registryAddresses;
-	SharedMap<std::string, std::shared_ptr<LinkApi>> actors;
+	SharedMap<const std::string, const struct NetAddr> registryAddresses;
+	SharedMap<const std::string, const std::shared_ptr<LinkApi>> actors;
 	ProxyContainer proxies;
 	std::thread t;
 
