@@ -39,7 +39,7 @@ public:
 
 	int getErrorCode() const { return code; };
 private:
-	int code;
+	const int code;
 };
 
 #endif
