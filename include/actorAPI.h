@@ -32,13 +32,12 @@
 
 #include <rc.h>
 
-#include <vector>
 #include <memory>
 
 class LinkApi {
 public:
-	virtual StatusCode postSync(int code, std::vector<uint8_t> params = std::vector<uint8_t>()) = 0;
-	virtual void post(int code, std::vector<uint8_t> params = std::vector<uint8_t>()) = 0;
+	virtual StatusCode postSync(int code, RawData = RawData()) = 0;
+	virtual void post(int code, RawData = RawData()) = 0;
 protected:
 	LinkApi() = default;
 	virtual ~LinkApi() = default;
