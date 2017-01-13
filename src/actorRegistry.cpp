@@ -84,13 +84,13 @@ std::string ActorRegistry::addReference(const std::string &host, uint16_t port) 
 	return otherName;
 }
 
-void ActorRegistry::removeReference(std::string registryName) { registryAddresses.erase(std::move(registryName)); }
+void ActorRegistry::removeReference(const std::string &registryName) { registryAddresses.erase(registryName); }
 
 void ActorRegistry::registerActor(std::string name, ActorLink actor) { actors.insert(std::move(name), std::move(actor)); }
 
-void ActorRegistry::unregisterActor(std::string name) { actors.erase(std::move(name)); }
+void ActorRegistry::unregisterActor(const std::string &name) { actors.erase(name); }
 
-ActorLink  ActorRegistry::getActor(std::string name) const {
+ActorLink  ActorRegistry::getActor(const std::string &name) const {
 	try {
 		return getLocalActor(name);
 	} catch (std::out_of_range &e) {

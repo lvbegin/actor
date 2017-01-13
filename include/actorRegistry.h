@@ -47,10 +47,10 @@ public:
 	ActorRegistry(std::string name, uint16_t port);
 	~ActorRegistry();
 	std::string addReference(const std::string &host, uint16_t port);
-	void removeReference(std::string registryName);
+	void removeReference(const std::string &registryName);
 	void registerActor(std::string name, ActorLink actor);
-	void unregisterActor(std::string name);
-	ActorLink  getActor(std::string name) const;
+	void unregisterActor(const std::string &name);
+	ActorLink  getActor(const std::string &name) const;
 
 private:
 	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY, SEARCH_ACTOR, };

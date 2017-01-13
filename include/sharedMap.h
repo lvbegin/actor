@@ -59,7 +59,7 @@ public:
 
 		map.emplace(std::forward<Args>(args)...);
 	}
-	void erase(K key) {
+	void erase(const K &key) {
 		std::unique_lock<std::mutex> l(mutex);
 
 		const auto it = map.find(key);
