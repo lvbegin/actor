@@ -30,7 +30,7 @@
 #include <messageQueue.h>
 
 
-MessageQueue::message::message(MessageType type, int code, RawData params) : type(type), code(code), params(params) {}
+MessageQueue::message::message(MessageType type, int code, RawData params) : type(type), code(code), params(std::move(params)) {}
 
 MessageQueue::message::~message() = default;
 MessageQueue::message::message(struct message &&m) = default;
@@ -38,23 +38,20 @@ MessageQueue::message::message(struct message &&m) = default;
 MessageQueue::MessageQueue() = default;
 MessageQueue::~MessageQueue() = default;
 
+
+StatusCode MessageQueue::postSync(int code, RawData params) { return postSync(MessageType::COMMAND_MESSAGE, code, std::move(params)); }
+
+void MessageQueue::post(int code, RawData params) { post(MessageType::COMMAND_MESSAGE, code, std::move(params)); }
+
+void MessageQueue::post(MessageType type, int code, RawData params) { putMessage(type, code, std::move(params)); }
+
+StatusCode MessageQueue::postSync(MessageType type, int code, RawData params) { return putMessage(type, code, std::move(params)).get(); }
+
+struct MessageQueue::message MessageQueue::get(void) { return queue.get(); }
+
 std::future<StatusCode> MessageQueue::putMessage(MessageType type, int code, RawData params) {
 	struct message  m(type, code, std::move(params));
 	auto future = m.promise.get_future();
 	queue.post(std::move(m));
 	return future;
 }
-
-StatusCode MessageQueue::postSync(int code, RawData params) { return postSync(MessageType::COMMAND_MESSAGE, code, params); }
-
-void MessageQueue::post(int code, RawData params) { post(MessageType::COMMAND_MESSAGE, code, params); }
-
-void MessageQueue::post(MessageType type, int code, RawData params) {
-	putMessage(type, code, params);
-}
-
-StatusCode MessageQueue::postSync(MessageType type, int code, RawData params) {
-	return putMessage(type, code, params).get();
-}
-
-struct MessageQueue::message MessageQueue::get(void) { return queue.get(); }
