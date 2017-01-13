@@ -53,9 +53,9 @@ private:
 	mutable std::mutex monitorMutex;
 	const Id id;
 	const RestartStrategy restartStrategy;
+	const std::shared_ptr<MessageQueue> self;
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;
-	std::shared_ptr<MessageQueue> self;
 
 	void sendToSupervisor(MessageType type, uint32_t code) const;
 	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
