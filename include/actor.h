@@ -72,6 +72,7 @@ private:
 
 	StatusCode actorExecutor(ActorBody body, MessageType type, int code, const RawData &params);
 	StatusCode executeActorBody(ActorBody body, int code, const RawData &params);
+	StatusCode executeActorManagement(int code, const RawData &params);
 	StatusCode doRestart(void);
 	StatusCode restartSateMachine(void);
 };

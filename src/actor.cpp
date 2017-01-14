@@ -91,19 +91,23 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 		case MessageType::ERROR_MESSAGE:
 			return (supervisor.doSupervisorOperation(code, params), StatusCode::ok);
 		case MessageType::MANAGEMENT_MESSAGE:
-			switch (code) {
-				case Command::COMMAND_RESTART:
-					return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
-				case Command::COMMAND_UNREGISTER_ACTOR:
-					supervisor.removeSupervised(UniqueId::unserialize(params));
-					return StatusCode::ok;
-				default:
-					THROW(std::runtime_error, "unsupported management message code.");
-			}
+			return executeActorManagement(code, params);
 		case MessageType::COMMAND_MESSAGE:
 			return executeActorBody(body, code, params);
 		default:
 			THROW(std::runtime_error, "unsupported message type.");
+	}
+}
+
+StatusCode Actor::executeActorManagement(int code, const RawData &params) {
+	switch (code) {
+		case Command::COMMAND_RESTART:
+			return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
+		case Command::COMMAND_UNREGISTER_ACTOR:
+			supervisor.removeSupervised(UniqueId::unserialize(params));
+			return StatusCode::ok;
+		default:
+			THROW(std::runtime_error, "unsupported management message code.");
 	}
 }
 
