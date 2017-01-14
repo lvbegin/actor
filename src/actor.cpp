@@ -30,6 +30,7 @@
 #include <actor.h>
 #include <actorException.h>
 #include <command.h>
+#include <exception.h>
 
 std::function<void(void)> Actor::doNothing = [](void) {};
 
@@ -86,16 +87,23 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED)) //FIX: race condition when the actor is stopped just after.
 		return StatusCode::ok;
 
-	if (MessageType::ERROR_MESSAGE == type)
-		return (supervisor.doSupervisorOperation(code, params), StatusCode::ok);
-	switch (code) {
-		case Command::COMMAND_RESTART:
-			return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
-		case Command::COMMAND_UNREGISTER_ACTOR:
-			supervisor.removeSupervised(UniqueId::unserialize(params));
-			return StatusCode::ok;
-		default:
+	switch (type) {
+		case MessageType::ERROR_MESSAGE:
+			return (supervisor.doSupervisorOperation(code, params), StatusCode::ok);
+		case MessageType::MANAGEMENT_MESSAGE:
+			switch (code) {
+				case Command::COMMAND_RESTART:
+					return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
+				case Command::COMMAND_UNREGISTER_ACTOR:
+					supervisor.removeSupervised(UniqueId::unserialize(params));
+					return StatusCode::ok;
+				default:
+					THROW(std::runtime_error, "unsupported management message code.");
+			}
+		case MessageType::COMMAND_MESSAGE:
 			return executeActorBody(body, code, params);
+		default:
+			THROW(std::runtime_error, "unsupported message type.");
 	}
 }
 

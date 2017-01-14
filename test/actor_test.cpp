@@ -71,8 +71,8 @@ static int basicActorWithParamsTest(void) {
 	return 0;
 }
 
-void executeSeverProxy(uint16_t port) {
-	Actor actor([](int i, const std::vector<unsigned char> &params) { /* do something */ return StatusCode::ok; });
+void executeSeverProxy(uint16_t port, int *nbMessages) {
+	Actor actor([nbMessages](int i, const std::vector<unsigned char> &params) { (*nbMessages)++; return StatusCode::ok; });
 	auto doNothing = []() { };
 	proxyServer server(actor.getActorLinkRef(), ServerSocket::getConnection(port), doNothing);
 }
@@ -81,32 +81,21 @@ static Connection openOneConnection(uint16_t port) {
 	while (true) {
 		try {
 			return ClientSocket::openHostConnection("localhost", port);
-		} catch (std::exception &e) {}
+		} catch (std::exception &e) { }
 	}
 }
 
 static int proxyTest(void) {
 	std::cout << "proxyTest" << std::endl;
 	static const uint16_t port = 4011;
-	std::thread t(executeSeverProxy, port);
+	static const uint32_t code = 0x33;
+	int nbMessages { 0 };
+	std::thread t(executeSeverProxy, port, &nbMessages);
 	proxyClient client(openOneConnection(port));
+	client.post(code);
 	client.postSync(Command::COMMAND_SHUTDOWN);
 	t.join();
-	return 0;
-}
-
-static int proxyRestartTest(void) {
-	std::cout << "proxyRestartTest" << std::endl;
-	static const uint16_t port = 4003;
-	static const int command = 0x33;
-	std::thread t(executeSeverProxy, port);
-	proxyClient client(openOneConnection(port));
-	int NbError = (StatusCode::ok == client.postSync(command)) ? 0 : 1;
-	client.post(Command::COMMAND_RESTART);
-	NbError += (StatusCode::ok == client.postSync(command)) ? 0 : 1;
-	NbError +=  (StatusCode::ok == client.postSync(Command::COMMAND_SHUTDOWN)) ? 0 : 1;
-	t.join();
-	return NbError;
+	return (1 == nbMessages) ? 0 : 1;
 }
 
 static int registryConnectTest(void) {
@@ -485,7 +474,6 @@ int main() {
 	int nbFailure = basicActorTest();
 	nbFailure += basicActorWithParamsTest();
 	nbFailure += proxyTest();
-	nbFailure += proxyRestartTest();
 	nbFailure += registryConnectTest();
 	nbFailure += registryAddActorTest();
 	nbFailure += registryAddActorAndRemoveTest();
