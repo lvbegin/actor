@@ -36,8 +36,6 @@
 #include <actor.h>
 #include <uniqueId.h>
 
-#include <atomic>
-
 class ProxyContainer {
 public:
 	ProxyContainer();
