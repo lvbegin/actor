@@ -33,11 +33,9 @@
 #include <actor.h>
 #include <connection.h>
 
-#include <thread>
-
 class ProxyContainer;
 
-enum class postType : uint32_t { Sync, Async, Restart, } ;
+enum class postType : uint32_t { Sync, Async, } ;
 
 class proxyServer {
 public:
@@ -48,7 +46,6 @@ public:
 	proxyServer &operator=(const proxyServer &p) = delete;
 	proxyServer &operator=(proxyServer &&p) = delete;
 	proxyServer(proxyServer &&p) = delete;
-
 private:
 	std::thread t;
 	static void startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate);

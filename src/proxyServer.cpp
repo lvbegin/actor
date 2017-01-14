@@ -43,7 +43,6 @@ proxyServer::~proxyServer() {
 		t.join();
 };
 
-
 void proxyServer::startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate) {
 	while (true) {
 		uint32_t command;
@@ -61,9 +60,6 @@ void proxyServer::startThread(ActorLink actor, Connection connection, std::funct
 				command = connection.readInt<uint32_t>();
 				connection.writeInt(actor->postSync(command, connection.readRawData()));
 				break;
-			case postType::Restart:
-				actor->post(Command::COMMAND_RESTART);
-				continue;
 			default:
 				continue;
 		}
