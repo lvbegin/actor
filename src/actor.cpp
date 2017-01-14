@@ -45,7 +45,7 @@ Actor::~Actor() {
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
 	supervisor.notifySupervisor(Command::COMMAND_UNREGISTER_ACTOR);
 	executorQueue->post(Command::COMMAND_SHUTDOWN);
-};
+}
 
 StatusCode Actor::postSync(int i, RawData params) const { return executorQueue->postSync(i, params); }
 
