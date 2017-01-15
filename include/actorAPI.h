@@ -34,15 +34,19 @@
 
 #include <memory>
 
+class LinkApi;
+using ActorLink = std::shared_ptr<LinkApi>;
+
 class LinkApi {
 public:
-	virtual StatusCode postSync(int code, RawData = RawData()) = 0;
-	virtual void post(int code, RawData = RawData()) = 0;
+	virtual StatusCode postSync(int code, std::shared_ptr<LinkApi> sender = std::shared_ptr<LinkApi>()) = 0;
+	virtual void post(int code, std::shared_ptr<LinkApi> sender = std::shared_ptr<LinkApi>()) = 0;
+	virtual StatusCode postSync(int code, RawData data, std::shared_ptr<LinkApi> sender = std::shared_ptr<LinkApi>()) = 0;
+	virtual void post(int code, RawData data, std::shared_ptr<LinkApi> sender = std::shared_ptr<LinkApi>()) = 0;
 protected:
 	LinkApi() = default;
 	virtual ~LinkApi() = default;
 };
 
-using ActorLink = std::shared_ptr<LinkApi>;
 
 #endif

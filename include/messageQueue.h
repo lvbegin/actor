@@ -43,7 +43,8 @@ public:
 		int code;
 		RawData params;
 		std::promise<StatusCode> promise;
-		message(MessageType type, int c, RawData params);
+		std::shared_ptr<LinkApi> sender;
+		message(MessageType type, int c, RawData params, std::shared_ptr<LinkApi> sender);
 		~message();
 		message(struct message &&m);
 		message (const struct message &m) = delete;
@@ -52,14 +53,17 @@ public:
 	MessageQueue();
 	virtual ~MessageQueue();
 
-	StatusCode postSync(int code, RawData params = RawData());
-	void post(int code, RawData params = RawData());
+	StatusCode postSync(int code, ActorLink sender = ActorLink());
+	void post(int code, ActorLink sender = ActorLink());
+	StatusCode postSync(int code, RawData params, ActorLink sender = ActorLink());
+	void post(int code, RawData params, ActorLink sender = ActorLink());
+
 	void post(MessageType type, int code, RawData params = RawData());
 	StatusCode postSync(MessageType type, int code, RawData params = RawData());
 
 	message get(void);
 private:
-	std::future<StatusCode> putMessage(MessageType type, int i, RawData params);
+	std::future<StatusCode> putMessage(MessageType type, int i, RawData params, std::shared_ptr<LinkApi> sender);
 	SharedQueue<message> queue;
 };
 

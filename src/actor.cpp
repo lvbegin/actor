@@ -38,8 +38,8 @@ Actor::Actor(ActorBody body, RestartStrategy restartStrategy)  : Actor(body, Act
 
 Actor::Actor(ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
 						executorQueue(new MessageQueue()), supervisor(std::move(restartStrategy), executorQueue), atRestart(atRestart), body(body),
-						executor(new Executor([this](MessageType type, int command, const RawData &params)
-								{ return this->actorExecutor(this->body, type, command, params); }, *executorQueue)) { }
+						executor(new Executor([this](MessageType type, int command, const RawData &params, const std::shared_ptr<LinkApi> &sender)
+								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue)) { }
 
 Actor::~Actor() {
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
@@ -47,9 +47,13 @@ Actor::~Actor() {
 	executorQueue->post(Command::COMMAND_SHUTDOWN);
 }
 
-StatusCode Actor::postSync(int i, RawData params) const { return executorQueue->postSync(i, params); }
+StatusCode Actor::postSync(int i, ActorLink sender) const { return executorQueue->postSync(i, RawData(), std::move(sender)); }
 
-void Actor::post(int i, RawData params) const { executorQueue->post(i, params); }
+void Actor::post(int i, ActorLink sender) const { executorQueue->post(i, RawData(), std::move(sender)); }
+
+StatusCode Actor::postSync(int i, RawData params, ActorLink sender) const { return executorQueue->postSync(i, params, std::move(sender)); }
+
+void Actor::post(int i, RawData params, ActorLink sender) const { executorQueue->post(i, params, std::move(sender)); }
 
 StatusCode Actor::restartSateMachine(void) {
 	stateMachine.moveTo(ActorStateMachine::ActorState::RESTARTING);
@@ -62,8 +66,8 @@ StatusCode Actor::doRestart(void) {
 	auto status = std::promise<StatusCode>();
 	auto e = std::promise<std::unique_ptr<Executor> &>();
 	std::unique_ptr<Executor> newExecutor = std::make_unique<Executor>(
-			[this](MessageType type, int command, const RawData &params) {
-				return this->actorExecutor(this->body, type, command, params);
+			[this](MessageType type, int command, const RawData &params, const std::shared_ptr<LinkApi> &sender) {
+				return this->actorExecutor(this->body, type, command, params, sender);
 			}, *executorQueue,
 			[this, &status, & e]() mutable {
 				std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
@@ -83,7 +87,7 @@ void Actor::unregisterActor(Actor &monitored) { supervisor.unregisterMonitored(m
 
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
-StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, const RawData &params) {
+StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, const RawData &params, const ActorLink &sender) {
 	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED)) //FIX: race condition when the actor is stopped just after.
 		return StatusCode::ok;
 
@@ -93,7 +97,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 		case MessageType::MANAGEMENT_MESSAGE:
 			return executeActorManagement(code, params);
 		case MessageType::COMMAND_MESSAGE:
-			return executeActorBody(body, code, params);
+			return executeActorBody(body, code, params, sender);
 		default:
 			THROW(std::runtime_error, "unsupported message type.");
 	}
@@ -111,9 +115,9 @@ StatusCode Actor::executeActorManagement(int code, const RawData &params) {
 	}
 }
 
-StatusCode Actor::executeActorBody(ActorBody body, int code, const RawData &params) {
+StatusCode Actor::executeActorBody(ActorBody body, int code, const RawData &params, const ActorLink &sender) {
 	try {
-		return body(code, params);
+		return body(code, params, sender);
 	} catch (ActorException &e) {
 		supervisor.sendErrorToSupervisor(e.getErrorCode());
 		return StatusCode::error;

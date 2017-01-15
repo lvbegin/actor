@@ -34,7 +34,7 @@
 #include <tuple>
 
 ProxyContainer::ProxyContainer() :
-	executor([this](MessageType, int, const RawData &id) { return (this->deleteProxy(UniqueId::unserialize(id)), StatusCode::ok);}, executorQueue) { }
+	executor([this](MessageType, int, const RawData &id, const ActorLink &) { return (this->deleteProxy(UniqueId::unserialize(id)), StatusCode::ok);}, executorQueue) { }
 
 ProxyContainer::~ProxyContainer() { executorQueue.post(Command::COMMAND_SHUTDOWN); }
 

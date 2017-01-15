@@ -43,7 +43,7 @@ void Executor::executeBody(ExecutorBody body) {
 	while (true) {
 		struct MessageQueue::message message(messageQueue.get());
 		const StatusCode status = (MessageType::COMMAND_MESSAGE == message.type && Command::COMMAND_SHUTDOWN == message.code) ?
-				StatusCode::shutdown : body(message.type, message.code, std::move(message.params));
+				StatusCode::shutdown : body(message.type, message.code, message.params, message.sender);
 
 		switch (status) {
 			case StatusCode::ok:

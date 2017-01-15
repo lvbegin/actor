@@ -37,7 +37,7 @@
 #include <thread>
 #include <future>
 
-using ExecutorBody = std::function<StatusCode(MessageType, int, const RawData &)>;
+using ExecutorBody = std::function<StatusCode(MessageType, int, const RawData &data, const std::shared_ptr<LinkApi> &sender)>;
 
 class Executor {
 public:

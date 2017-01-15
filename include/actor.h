@@ -40,7 +40,7 @@
 #include <memory>
 #include <mutex>
 
-using ActorBody = std::function<StatusCode(int, const RawData &)>;
+using ActorBody = std::function<StatusCode(int, const RawData &, const ActorLink &)>;
 
 class Actor {
 public:
@@ -51,8 +51,12 @@ public:
 	Actor(const Actor &a) = delete;
 	Actor &operator=(const Actor &a) = delete;
 
-	StatusCode postSync(int i, RawData params = RawData()) const;
-	void post(int i, RawData params = RawData()) const;
+
+	StatusCode postSync(int i, ActorLink sender = ActorLink()) const;
+	void post(int i, ActorLink sender = ActorLink()) const;
+	StatusCode postSync(int i, RawData params, ActorLink sender = ActorLink()) const;
+	void post(int i, RawData params, ActorLink sender = ActorLink()) const;
+
 	ActorLink getActorLinkRef() const;
 
 	void registerActor(Actor &monitored);
@@ -70,8 +74,8 @@ private:
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
 
-	StatusCode actorExecutor(ActorBody body, MessageType type, int code, const RawData &params);
-	StatusCode executeActorBody(ActorBody body, int code, const RawData &params);
+	StatusCode actorExecutor(ActorBody body, MessageType type, int code, const RawData &params, const ActorLink &sender);
+	StatusCode executeActorBody(ActorBody body, int code, const RawData &params, const ActorLink &sender);
 	StatusCode executeActorManagement(int code, const RawData &params);
 	StatusCode doRestart(void);
 	StatusCode restartSateMachine(void);
