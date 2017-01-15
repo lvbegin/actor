@@ -52,9 +52,11 @@ void Executor::executeBody(ExecutorBody body) {
 			case StatusCode::shutdown:
 				message.promise.set_value(StatusCode::ok);
 				return;
-			default:
+			case StatusCode::error:
 				message.promise.set_value(StatusCode::error);
 				break;
+			default:
+				THROW(std::runtime_error, "Unknown status code.");
 		}
 	}
 }
