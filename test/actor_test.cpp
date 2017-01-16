@@ -85,14 +85,14 @@ static int actorSendMessageAndReceiveAnAnswerTest(void) {
 	});
 	auto queue = std::make_shared<MessageQueue>();
 	a.post(1, params, queue);
-	auto answer = queue->get();
+	const auto answer = queue->get();
 	return (0x00 == answer.code) ? 0 : 1;
 }
 
 static void executeSeverProxy(uint16_t port, int *nbMessages) {
 	const Actor actor([nbMessages](int i, const RawData &, const ActorLink &) { (*nbMessages)++; return StatusCode::ok; });
 	const auto doNothing = []() { };
-	proxyServer server(actor.getActorLinkRef(), ServerSocket::getConnection(port), doNothing);
+	const proxyServer server(actor.getActorLinkRef(), ServerSocket::getConnection(port), doNothing);
 }
 
 static Connection openOneConnection(uint16_t port) {
@@ -119,8 +119,8 @@ static int proxyTest(void) {
 static int registryConnectTest(void) {
 	std::cout << "registryConnectTest" << std::endl;
 	static const uint16_t port = 4001;
-	ActorRegistry registry(std::string("name"), port);
-	Connection c = openOneConnection(port);
+	const ActorRegistry registry(std::string("name"), port);
+	const Connection c = openOneConnection(port);
 	return 0;
 }
 
@@ -195,10 +195,9 @@ static int registeryAddActorAndFindItBackTest() {
 
 	static const std::string actorName("my actor");
 	static const uint16_t port = 4001;
-	ActorRegistry registry(std::string("name1"), port);
-
 	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	const auto actorRefLink = a.getActorLinkRef();
+	ActorRegistry registry(std::string("name1"), port);
 	registry.registerActor(actorName, actorRefLink);
 
 	const auto b = registry.getActor(actorName);
@@ -211,9 +210,8 @@ static int registeryFindUnknownActorTest() {
 
 	static const std::string actorName("my actor");
 	static const uint16_t port = 4001;
-	ActorRegistry registry(std::string("name1"), port);
-
 	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	ActorRegistry registry(std::string("name1"), port);
 	registry.registerActor(actorName, a.getActorLinkRef());
 
 	const ActorLink b = registry.getActor(std::string("wrong name"));
@@ -247,9 +245,7 @@ static int findActorFromOtherRegistryTest() {
 	if (nullptr == actor.get())
 		return 1;
 	sleep(10); // ensure that the proxy server does not stop after a timeout when no command is sent.
-	if (StatusCode::ok != actor->postSync(dummyCommand))
-		return 1;
-	return 0;
+	return (StatusCode::ok == actor->postSync(dummyCommand)) ? 0 : 1;
 }
 
 static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
@@ -269,13 +265,13 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	const std::string name = registry1.addReference("localhost", port2);
 	if (name2.compare(name))
 		return 1;
-	Actor a([](int i, const std::vector<unsigned char> &params, const ActorLink &) {
+	const Actor a([](int i, const std::vector<unsigned char> &params, const ActorLink &) {
 		if (i == dummyCommand && 0 == paramValue.compare(std::string(params.begin(), params.end())))
 							return StatusCode::ok;
 						else
 							return StatusCode::error;} );
 	registry2.registerActor(actorName, a.getActorLinkRef());
-	auto actor = registry1.getActor(actorName);
+	const auto actor = registry1.getActor(actorName);
 	if (StatusCode::ok != actor->postSync(dummyCommand, std::vector<unsigned char>(paramValue.begin(), paramValue.end())))
 		return 1;
 	actor->postSync(Command::COMMAND_SHUTDOWN);
@@ -298,9 +294,9 @@ static int findUnknownActorInMultipleRegistryTest() {
 	const std::string name = registry1.addReference("localhost", port2);
 	if (name2.compare(name))
 		return 1;
-	Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	registry2.registerActor(actorName, a.getActorLinkRef());
-	auto actor = registry1.getActor("unknown actor");
+	const auto actor = registry1.getActor("unknown actor");
 	return nullptr == actor.get() ? 0 : 1;
 }
 
@@ -484,7 +480,7 @@ static int executorTest() {
 static int serializationTest() {
 	static const uint32_t expected_value = 0x11223344;
 
-	auto s = UniqueId::serialize(expected_value);
+	const auto s = UniqueId::serialize(expected_value);
 	return (expected_value == UniqueId::unserialize(s)) ? 0 : 1;
 }
 
