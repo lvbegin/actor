@@ -511,31 +511,6 @@ int _runTest(_test *suite, size_t nbTests) {
 }
 
 int main() {
-//	int nbFailure = basicActorTest();
-//	nbFailure += basicActorWithParamsTest();
-//	nbFailure += proxyTest();
-//	nbFailure += actorSendMessageAndReceiveAnAnswerTest();
-//	nbFailure += registryConnectTest();
-//	nbFailure += registryAddActorTest();
-//	nbFailure += registryAddActorAndRemoveTest();
-//	nbFailure += registryAddReferenceTest();
-//	nbFailure += registryAddReferenceOverrideExistingOneTest();
-//	nbFailure += registeryAddActorAndFindItBackTest();
-//	nbFailure += registeryFindUnknownActorTest();
-//	nbFailure += findActorFromOtherRegistryTest();
-//	nbFailure += findActorFromOtherRegistryAndSendCommandWithParamsTest();
-//	nbFailure += findUnknownActorInMultipleRegistryTest();
-//	nbFailure += initSupervisionTest();
-//	nbFailure += unregisterToSupervisorWhenActorDestroyedTest();
-//	nbFailure += supervisorRestartsActorTest();
-// 	nbFailure += actorNotifiesErrorToSupervisorTest();
-//	nbFailure += actorDoesNothingIfNoSupervisorTest();
-//	nbFailure += actorDoesNothingIfNoSupervisorAndExceptionThrownTest();
-//	nbFailure += restartAllActorBySupervisorTest();
-//	nbFailure += executorTest();
-//	nbFailure += serializationTest();
-//	std::cout << ((nbFailure) ? "Failure" : "Success") << std::endl;
-
 	_test suite[] = {
 			TEST(basicActorTest),
 			TEST(basicActorWithParamsTest),
