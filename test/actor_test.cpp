@@ -181,17 +181,32 @@ static int registryAddReferenceOverrideExistingOneTest(void) {
 	return name == name2 ? 0 : 1;
 }
 
-static int registeryAddActorAndFindItBackTest() {
+static int registeryAddActorFindItBackAndSendMessageTest() {
+	static const int code = 0x11;
+	static const int answer = 0x33;
+	static const int badAnswer = 0x33;
 	static const std::string actorName("my actor");
 	static const uint16_t port = 4001;
-	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	auto link = std::make_shared<MessageQueue>();
+	const Actor a([](int i, const RawData &, const ActorLink &link) {
+		if (code == i)
+			link->post(answer);
+		else
+			link->post(badAnswer);
+		return StatusCode::ok;
+	});
 	const auto actorRefLink = a.getActorLinkRef();
 	ActorRegistry registry(std::string("name1"), port);
 	registry.registerActor(actorName, actorRefLink);
 
 	const auto b = registry.getActor(actorName);
 
-	return (actorRefLink.get() == b.get()) ? 0 : 1;
+	if (actorRefLink.get() != b.get())
+		return 1;
+	b->post(code, link);
+	if (answer != link->get().code)
+		return 1;
+	return 0;
 }
 
 static int registeryFindUnknownActorTest() {
@@ -494,7 +509,7 @@ int main() {
 			TEST(registryAddActorAndRemoveTest),
 			TEST(registryAddReferenceTest),
 			TEST(registryAddReferenceOverrideExistingOneTest),
-			TEST(registeryAddActorAndFindItBackTest),
+			TEST(registeryAddActorFindItBackAndSendMessageTest),
 			TEST(registeryFindUnknownActorTest),
 			TEST(findActorFromOtherRegistryTest),
 			TEST(findActorFromOtherRegistryAndSendCommandWithParamsTest),
