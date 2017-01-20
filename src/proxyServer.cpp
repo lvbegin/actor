@@ -52,14 +52,11 @@ void proxyServer::startThread(ActorLink actor, Connection connection, std::funct
 		} catch (ConnectionTimeout &e) { continue ; }
 		  catch (std::runtime_error &e) {  return; }
 		switch (type) {
-			case postType::Async:
+			case postType::Async: {
 				command = connection.readInt<uint32_t>();
 				actor->post(command, connection.readRawData());
 				break;
-			case postType::Sync:
-				command = connection.readInt<uint32_t>();
-				connection.writeInt(actor->postSync(command, connection.readRawData()));
-				break;
+			}
 			default:
 				continue;
 		}

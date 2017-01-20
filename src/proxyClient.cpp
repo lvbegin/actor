@@ -34,15 +34,7 @@
 proxyClient::proxyClient(Connection connection) : connection(std::move(connection)) { }
 proxyClient::~proxyClient() = default;
 
-StatusCode proxyClient::postSync(int command, ActorLink sender) { return postSync(command, RawData(), std::move(sender)); }
-
 void proxyClient::post(int command, ActorLink sender) { post(command, RawData(), std::move(sender)); }
-
-/* do something with the sender */
-StatusCode proxyClient::postSync(int command, RawData params, ActorLink sender) {
-	connection.writeInt(postType::Sync).writeInt(command).writeRawData(params);
-	return connection.readInt<StatusCode>();
-}
 
 /* do something with the sender */
 void proxyClient::post(int command, RawData params, ActorLink sender) {

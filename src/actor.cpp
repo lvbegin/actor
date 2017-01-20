@@ -47,11 +47,11 @@ Actor::~Actor() {
 	executorQueue->post(Command::COMMAND_SHUTDOWN);
 }
 
-StatusCode Actor::postSync(int i, ActorLink sender) const { return executorQueue->postSync(i, RawData(), std::move(sender)); }
+//StatusCode Actor::postSync(int i, ActorLink sender) const { return executorQueue->postSync(i, RawData(), std::move(sender)); }
 
 void Actor::post(int i, ActorLink sender) const { executorQueue->post(i, RawData(), std::move(sender)); }
 
-StatusCode Actor::postSync(int i, RawData params, ActorLink sender) const { return executorQueue->postSync(i, params, std::move(sender)); }
+//StatusCode Actor::postSync(int i, RawData params, ActorLink sender) const { return executorQueue->postSync(i, params, std::move(sender)); }
 
 void Actor::post(int i, RawData params, ActorLink sender) const { executorQueue->post(i, params, std::move(sender)); }
 

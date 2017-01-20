@@ -53,13 +53,10 @@ public:
 	MessageQueue();
 	virtual ~MessageQueue();
 
-	StatusCode postSync(int code, ActorLink sender = ActorLink());
 	void post(int code, ActorLink sender = ActorLink());
-	StatusCode postSync(int code, RawData params, ActorLink sender = ActorLink());
 	void post(int code, RawData params, ActorLink sender = ActorLink());
 
 	void post(MessageType type, int code, RawData params = RawData());
-	StatusCode postSync(MessageType type, int code, RawData params = RawData());
 
 	message get(void);
 private:

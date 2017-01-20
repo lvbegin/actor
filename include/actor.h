@@ -52,9 +52,9 @@ public:
 	Actor &operator=(const Actor &a) = delete;
 
 
-	StatusCode postSync(int i, ActorLink sender = ActorLink()) const;
+//	StatusCode postSync(int i, ActorLink sender = ActorLink()) const;
 	void post(int i, ActorLink sender = ActorLink()) const;
-	StatusCode postSync(int i, RawData params, ActorLink sender = ActorLink()) const;
+//	StatusCode postSync(int i, RawData params, ActorLink sender = ActorLink()) const;
 	void post(int i, RawData params, ActorLink sender = ActorLink()) const;
 
 	ActorLink getActorLinkRef() const;

@@ -41,32 +41,32 @@
 
 static int basicActorTest(void) {
 	static const uint32_t command = 0xaa;
-	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
-	const auto val = a.postSync(command);
-	if (StatusCode::ok != val) {
-		std::cout << "post failure" << std::endl;
-		return 1;
-	}
-	a.postSync(Command::COMMAND_SHUTDOWN);
-	return 0;
+	static const int answer = 0x22;
+	const auto link = std::make_shared<MessageQueue>();
+	const Actor a([](int i, const RawData &, const ActorLink &link) { link->post(answer); return StatusCode::ok; });
+	a.post(command, link);
+	return (answer == link->get().code) ? 0 : 1;
 }
 
 static int basicActorWithParamsTest(void) {
 	static const std::string paramValue("Hello World");
 	const RawData params(paramValue.begin(), paramValue.end());
+	static const int answer = 0x22;
+	static const int badAnswer = 0x88;
+	const auto link = std::make_shared<MessageQueue>();
 
-	const Actor a([](int i, const std::vector<unsigned char> &params, const ActorLink &) {
-				if (0 == paramValue.compare(std::string(params.begin(), params.end())))
+	const Actor a([](int i, const std::vector<unsigned char> &params, const ActorLink &link) {
+				if (0 == paramValue.compare(std::string(params.begin(), params.end()))) {
+					link->post(answer);
 					return StatusCode::ok;
-				else
-					return StatusCode::error;});
-	const auto val = a.postSync(1, params);
-	if (StatusCode::ok != val) {
-		std::cout << "post failure" << std::endl;
-		return 1;
-	}
-
-	return 0;
+				}
+				else {
+					link->post(badAnswer);
+					return StatusCode::error;
+				}
+	});
+	a.post(1, params, link);
+	return (answer == link->get().code) ? 0 : 1;
 }
 
 static int actorSendMessageAndReceiveAnAnswerTest(void) {
@@ -82,8 +82,7 @@ static int actorSendMessageAndReceiveAnAnswerTest(void) {
 	});
 	auto queue = std::make_shared<MessageQueue>();
 	a.post(1, params, queue);
-	const auto answer = queue->get();
-	return (0x00 == answer.code) ? 0 : 1;
+	return (0x00 == queue->get().code) ? 0 : 1;
 }
 
 static void executeSeverProxy(uint16_t port, int *nbMessages) {
@@ -107,7 +106,7 @@ static int proxyTest(void) {
 	std::thread t(executeSeverProxy, port, &nbMessages);
 	proxyClient client(openOneConnection(port));
 	client.post(code);
-	client.postSync(Command::COMMAND_SHUTDOWN);
+	client.post(Command::COMMAND_SHUTDOWN);
 	t.join();
 	return (1 == nbMessages) ? 0 : 1;
 }
@@ -229,24 +228,31 @@ static int findActorFromOtherRegistryTest() {
 	static const uint16_t port2 = 4002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
-
+	bool rc = false;
 	ensureRegistryStarted(port1);
 	ensureRegistryStarted(port2);
 	const std::string name = registry1.addReference("localhost", port2);
 	if (name2.compare(name))
 		return 1;
-	const Actor a([](int i, const std::vector<unsigned char> &params, const ActorLink &) {
-		if (i == dummyCommand && 0 == params.size())
+	const Actor a([&rc](int i, const std::vector<unsigned char> &params, const ActorLink &) {
+		if (i == dummyCommand && 0 == params.size()) {
+			rc = true;
 			return StatusCode::ok;
-		else
-			return StatusCode::error;} );
+		}
+		else {
+			rc = false;
+			return StatusCode::error;
+		}
+	} );
 
 	registry2.registerActor(actorName, a.getActorLinkRef());
 	const auto actor = registry1.getActor(actorName);
 	if (nullptr == actor.get())
 		return 1;
 	sleep(10); // ensure that the proxy server does not stop after a timeout when no command is sent.
-	return (StatusCode::ok == actor->postSync(dummyCommand)) ? 0 : 1;
+	actor->post(dummyCommand);
+	sleep(1); //should be removed once reply is implemented for remote
+	return (rc) ? 0 : 1;
 }
 
 static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
@@ -259,23 +265,30 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	static const uint16_t port2 = 4002;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
+	bool rc = false;
 
 	ensureRegistryStarted(port1);
 	ensureRegistryStarted(port2);
 	const std::string name = registry1.addReference("localhost", port2);
 	if (name2.compare(name))
 		return 1;
-	const Actor a([](int i, const std::vector<unsigned char> &params, const ActorLink &) {
-		if (i == dummyCommand && 0 == paramValue.compare(std::string(params.begin(), params.end())))
-							return StatusCode::ok;
-						else
-							return StatusCode::error;} );
+	const Actor a([&rc](int i, const std::vector<unsigned char> &params, const ActorLink &) {
+		if (i == dummyCommand && 0 == paramValue.compare(std::string(params.begin(), params.end()))) {
+			rc = true;
+			return StatusCode::ok;
+		}
+		else {
+			rc = false;
+			return StatusCode::error;
+		}
+	} );
 	registry2.registerActor(actorName, a.getActorLinkRef());
 	const auto actor = registry1.getActor(actorName);
-	if (StatusCode::ok != actor->postSync(dummyCommand, std::vector<unsigned char>(paramValue.begin(), paramValue.end())))
+	if (nullptr == actor.get())
 		return 1;
-	actor->postSync(Command::COMMAND_SHUTDOWN);
-	return nullptr != actor.get() ? 0 : 1;
+	actor->post(dummyCommand, std::vector<unsigned char>(paramValue.begin(), paramValue.end()));
+	sleep(1); //to be removed once the reply for remote is implemented;
+	return rc ? 0 : 1;
 }
 
 
@@ -328,20 +341,22 @@ static int supervisorRestartsActorTest() {
 	static bool exceptionThrown = false;
 	static int restartCommand = 0x99;
 	static int otherCommand = 0xaa;
+	static const int answer = 0x99;
+	const auto link = std::make_shared<MessageQueue>();
 	Actor supervisor([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
-	Actor supervised([](int i, const RawData &, const ActorLink &) {
+	Actor supervised([](int i, const RawData &, const ActorLink &link) {
 		if (i == restartCommand) {
 			exceptionThrown = true;
 			throw std::runtime_error("some error");
 		}
+		link->post(answer);
 		 return StatusCode::ok;
 	 });
 	supervisor.registerActor(supervised);
-	if (StatusCode::error != supervised.postSync(restartCommand))
-		std::cout << "error not returned" << std::endl;
-	if (StatusCode::ok != supervised.postSync(otherCommand))
-		std::cout << "other command not ok" << std::endl;
-
+	supervised.post(restartCommand, link);
+	supervised.post(otherCommand, link);
+	if (answer != link->get().code)
+		return 1;
 	supervisor.post(Command::COMMAND_SHUTDOWN);
 	supervised.post(Command::COMMAND_SHUTDOWN);
 
@@ -351,7 +366,7 @@ static int supervisorRestartsActorTest() {
 static int actorNotifiesErrorToSupervisorTest() {
 	static int someCommand = 0xaa;
 	bool supervisorRestarted = false;
-	bool supervised1Restarted = false;
+	int supervised1Restarted = 0;
 	bool supervised2Restarted = false;
 	Actor supervisor(
 			[](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
@@ -361,7 +376,7 @@ static int actorNotifiesErrorToSupervisorTest() {
 				Actor::notifyError(0x69);
 				return StatusCode::ok;
 	 	 	 },
-			 [&supervised1Restarted](void) { supervised1Restarted = true; } );
+			 [&supervised1Restarted](void) { supervised1Restarted++; } );
 	Actor supervised2(
 			[](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
 			[&supervised2Restarted](void) { supervised2Restarted = true; } );
@@ -369,14 +384,12 @@ static int actorNotifiesErrorToSupervisorTest() {
 	supervisor.registerActor(supervised1);
 	supervisor.registerActor(supervised2);
 
-	if (StatusCode::error != supervised1.postSync(someCommand))
-		return 1;
-	if (StatusCode::error != supervised1.postSync(someCommand))
-		return 1;
+	supervised1.post(someCommand);
+	supervised1.post(someCommand);
 
 	for (int i = 0; i < 5 && !supervised1Restarted; i++)
 		sleep(1);
-	if (supervisorRestarted || !supervised1Restarted || supervised2Restarted)
+	if (supervisorRestarted || ! (2 == supervised1Restarted) || supervised2Restarted)
 		return 1;
 
 	supervisor.post(Command::COMMAND_SHUTDOWN);
@@ -391,10 +404,9 @@ static int actorDoesNothingIfNoSupervisorTest() {
 		Actor::notifyError(0x69);
 		return StatusCode::ok;
 	 });
-	if (StatusCode::error != supervised.postSync(someCommand))
-		return 1;
-	if (StatusCode::error != supervised.postSync(someCommand))
-		return 1;
+	/* ADD A RESTART HOOK TO CHECK THAT IT IS NOT RESTARTED */
+	supervised.post(someCommand);
+	supervised.post(someCommand);
 
 	supervised.post(Command::COMMAND_SHUTDOWN);
 
@@ -407,10 +419,9 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 		throw std::runtime_error("some error");
 		return StatusCode::ok; //remove that ?
 	 });
-	if (StatusCode::error != supervised.postSync(someCommand))
-		return 1;
-	if (StatusCode::error != supervised.postSync(someCommand))
-		return 1;
+	/* ADD A RESTART HOOK TO CHECK THAT IT IS NOT RESTARTED */
+	supervised.post(someCommand);
+	supervised.post(someCommand);
 
 	supervised.post(Command::COMMAND_SHUTDOWN);
 
@@ -439,12 +450,10 @@ static int restartAllActorBySupervisorTest() {
 	supervisor.registerActor(supervised1);
 	supervisor.registerActor(supervised2);
 
-	if (StatusCode::error != supervised1.postSync(someCommand))
-		return 1;
-	if (StatusCode::error != supervised1.postSync(someCommand))
-		return 1;
-	if (StatusCode::ok != supervised2.postSync(someCommand))
-		return 1;
+	supervised1.post(someCommand);
+	supervised1.post(someCommand);
+	supervised2.post(someCommand);
+
 	for (int i = 0; i < 5 && !supervised1Restarted && !supervised2Restarted; i++)
 		sleep(1);
 
