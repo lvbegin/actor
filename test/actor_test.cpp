@@ -40,7 +40,6 @@
 
 
 static int basicActorTest(void) {
-//	std::cout << "basicActorTest" << std::endl;
 	static const uint32_t command = 0xaa;
 	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	const auto val = a.postSync(command);
@@ -53,7 +52,6 @@ static int basicActorTest(void) {
 }
 
 static int basicActorWithParamsTest(void) {
-//	std::cout << "basicActorWithParamsTest" << std::endl;
 	static const std::string paramValue("Hello World");
 	const RawData params(paramValue.begin(), paramValue.end());
 
@@ -72,7 +70,6 @@ static int basicActorWithParamsTest(void) {
 }
 
 static int actorSendMessageAndReceiveAnAnswerTest(void) {
-//	std::cout << "actorSendMessageAndReceiveAnAnswerTest" << std::endl;
 	static const std::string paramValue("Hello World");
 	const RawData params(paramValue.begin(), paramValue.end());
 
@@ -104,7 +101,6 @@ static Connection openOneConnection(uint16_t port) {
 }
 
 static int proxyTest(void) {
-//	std::cout << "proxyTest" << std::endl;
 	static const uint16_t port = 4011;
 	static const uint32_t code = 0x33;
 	int nbMessages { 0 };
@@ -117,7 +113,6 @@ static int proxyTest(void) {
 }
 
 static int registryConnectTest(void) {
-//	std::cout << "registryConnectTest" << std::endl;
 	static const uint16_t port = 4001;
 	const ActorRegistry registry(std::string("name"), port);
 	const Connection c = openOneConnection(port);
@@ -125,7 +120,6 @@ static int registryConnectTest(void) {
 }
 
 static int registryAddActorTest(void) {
-//	std::cout << "registryAddAtorTest" << std::endl;
 	static const uint16_t port = 4001;
 	static const std::string actorName("my actor");
 	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
@@ -137,7 +131,6 @@ static int registryAddActorTest(void) {
 }
 
 static int registryAddActorAndRemoveTest(void) {
-//	std::cout << "registryAddActorAndRemoveTest" << std::endl;
 	static const uint16_t port = 4001;
 	static const std::string actorName("my actor");
 	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
@@ -158,7 +151,6 @@ static int registryAddActorAndRemoveTest(void) {
 static void ensureRegistryStarted(uint16_t port) { openOneConnection(port); }
 
 static int registryAddReferenceTest(void) {
-//	std::cout << "registryAddReferenceTest" << std::endl;
 	static const std::string name1("name1");
 	static const std::string name2("name2");
 	static const uint16_t port1 = 4001;
@@ -173,7 +165,6 @@ static int registryAddReferenceTest(void) {
 }
 
 static int registryAddReferenceOverrideExistingOneTest(void) {
-//	std::cout << "registryAddReferenceOverrideExistingOneTest" << std::endl;
 	static const std::string name1("name1");
 	static const std::string name2("name2");
 	static const uint16_t port1 = 4001;
@@ -191,8 +182,6 @@ static int registryAddReferenceOverrideExistingOneTest(void) {
 }
 
 static int registeryAddActorAndFindItBackTest() {
-//	std::cout << "registeryAddActorAndFindItBackTest" << std::endl;
-
 	static const std::string actorName("my actor");
 	static const uint16_t port = 4001;
 	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
@@ -206,8 +195,6 @@ static int registeryAddActorAndFindItBackTest() {
 }
 
 static int registeryFindUnknownActorTest() {
-//	std::cout << "registeryFindUnknownActorTest" << std::endl;
-
 	static const std::string actorName("my actor");
 	static const uint16_t port = 4001;
 	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
@@ -219,7 +206,6 @@ static int registeryFindUnknownActorTest() {
 }
 
 static int findActorFromOtherRegistryTest() {
-//	std::cout << "findActorFromOtherRegistryTest" << std::endl;
 	static const uint32_t dummyCommand = 0x33;
 	static const std::string name1("name1");
 	static const std::string name2("name2");
@@ -249,7 +235,6 @@ static int findActorFromOtherRegistryTest() {
 }
 
 static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
-//	std::cout << "findActorFromOtherRegistryAndSendCommandWithParamsTest" << std::endl;
 	static const uint32_t dummyCommand = 0x33;
 	static const std::string paramValue("Hello World");
 	static const std::string name1("name1");
@@ -280,7 +265,6 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 
 
 static int findUnknownActorInMultipleRegistryTest() {
-//	std::cout << "findUnknownActorInMultipleRegistryTest" << std::endl;
 	static const std::string name1("name1");
 	static const std::string name2("name2");
 	static const std::string actorName("my actor");
@@ -301,8 +285,6 @@ static int findUnknownActorInMultipleRegistryTest() {
 }
 
 static int initSupervisionTest() {
-//	std::cout << "initSupervisionTest" << std::endl;
-
 	Actor supervisor([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	Actor supervised([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	supervisor.registerActor(supervised);
@@ -316,8 +298,6 @@ static int initSupervisionTest() {
 
 
 static int unregisterToSupervisorWhenActorDestroyedTest() {
-//	std::cout << "unregisterToSupervisorWhenActorDestroyedTest" << std::endl;
-
 	Actor supervisor([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	auto supervised = std::make_unique<Actor>([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	supervisor.registerActor(*supervised.get());
@@ -330,7 +310,6 @@ static int unregisterToSupervisorWhenActorDestroyedTest() {
 }
 
 static int supervisorRestartsActorTest() {
-//	std::cout << "supervisorRestartsActorTest" << std::endl;
 	static bool exceptionThrown = false;
 	static int restartCommand = 0x99;
 	static int otherCommand = 0xaa;
@@ -355,7 +334,6 @@ static int supervisorRestartsActorTest() {
 }
 
 static int actorNotifiesErrorToSupervisorTest() {
-//	std::cout << "actorNotifiesErrorToSupervisorTest" << std::endl;
 	static int someCommand = 0xaa;
 	bool supervisorRestarted = false;
 	bool supervised1Restarted = false;
@@ -393,7 +371,6 @@ static int actorNotifiesErrorToSupervisorTest() {
 }
 
 static int actorDoesNothingIfNoSupervisorTest() {
-//	std::cout << "actorDoesNothingIfNoSupervisorTest" << std::endl;
 	static int someCommand = 0xaa;
 	Actor supervised([](int i, const RawData &, const ActorLink &) {
 		Actor::notifyError(0x69);
@@ -410,7 +387,6 @@ static int actorDoesNothingIfNoSupervisorTest() {
 }
 
 static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
-//	std::cout << "actorDoesNothingIfNoSupervisorAndExceptionThrownTest" << std::endl;
 	static int someCommand = 0xaa;
 	Actor supervised([](int i, const RawData &, const ActorLink &) {
 		throw std::runtime_error("some error");
@@ -427,7 +403,6 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 }
 
 static int restartAllActorBySupervisorTest() {
-//	std::cout << "restartAllActorBySupervisorTest" << std::endl;
 	static int someCommand = 0xaa;
 	bool supervisorRestarted = false;
 	bool supervised1Restarted = false;
@@ -469,8 +444,6 @@ static int restartAllActorBySupervisorTest() {
 }
 
 static int executorTest() {
-//	std::cout << "executorTest" << std::endl;
-
 	MessageQueue messageQueue;
 	Executor executor([](MessageType, int, const RawData &, const ActorLink &) { return StatusCode::shutdown; }, messageQueue);
 	messageQueue.post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);
@@ -537,7 +510,7 @@ int main() {
 			TEST(serializationTest),
 	};
 
-	auto nbFailure = runTest(suite);
+	const auto nbFailure = runTest(suite);
 	if (nbFailure > 0)
 		return (std::cout << nbFailure << " tests failed." << std::endl, EXIT_FAILURE);
 	else
