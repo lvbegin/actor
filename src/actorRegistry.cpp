@@ -29,7 +29,7 @@
 
 #include <actorRegistry.h>
 #include <clientSocket.h>
-#include <proxyClient.h>
+#include "../include/proxyClient.h"
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body);
 
@@ -106,7 +106,7 @@ ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
 		auto connection = ClientSocket::openHostConnection(c.second);
 		connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
 		if (ACTOR_FOUND == connection.readInt<uint32_t>())
-			actor.reset(new proxyClient(std::move(connection)));
+			actor.reset(new ProxyClient(std::move(connection)));
 	});
 	return actor;
 }

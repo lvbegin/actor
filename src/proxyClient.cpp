@@ -27,16 +27,16 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <proxyClient.h>
 #include <proxyServer.h>
 #include <clientSocket.h>
+#include "../include/proxyClient.h"
 
-proxyClient::proxyClient(Connection connection) : connection(std::move(connection)) { }
-proxyClient::~proxyClient() = default;
+ProxyClient::ProxyClient(Connection connection) : connection(std::move(connection)) { }
+ProxyClient::~ProxyClient() = default;
 
-void proxyClient::post(int command, ActorLink sender) { post(command, RawData(), std::move(sender)); }
+void ProxyClient::post(int command, ActorLink sender) { post(command, RawData(), std::move(sender)); }
 
 /* do something with the sender */
-void proxyClient::post(int command, RawData params, ActorLink sender) {
+void ProxyClient::post(int command, RawData params, ActorLink sender) {
 	connection.writeInt(postType::Async).writeInt(command).writeRawData(params);
 }

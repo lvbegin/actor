@@ -28,7 +28,6 @@
  */
 
 #include <actor.h>
-#include <proxyClient.h>
 #include <proxyServer.h>
 #include <actorRegistry.h>
 #include <clientSocket.h>
@@ -37,6 +36,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <unistd.h>
+
+#include "../include/proxyClient.h"
 
 
 static int basicActorTest(void) {
@@ -104,7 +105,7 @@ static int proxyTest(void) {
 	static const uint32_t code = 0x33;
 	int nbMessages { 0 };
 	std::thread t(executeSeverProxy, port, &nbMessages);
-	proxyClient client(openOneConnection(port));
+	ProxyClient client(openOneConnection(port));
 	client.post(code);
 	client.post(Command::COMMAND_SHUTDOWN);
 	t.join();

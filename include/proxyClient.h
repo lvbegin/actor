@@ -35,10 +35,10 @@
 
 #include <string>
 
-class proxyClient : public LinkApi {
+class ProxyClient : public LinkApi {
 public:
-	proxyClient(Connection connection);
-	~proxyClient();
+	ProxyClient(Connection connection);
+	~ProxyClient();
 
 	void post(int command, ActorLink sender = ActorLink());
 	void post(int command, RawData params, ActorLink sender = ActorLink());
