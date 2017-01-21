@@ -36,9 +36,9 @@ ProxyClient::~ProxyClient() = default;
 
 void ProxyClient::post(int command, ActorLink sender) { post(command, RawData(), std::move(sender)); }
 
-/* do something with the sender */
 void ProxyClient::post(int command, RawData params, ActorLink sender) {
-	connection.writeInt(postType::Async).writeInt(command).writeRawData(params);
+	const auto senderName = (nullptr == sender.get()) ?  std::string() : sender->getName();
+	connection.writeInt(postType::Async).writeString(senderName).writeInt(command).writeRawData(params);
 }
 
 const std::string &ProxyClient::getName(void) { return name; }

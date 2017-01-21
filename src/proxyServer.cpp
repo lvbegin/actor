@@ -53,6 +53,7 @@ void proxyServer::startThread(ActorLink actor, Connection connection, std::funct
 		  catch (std::runtime_error &e) {  return; }
 		switch (type) {
 			case postType::Async: {
+				std::string name = connection.readString();
 				command = connection.readInt<uint32_t>();
 				actor->post(command, connection.readRawData());
 				break;
