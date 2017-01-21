@@ -48,7 +48,7 @@ public:
 	~ActorRegistry();
 	std::string addReference(const std::string &host, uint16_t port);
 	void removeReference(const std::string &registryName);
-	void registerActor(std::string name, ActorLink actor);
+	void registerActor(ActorLink actor);
 	void unregisterActor(const std::string &name);
 	ActorLink  getActor(const std::string &name) const;
 
@@ -59,13 +59,14 @@ private:
 	const std::string name;
 	bool terminated;
 	SharedMap<const std::string, const struct NetAddr> registryAddresses;
-	SharedMap<const std::string, const std::shared_ptr<LinkApi>> actors;
+	std::vector<ActorLink> actors;
 	ProxyContainer proxies;
 	std::thread t;
 
 	void registryBody(const ServerSocket &s);
 	ActorLink getLocalActor(const std::string &name) const;
 	ActorLink getRemoteActor(const std::string &name) const;
+	std::vector<ActorLink>::const_iterator findActor(const std::string &name) const;
 };
 
 #endif

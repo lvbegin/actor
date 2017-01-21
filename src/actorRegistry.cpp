@@ -60,7 +60,7 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 				}
 				case RegistryCommand::SEARCH_ACTOR:
 					try {
-						auto actor = actors.find(connection.readString());
+						auto actor = getLocalActor(connection.readString());
 						connection.writeInt(ACTOR_FOUND);
 						proxies.createNewProxy(actor, std::move(connection));
 					} catch (std::out_of_range e) {
@@ -86,9 +86,9 @@ std::string ActorRegistry::addReference(const std::string &host, uint16_t port) 
 
 void ActorRegistry::removeReference(const std::string &registryName) { registryAddresses.erase(registryName); }
 
-void ActorRegistry::registerActor(std::string name, ActorLink actor) { actors.insert(std::move(name), std::move(actor)); }
+void ActorRegistry::registerActor(ActorLink actor) { actors.push_back(std::move(actor)); }
 
-void ActorRegistry::unregisterActor(const std::string &name) { actors.erase(name); }
+void ActorRegistry::unregisterActor(const std::string &name) { actors.erase(findActor(name)); }
 
 ActorLink  ActorRegistry::getActor(const std::string &name) const {
 	try {
@@ -98,7 +98,7 @@ ActorLink  ActorRegistry::getActor(const std::string &name) const {
 	}
 }
 
-ActorLink ActorRegistry::getLocalActor(const std::string &name) const { return actors.find(name); }
+ActorLink ActorRegistry::getLocalActor(const std::string &name) const { return *findActor(name); }
 
 ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
 	ActorLink actor;
@@ -106,7 +106,14 @@ ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
 		auto connection = ClientSocket::openHostConnection(c.second);
 		connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
 		if (ACTOR_FOUND == connection.readInt<uint32_t>())
-			actor.reset(new ProxyClient(std::move(connection)));
+			actor.reset(new ProxyClient(name, std::move(connection)));
 	});
 	return actor;
+}
+
+std::vector<ActorLink>::const_iterator ActorRegistry::findActor(const std::string &name) const {
+	const auto it = std::find_if(actors.begin(), actors.end(), [&name](const ActorLink &e) { return (0 == name.compare(e->getName()));});
+	if (actors.end() == it)
+		THROW(std::out_of_range, "Actor not found locally");
+	return it;
 }

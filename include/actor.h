@@ -44,8 +44,8 @@ using ActorBody = std::function<StatusCode(int, const RawData &, const ActorLink
 
 class Actor {
 public:
-	Actor(ActorBody body, RestartStrategy restartStrategy = defaultRestartStrategy);
-	Actor(ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy = defaultRestartStrategy);
+	Actor(std::string name, ActorBody body, RestartStrategy restartStrategy = defaultRestartStrategy);
+	Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy = defaultRestartStrategy);
 	~Actor();
 
 	Actor(const Actor &a) = delete;
@@ -66,7 +66,6 @@ public:
 private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
 	static std::function<void(void)> doNothing;
-
 	std::shared_ptr<MessageQueue> executorQueue;
 	Supervisor supervisor;
 	const std::function<void(void)> atRestart;

@@ -31,7 +31,7 @@
 #include <clientSocket.h>
 #include "../include/proxyClient.h"
 
-ProxyClient::ProxyClient(Connection connection) : connection(std::move(connection)) { }
+ProxyClient::ProxyClient(std::string name, Connection connection) : name(std::move(name)), connection(std::move(connection)) { }
 ProxyClient::~ProxyClient() = default;
 
 void ProxyClient::post(int command, ActorLink sender) { post(command, RawData(), std::move(sender)); }
@@ -40,3 +40,5 @@ void ProxyClient::post(int command, ActorLink sender) { post(command, RawData(),
 void ProxyClient::post(int command, RawData params, ActorLink sender) {
 	connection.writeInt(postType::Async).writeInt(command).writeRawData(params);
 }
+
+const std::string &ProxyClient::getName(void) { return name; }

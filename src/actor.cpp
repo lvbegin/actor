@@ -34,10 +34,11 @@
 
 std::function<void(void)> Actor::doNothing = [](void) {};
 
-Actor::Actor(ActorBody body, RestartStrategy restartStrategy)  : Actor(body, Actor::doNothing, restartStrategy) {}
+Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy) :
+		Actor(std::move(name), std::move(body), Actor::doNothing, std::move(restartStrategy)) { }
 
-Actor::Actor(ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
-						executorQueue(new MessageQueue()), supervisor(std::move(restartStrategy), executorQueue), atRestart(atRestart), body(body),
+Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
+						executorQueue(new MessageQueue(std::move(name))), supervisor(std::move(restartStrategy), executorQueue), atRestart(atRestart), body(body),
 						executor(new Executor([this](MessageType type, int command, const RawData &params, const std::shared_ptr<LinkApi> &sender)
 								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue)) { }
 
@@ -47,11 +48,7 @@ Actor::~Actor() {
 	executorQueue->post(Command::COMMAND_SHUTDOWN);
 }
 
-//StatusCode Actor::postSync(int i, ActorLink sender) const { return executorQueue->postSync(i, RawData(), std::move(sender)); }
-
 void Actor::post(int i, ActorLink sender) const { executorQueue->post(i, RawData(), std::move(sender)); }
-
-//StatusCode Actor::postSync(int i, RawData params, ActorLink sender) const { return executorQueue->postSync(i, params, std::move(sender)); }
 
 void Actor::post(int i, RawData params, ActorLink sender) const { executorQueue->post(i, params, std::move(sender)); }
 

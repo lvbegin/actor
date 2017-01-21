@@ -36,7 +36,7 @@ MessageQueue::message::message(MessageType type, int code, RawData params, std::
 MessageQueue::message::~message() = default;
 MessageQueue::message::message(struct message &&m) = default;
 
-MessageQueue::MessageQueue() = default;
+MessageQueue::MessageQueue(std::string name) : name(std::move(name)) { }
 MessageQueue::~MessageQueue() = default;
 
 void MessageQueue::post(int code, ActorLink sender) { post(code, RawData(), std::move(sender)); }
@@ -44,6 +44,8 @@ void MessageQueue::post(int code, ActorLink sender) { post(code, RawData(), std:
 void MessageQueue::post(int code, RawData params, ActorLink sender) {
 	putMessage(MessageType::COMMAND_MESSAGE, code, std::move(params), std::move(sender));
 }
+
+const std::string &MessageQueue::getName(void) { return name; }
 
 void MessageQueue::post(MessageType type, int code, RawData params) {
 	putMessage(type, code, std::move(params), std::shared_ptr<LinkApi>());

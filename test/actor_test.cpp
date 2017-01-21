@@ -43,8 +43,8 @@
 static int basicActorTest(void) {
 	static const uint32_t command = 0xaa;
 	static const int answer = 0x22;
-	const auto link = std::make_shared<MessageQueue>();
-	const Actor a([](int i, const RawData &, const ActorLink &link) { link->post(answer); return StatusCode::ok; });
+	const auto link = std::make_shared<MessageQueue>("queue for reply");
+	const Actor a("actor name", [](int i, const RawData &, const ActorLink &link) { link->post(answer); return StatusCode::ok; });
 	a.post(command, link);
 	return (answer == link->get().code) ? 0 : 1;
 }
@@ -54,9 +54,9 @@ static int basicActorWithParamsTest(void) {
 	const RawData params(paramValue.begin(), paramValue.end());
 	static const int answer = 0x22;
 	static const int badAnswer = 0x88;
-	const auto link = std::make_shared<MessageQueue>();
+	const auto link = std::make_shared<MessageQueue>("queue for reply");
 
-	const Actor a([](int i, const std::vector<unsigned char> &params, const ActorLink &link) {
+	const Actor a("actor name", [](int i, const std::vector<unsigned char> &params, const ActorLink &link) {
 				if (0 == paramValue.compare(std::string(params.begin(), params.end()))) {
 					link->post(answer);
 					return StatusCode::ok;
@@ -74,20 +74,20 @@ static int actorSendMessageAndReceiveAnAnswerTest(void) {
 	static const std::string paramValue("Hello World");
 	const RawData params(paramValue.begin(), paramValue.end());
 
-	const Actor a([](int i, const std::vector<unsigned char> &params, const ActorLink &sender) {
+	const Actor a("actor name", [](int i, const std::vector<unsigned char> &params, const ActorLink &sender) {
 				if (0 == paramValue.compare(std::string(params.begin(), params.end())))
 					sender->post(0x00);
 				else
 					sender->post(0x01);
 				return StatusCode::ok;
 	});
-	auto queue = std::make_shared<MessageQueue>();
+	auto queue = std::make_shared<MessageQueue>("queue for reply");
 	a.post(1, params, queue);
 	return (0x00 == queue->get().code) ? 0 : 1;
 }
 
 static void executeSeverProxy(uint16_t port, int *nbMessages) {
-	const Actor actor([nbMessages](int i, const RawData &, const ActorLink &) { (*nbMessages)++; return StatusCode::ok; });
+	const Actor actor("actor name", [nbMessages](int i, const RawData &, const ActorLink &) { (*nbMessages)++; return StatusCode::ok; });
 	const auto doNothing = []() { };
 	const proxyServer server(actor.getActorLinkRef(), ServerSocket::getConnection(port), doNothing);
 }
@@ -105,7 +105,7 @@ static int proxyTest(void) {
 	static const uint32_t code = 0x33;
 	int nbMessages { 0 };
 	std::thread t(executeSeverProxy, port, &nbMessages);
-	ProxyClient client(openOneConnection(port));
+	ProxyClient client("client name", openOneConnection(port));
 	client.post(code);
 	client.post(Command::COMMAND_SHUTDOWN);
 	t.join();
@@ -122,10 +122,10 @@ static int registryConnectTest(void) {
 static int registryAddActorTest(void) {
 	static const uint16_t port = 4001;
 	static const std::string actorName("my actor");
-	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	const Actor a(actorName, [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	ActorRegistry registry(std::string("name"), port);
 
-	registry.registerActor(actorName, a.getActorLinkRef());
+	registry.registerActor(a.getActorLinkRef());
 
 	return 0;
 }
@@ -133,18 +133,18 @@ static int registryAddActorTest(void) {
 static int registryAddActorAndRemoveTest(void) {
 	static const uint16_t port = 4001;
 	static const std::string actorName("my actor");
-	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	const Actor a(actorName, [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	ActorRegistry registry(std::string("name"), port);
 
-	registry.registerActor(actorName, a.getActorLinkRef());
+	registry.registerActor(a.getActorLinkRef());
 	registry.unregisterActor(actorName);
 	try {
 	    registry.unregisterActor(actorName);
 	    return 1;
-	} catch (std::runtime_error &e) { }
+	} catch (std::out_of_range &e) { }
 
-	const Actor anotherA([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
-	registry.registerActor(actorName, anotherA.getActorLinkRef());
+	const Actor anotherA(actorName, [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	registry.registerActor(anotherA.getActorLinkRef());
 	return 0;
 }
 
@@ -187,8 +187,8 @@ static int registeryAddActorFindItBackAndSendMessageTest() {
 	static const int badAnswer = 0x33;
 	static const std::string actorName("my actor");
 	static const uint16_t port = 4001;
-	auto link = std::make_shared<MessageQueue>();
-	const Actor a([](int i, const RawData &, const ActorLink &link) {
+	auto link = std::make_shared<MessageQueue>("queue for reply");
+	const Actor a(actorName, [](int i, const RawData &, const ActorLink &link) {
 		if (code == i)
 			link->post(answer);
 		else
@@ -196,8 +196,8 @@ static int registeryAddActorFindItBackAndSendMessageTest() {
 		return StatusCode::ok;
 	});
 	const auto actorRefLink = a.getActorLinkRef();
-	ActorRegistry registry(std::string("name1"), port);
-	registry.registerActor(actorName, actorRefLink);
+	ActorRegistry registry("registry name", port);
+	registry.registerActor(actorRefLink);
 
 	const auto b = registry.getActor(actorName);
 
@@ -212,9 +212,9 @@ static int registeryAddActorFindItBackAndSendMessageTest() {
 static int registeryFindUnknownActorTest() {
 	static const std::string actorName("my actor");
 	static const uint16_t port = 4001;
-	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	const Actor a(actorName, [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	ActorRegistry registry(std::string("name1"), port);
-	registry.registerActor(actorName, a.getActorLinkRef());
+	registry.registerActor(a.getActorLinkRef());
 
 	const ActorLink b = registry.getActor(std::string("wrong name"));
 	return (nullptr == b.get()) ? 0 : 1;
@@ -235,7 +235,7 @@ static int findActorFromOtherRegistryTest() {
 	const std::string name = registry1.addReference("localhost", port2);
 	if (name2.compare(name))
 		return 1;
-	const Actor a([&rc](int i, const std::vector<unsigned char> &params, const ActorLink &) {
+	const Actor a(actorName, [&rc](int i, const std::vector<unsigned char> &params, const ActorLink &) {
 		if (i == dummyCommand && 0 == params.size()) {
 			rc = true;
 			return StatusCode::ok;
@@ -246,7 +246,7 @@ static int findActorFromOtherRegistryTest() {
 		}
 	} );
 
-	registry2.registerActor(actorName, a.getActorLinkRef());
+	registry2.registerActor(a.getActorLinkRef());
 	const auto actor = registry1.getActor(actorName);
 	if (nullptr == actor.get())
 		return 1;
@@ -273,7 +273,7 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	const std::string name = registry1.addReference("localhost", port2);
 	if (name2.compare(name))
 		return 1;
-	const Actor a([&rc](int i, const std::vector<unsigned char> &params, const ActorLink &) {
+	const Actor a(actorName, [&rc](int i, const std::vector<unsigned char> &params, const ActorLink &) {
 		if (i == dummyCommand && 0 == paramValue.compare(std::string(params.begin(), params.end()))) {
 			rc = true;
 			return StatusCode::ok;
@@ -283,7 +283,7 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 			return StatusCode::error;
 		}
 	} );
-	registry2.registerActor(actorName, a.getActorLinkRef());
+	registry2.registerActor(a.getActorLinkRef());
 	const auto actor = registry1.getActor(actorName);
 	if (nullptr == actor.get())
 		return 1;
@@ -307,15 +307,15 @@ static int findUnknownActorInMultipleRegistryTest() {
 	const std::string name = registry1.addReference("localhost", port2);
 	if (name2.compare(name))
 		return 1;
-	const Actor a([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
-	registry2.registerActor(actorName, a.getActorLinkRef());
+	const Actor a(actorName, [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	registry2.registerActor(a.getActorLinkRef());
 	const auto actor = registry1.getActor("unknown actor");
 	return nullptr == actor.get() ? 0 : 1;
 }
 
 static int initSupervisionTest() {
-	Actor supervisor([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
-	Actor supervised([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	supervisor.registerActor(supervised);
 	supervisor.unregisterActor(supervised);
 
@@ -327,8 +327,8 @@ static int initSupervisionTest() {
 
 
 static int unregisterToSupervisorWhenActorDestroyedTest() {
-	Actor supervisor([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
-	auto supervised = std::make_unique<Actor>([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	auto supervised = std::make_unique<Actor>("supervised", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	supervisor.registerActor(*supervised.get());
 
 	supervised->post(Command::COMMAND_SHUTDOWN);
@@ -343,9 +343,9 @@ static int supervisorRestartsActorTest() {
 	static int restartCommand = 0x99;
 	static int otherCommand = 0xaa;
 	static const int answer = 0x99;
-	const auto link = std::make_shared<MessageQueue>();
-	Actor supervisor([](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
-	Actor supervised([](int i, const RawData &, const ActorLink &link) {
+	const auto link = std::make_shared<MessageQueue>("queue for reply");
+	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
+	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
 		if (i == restartCommand) {
 			exceptionThrown = true;
 			throw std::runtime_error("some error");
@@ -369,16 +369,16 @@ static int actorNotifiesErrorToSupervisorTest() {
 	bool supervisorRestarted = false;
 	int supervised1Restarted = 0;
 	bool supervised2Restarted = false;
-	Actor supervisor(
+	Actor supervisor("supervisor",
 			[](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
 			[&supervisorRestarted](void) { supervisorRestarted = true; } );
-	Actor supervised1(
+	Actor supervised1("supervised1",
 			[](int i, const RawData &, const ActorLink &) {
 				Actor::notifyError(0x69);
 				return StatusCode::ok;
 	 	 	 },
 			 [&supervised1Restarted](void) { supervised1Restarted++; } );
-	Actor supervised2(
+	Actor supervised2("supervised2",
 			[](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
 			[&supervised2Restarted](void) { supervised2Restarted = true; } );
 
@@ -401,7 +401,7 @@ static int actorNotifiesErrorToSupervisorTest() {
 
 static int actorDoesNothingIfNoSupervisorTest() {
 	static int someCommand = 0xaa;
-	Actor supervised([](int i, const RawData &, const ActorLink &) {
+	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &) {
 		Actor::notifyError(0x69);
 		return StatusCode::ok;
 	 });
@@ -416,7 +416,7 @@ static int actorDoesNothingIfNoSupervisorTest() {
 
 static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 	static int someCommand = 0xaa;
-	Actor supervised([](int i, const RawData &, const ActorLink &) {
+	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &) {
 		throw std::runtime_error("some error");
 		return StatusCode::ok; //remove that ?
 	 });
@@ -434,17 +434,17 @@ static int restartAllActorBySupervisorTest() {
 	bool supervisorRestarted = false;
 	bool supervised1Restarted = false;
 	bool supervised2Restarted = false;
-	Actor supervisor(
+	Actor supervisor("supervisor",
 			[](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
 			[&supervisorRestarted](void) { supervisorRestarted = true; },
 			[](void) { return RestartType::RESTART_ALL; });
-	Actor supervised1(
+	Actor supervised1("supervised1",
 			[](int i, const RawData &, const ActorLink &) {
 				Actor::notifyError(0x69);
 				return StatusCode::ok;
 	 	 	 },
 			 [&supervised1Restarted](void) { supervised1Restarted = true; });
-	Actor supervised2(
+	Actor supervised2("supervised2",
 			[](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
 			[&supervised2Restarted](void) { supervised2Restarted = true; });
 
@@ -469,7 +469,7 @@ static int restartAllActorBySupervisorTest() {
 }
 
 static int executorTest() {
-	MessageQueue messageQueue;
+	MessageQueue messageQueue("queue name");
 	Executor executor([](MessageType, int, const RawData &, const ActorLink &) { return StatusCode::shutdown; }, messageQueue);
 	messageQueue.post(MessageType::COMMAND_MESSAGE, Command::COMMAND_SHUTDOWN);
 	return 0;

@@ -37,12 +37,14 @@
 
 class ProxyClient : public LinkApi {
 public:
-	ProxyClient(Connection connection);
+	ProxyClient(std::string name, Connection connection);
 	~ProxyClient();
 
 	void post(int command, ActorLink sender = ActorLink());
 	void post(int command, RawData params, ActorLink sender = ActorLink());
+	const std::string &getName(void);
 private:
+	std::string name;
 	const Connection connection;
 };
 
