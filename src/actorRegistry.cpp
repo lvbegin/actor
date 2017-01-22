@@ -98,7 +98,7 @@ ActorLink  ActorRegistry::getActor(const std::string &name) const {
 	}
 }
 
-ActorLink ActorRegistry::getLocalActor(const std::string &name) const { return *findActor(name); }
+ActorLink ActorRegistry::getLocalActor(const std::string &name) const { return  *findActor(name); }
 
 ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
 	ActorLink actor;

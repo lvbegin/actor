@@ -64,14 +64,18 @@ RawData Connection::readRawData(void) const {
 
 const Connection &Connection::writeString(const std::string &hostValue) const {
 	const size_t nbBytesToWrite = hostValue.size() + 1;
+	if (1 == nbBytesToWrite)
+		return writeInt(0);
+
 	return writeInt(nbBytesToWrite).writeBytes(hostValue.c_str(), nbBytesToWrite);
 }
 
 std::string Connection::readString(void) const {
 	auto string = readRawData();
-	if (0 == string.size() || '\0' != string.data()[string.size() - 1])
-		THROW(std::runtime_error, "non NULL-terminated string value");
-	return std::string(string.begin(), string.end() - 1);
+//	if (0 == string.size() || '\0' != string.data()[string.size() - 1]) //non-sense to use null terminated string...
+//		THROW(std::runtime_error, "non NULL-terminated string value");
+	auto rc = (string.size() == 0) ? std::string() : std::string(string.begin(), string.end() - 1);
+	return rc;
 }
 
 const Connection &Connection::writeBytes(const void *buffer, size_t count) const {

@@ -55,7 +55,7 @@ public:
 
 	void post(int code, ActorLink sender = ActorLink());
 	void post(int code, RawData params, ActorLink sender = ActorLink());
-	const std::string &getName(void);
+	const std::string &getName(void) const;
 
 	void post(MessageType type, int code, RawData params = RawData());
 

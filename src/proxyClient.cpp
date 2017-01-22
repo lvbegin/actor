@@ -41,4 +41,4 @@ void ProxyClient::post(int command, RawData params, ActorLink sender) {
 	connection.writeInt(postType::Async).writeString(senderName).writeInt(command).writeRawData(params);
 }
 
-const std::string &ProxyClient::getName(void) { return name; }
+const std::string &ProxyClient::getName(void) const { return name; }

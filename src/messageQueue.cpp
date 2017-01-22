@@ -45,7 +45,7 @@ void MessageQueue::post(int code, RawData params, ActorLink sender) {
 	putMessage(MessageType::COMMAND_MESSAGE, code, std::move(params), std::move(sender));
 }
 
-const std::string &MessageQueue::getName(void) { return name; }
+const std::string &MessageQueue::getName(void) const { return name; }
 
 void MessageQueue::post(MessageType type, int code, RawData params) {
 	putMessage(type, code, std::move(params), std::shared_ptr<LinkApi>());
