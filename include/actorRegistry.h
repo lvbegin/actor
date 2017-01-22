@@ -57,6 +57,7 @@ private:
 	static const int ACTOR_NOT_FOUND = 0;
 	static const int ACTOR_FOUND = 1;
 	const std::string name;
+	const uint16_t port;
 	bool terminated;
 	SharedMap<const std::string, const struct NetAddr> registryAddresses;
 	std::vector<ActorLink> actors;

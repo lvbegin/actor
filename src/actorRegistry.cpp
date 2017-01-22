@@ -33,8 +33,8 @@
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body);
 
-ActorRegistry::ActorRegistry(std::string name, uint16_t port) : name(name), terminated(false),
-					t([this, port]() {  threadBody(port, [this](ServerSocket &s) { registryBody(s); }); }) { }
+ActorRegistry::ActorRegistry(std::string name, uint16_t port) : name(name), port(port), terminated(false),
+					t([this]() {  threadBody(this->port, [this](ServerSocket &s) { registryBody(s); }); }) { }
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body) {
 	auto s = std::make_unique<ServerSocket>(port);
@@ -49,11 +49,11 @@ ActorRegistry::~ActorRegistry() {
 void ActorRegistry::registryBody(const ServerSocket &s) {
 	while (!terminated) {
 		struct NetAddr client_addr;
-		Connection connection;
 		try {
-			connection = s.acceptOneConnection(2, &client_addr);
+			Connection connection = s.acceptOneConnection(2, &client_addr);
 			switch (connection.readInt<RegistryCommand>()) {
 				case RegistryCommand::REGISTER_REGISTRY: {
+					reinterpret_cast<sockaddr_in *>(&client_addr.ai_addr)->sin_port = htons(connection.readInt<uint32_t>());
 					registryAddresses.insert(connection.readString(), client_addr);
 					connection.writeString(this->name);
 					break;
@@ -62,7 +62,8 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 					try {
 						auto actor = getLocalActor(connection.readString());
 						connection.writeInt(ACTOR_FOUND);
-						proxies.createNewProxy(actor, std::move(connection));
+						auto findActor = [this](const std::string &name) { return this->getRemoteActor(name); };
+						proxies.createNewProxy(actor, std::move(connection), findActor);
 					} catch (std::out_of_range e) {
 						connection.writeInt(ACTOR_NOT_FOUND);
 					}
@@ -77,7 +78,7 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 
 std::string ActorRegistry::addReference(const std::string &host, uint16_t port) {
 	const auto connection = ClientSocket::openHostConnection(host, port);
-	connection.writeInt(RegistryCommand::REGISTER_REGISTRY).writeString(name);
+	connection.writeInt(RegistryCommand::REGISTER_REGISTRY).writeInt<uint32_t>(this->port).writeString(name);
 	//should read status...and react in consequence: what if failure returned?
 	const std::string otherName = connection.readString();
 	registryAddresses.insert(otherName, ClientSocket::toNetAddr(host, port));
@@ -103,7 +104,7 @@ ActorLink ActorRegistry::getLocalActor(const std::string &name) const { return  
 ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
 	ActorLink actor;
 	registryAddresses.for_each([&actor, &name](const std::pair<const std::string, const struct NetAddr> &c) {
-		auto connection = ClientSocket::openHostConnection(c.second);
+		auto connection =	ClientSocket::openHostConnection(c.second);
 		connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
 		if (ACTOR_FOUND == connection.readInt<uint32_t>())
 			actor.reset(new ProxyClient(name, std::move(connection)));

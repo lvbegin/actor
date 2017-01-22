@@ -89,7 +89,8 @@ static int actorSendMessageAndReceiveAnAnswerTest(void) {
 static void executeSeverProxy(uint16_t port, int *nbMessages) {
 	const Actor actor("actor name", [nbMessages](int i, const RawData &, const ActorLink &) { (*nbMessages)++; return StatusCode::ok; });
 	const auto doNothing = []() { };
-	const proxyServer server(actor.getActorLinkRef(), ServerSocket::getConnection(port), doNothing);
+	const auto DummyGetConnection = [] (std::string) { return ActorLink(); };
+	const proxyServer server(actor.getActorLinkRef(), ServerSocket::getConnection(port), doNothing, DummyGetConnection);
 }
 
 static Connection openOneConnection(uint16_t port) {
@@ -220,40 +221,46 @@ static int registeryFindUnknownActorTest() {
 	return (nullptr == b.get()) ? 0 : 1;
 }
 
-static int findActorFromOtherRegistryTest() {
+static int findActorFromOtherRegistryAndSendMessageTest() {
 	static const uint32_t dummyCommand = 0x33;
 	static const std::string name1("name1");
 	static const std::string name2("name2");
 	static const std::string actorName("my actor");
 	static const uint16_t port1 = 4001;
 	static const uint16_t port2 = 4002;
+	static const int answer = 0x99;
+	static const int badAnswer = 0x11;
 	ActorRegistry registry1(name1, port1);
 	ActorRegistry registry2(name2, port2);
+	auto link = std::make_shared<MessageQueue>("dummy name");
 	bool rc = false;
 	ensureRegistryStarted(port1);
 	ensureRegistryStarted(port2);
 	const std::string name = registry1.addReference("localhost", port2);
 	if (name2.compare(name))
 		return 1;
-	const Actor a(actorName, [&rc](int i, const std::vector<unsigned char> &params, const ActorLink &) {
+	const Actor a(actorName, [&rc](int i, const std::vector<unsigned char> &params, const ActorLink &link) {
 		if (i == dummyCommand && 0 == params.size()) {
 			rc = true;
+			link->post(answer);
 			return StatusCode::ok;
 		}
 		else {
 			rc = false;
+			link->post(badAnswer);
 			return StatusCode::error;
 		}
 	} );
 
+	registry1.registerActor(link);
 	registry2.registerActor(a.getActorLinkRef());
 	const auto actor = registry1.getActor(actorName);
 	if (nullptr == actor.get())
 		return 1;
 	sleep(10); // ensure that the proxy server does not stop after a timeout when no command is sent.
-	actor->post(dummyCommand);
-	sleep(1); //should be removed once reply is implemented for remote
-	return (rc) ? 0 : 1;
+	actor->post(dummyCommand, link);
+//	sleep(1); //should be removed once reply is implemented for remote
+	return (answer == link->get().code) ? 0 : 1;
 }
 
 static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
@@ -521,7 +528,7 @@ int main() {
 			TEST(registryAddReferenceOverrideExistingOneTest),
 			TEST(registeryAddActorFindItBackAndSendMessageTest),
 			TEST(registeryFindUnknownActorTest),
-			TEST(findActorFromOtherRegistryTest),
+			TEST(findActorFromOtherRegistryAndSendMessageTest),
 			TEST(findActorFromOtherRegistryAndSendCommandWithParamsTest),
 			TEST(findUnknownActorInMultipleRegistryTest),
 			TEST(initSupervisionTest),

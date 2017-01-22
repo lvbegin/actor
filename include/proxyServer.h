@@ -37,9 +37,11 @@ class ProxyContainer;
 
 enum class postType : uint32_t { Sync, Async, } ;
 
+using FindActor = std::function<ActorLink(const std::string &)> ;
+
 class proxyServer {
 public:
-	proxyServer(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate);
+	proxyServer(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor);
 	~proxyServer();
 
 	proxyServer(const proxyServer &p) = delete;
@@ -48,7 +50,7 @@ public:
 	proxyServer(proxyServer &&p) = delete;
 private:
 	std::thread t;
-	static void startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate);
+	static void startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor);
 };
 
 #endif

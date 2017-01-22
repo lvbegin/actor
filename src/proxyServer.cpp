@@ -34,16 +34,16 @@
 
 #include <arpa/inet.h>
 
-proxyServer::proxyServer(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate) :
-	t([actor, connection {std::move(connection)}, notifyTerminate]() mutable
-						{ startThread(std::move(actor), std::move(connection), notifyTerminate); }) { }
+proxyServer::proxyServer(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor) :
+	t([actor, connection {std::move(connection)}, notifyTerminate, findActor]() mutable
+						{ startThread(std::move(actor), std::move(connection), notifyTerminate, findActor); }) { }
 
 proxyServer::~proxyServer() {
 	if (t.joinable())
 		t.join();
 };
 
-void proxyServer::startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate) {
+void proxyServer::startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor) {
 	while (true) {
 		uint32_t command;
 		postType type;
@@ -53,9 +53,10 @@ void proxyServer::startThread(ActorLink actor, Connection connection, std::funct
 		  catch (std::runtime_error &e) {  return; }
 		switch (type) {
 			case postType::Async: {
-				std::string name = connection.readString();
+				const std::string name = connection.readString();
+				auto sender = (name.size() > 0) ? findActor(name) : ActorLink();
 				command = connection.readInt<uint32_t>();
-				actor->post(command, connection.readRawData());
+				actor->post(command, connection.readRawData(), sender);
 				break;
 			}
 			default:
