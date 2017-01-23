@@ -41,7 +41,7 @@ void Supervisor::sendErrorToSupervisor(uint32_t code) const { sendToSupervisor(M
 void Supervisor::sendToSupervisor(MessageType type, uint32_t code) const {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
-	auto ref = supervisorRef.lock();
+	const auto ref = supervisorRef.lock();
 	if (nullptr != ref.get())
 		ref->post(type, code, UniqueId::serialize(id));
 }
