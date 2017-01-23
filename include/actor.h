@@ -51,7 +51,6 @@ public:
 	Actor(const Actor &a) = delete;
 	Actor &operator=(const Actor &a) = delete;
 
-
 	void post(int i, ActorLink sender = ActorLink()) const;
 	void post(int i, RawData params, ActorLink sender = ActorLink()) const;
 
