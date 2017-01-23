@@ -62,10 +62,10 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 				case RegistryCommand::SEARCH_ACTOR:
 					try {
 						auto actor = getLocalActor(connection.readString());
-						connection.writeInt(ACTOR_FOUND);
+						connection.writeInt(ActorSearchResult::ACTOR_FOUND);
 						proxies.createNewProxy(actor, std::move(connection), findActorCallback);
 					} catch (std::out_of_range e) {
-						connection.writeInt(ACTOR_NOT_FOUND);
+						connection.writeInt(ActorSearchResult::ACTOR_NOT_FOUND);
 					}
 					break;
 				default:
@@ -110,7 +110,7 @@ ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
 	registryAddresses.for_each([&actor, &name](const std::pair<const std::string, const struct NetAddr> &c) {
 		auto connection =	ClientSocket::openHostConnection(c.second);
 		connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
-		if (ACTOR_FOUND == connection.readInt<uint32_t>())
+		if (ActorSearchResult::ACTOR_FOUND == connection.readInt<ActorSearchResult>())
 			actor.reset(new ProxyClient(name, std::move(connection)));
 	});
 	return actor;

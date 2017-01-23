@@ -53,9 +53,8 @@ public:
 	ActorLink  getActor(const std::string &name) const;
 
 private:
-	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY, SEARCH_ACTOR, };
-	static const int ACTOR_NOT_FOUND = 0;
-	static const int ACTOR_FOUND = 1;
+	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY = 0, SEARCH_ACTOR = 1, };
+	enum class ActorSearchResult : uint32_t { ACTOR_NOT_FOUND = 0, ACTOR_FOUND = 1, };
 	const std::string name;
 	const uint16_t port;
 	const FindActor findActorCallback;
@@ -68,7 +67,6 @@ private:
 	void registryBody(const ServerSocket &s);
 	ActorLink getLocalActor(const std::string &name) const;
 	ActorLink getRemoteActor(const std::string &name) const;
-//	std::vector<ActorLink>::const_iterator findActor(const std::string &name) const;
 };
 
 #endif
