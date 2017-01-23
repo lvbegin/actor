@@ -40,7 +40,7 @@ class ProxyContainer {
 public:
 	ProxyContainer();
 	~ProxyContainer();
-	void createNewProxy(ActorLink actor, Connection connection, std::function<ActorLink(const std::string&)> findActor);
+	void createNewProxy(ActorLink actor, Connection connection, FindActor findActor);
 	void deleteProxy(Id id);
 private:
 	static const uint32_t USELESS_CODE = 0;
