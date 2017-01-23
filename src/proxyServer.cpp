@@ -50,7 +50,7 @@ void proxyServer::startThread(ActorLink actor, Connection connection, std::funct
 			type = connection.readInt<postType>();
 		} catch (ConnectionTimeout &e) { continue ; }
 		  catch (std::runtime_error &e) {  return; }
-		if (postType::Async != type)
+		if (postType::NewMessage != type)
 			continue;
 		const auto name = connection.readString();
 		auto sender = (name.size() > 0) ? findActor(name) : ActorLink();
