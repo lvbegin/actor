@@ -259,7 +259,64 @@ static int findActorFromOtherRegistryAndSendMessageTest() {
 		return 1;
 	sleep(10); // ensure that the proxy server does not stop after a timeout when no command is sent.
 	actor->post(dummyCommand, link);
-//	sleep(1); //should be removed once reply is implemented for remote
+	return (answer == link->get().code) ? 0 : 1;
+}
+
+static int findActorFromOtherRegistryAndSendWithSenderForwardToAnotherActorMessageTest() {
+	static const uint32_t dummyCommand = 0x33;
+	static const std::string name1("name1");
+	static const std::string name2("name2");
+	static const std::string name3("name3");
+	static const std::string actorName1("my actor 1");
+	static const std::string actorName2("my actor 2");
+	static const uint16_t port1 = 4001;
+	static const uint16_t port2 = 4002;
+	static const uint16_t port3 = 4003;
+	static const int answer = 0x99;
+	static const int intermedieateCommand = 0x44;
+	static const int badAnswer = 0x11;
+	ActorRegistry registry1(name1, port1);
+	ActorRegistry registry2(name2, port2);
+	ActorRegistry registry3(name3, port3);
+	auto link = std::make_shared<MessageQueue>("dummy name");
+	ensureRegistryStarted(port1);
+	ensureRegistryStarted(port2);
+	ensureRegistryStarted(port3);
+
+	registry1.addReference("localhost", port2);
+	registry1.addReference("localhost", port3);
+	registry2.addReference("localhost", port3);
+
+	const Actor actor2(actorName2, [](int i, const std::vector<unsigned char> &params, const ActorLink &link) {
+		if (i == intermedieateCommand && 0 == params.size()) {
+			link->post(answer);
+			return StatusCode::ok;
+		}
+		else {
+			link->post(badAnswer);
+			return StatusCode::error;
+		}
+	} );
+	registry3.registerActor(actor2.getActorLinkRef());
+
+	auto linkActor2 = registry3.getActor(actorName2);
+
+	const Actor actor1(actorName1, [linkActor2](int i, const std::vector<unsigned char> &params, const ActorLink &link) {
+		if (i == dummyCommand && 0 == params.size()) {
+			linkActor2->post(intermedieateCommand, link);
+			return StatusCode::ok;
+		}
+		else {
+			link->post(badAnswer);
+			return StatusCode::error;
+		}
+	} );
+	registry2.registerActor(actor1.getActorLinkRef());
+	registry1.registerActor(link);
+	const auto actor = registry2.getActor(actorName1);
+	if (nullptr == actor.get())
+		return 1;
+	actor->post(dummyCommand, link);
 	return (answer == link->get().code) ? 0 : 1;
 }
 
@@ -503,7 +560,7 @@ int _runTest(_test *suite, size_t nbTests) {
 	int nbFailure = 0;
 
 	for (size_t i = 0; i < nbTests; i++) {
-		std::cout << suite[i].name << ": ";
+		std::cout << suite[i].name << ": " << std::flush;
 		if (0 < suite[i].test()) {
 			nbFailure ++;
 			std::cout << "FAILURE" << std::endl;
@@ -529,6 +586,7 @@ int main() {
 			TEST(registeryAddActorFindItBackAndSendMessageTest),
 			TEST(registeryFindUnknownActorTest),
 			TEST(findActorFromOtherRegistryAndSendMessageTest),
+			TEST(findActorFromOtherRegistryAndSendWithSenderForwardToAnotherActorMessageTest),
 			TEST(findActorFromOtherRegistryAndSendCommandWithParamsTest),
 			TEST(findUnknownActorInMultipleRegistryTest),
 			TEST(initSupervisionTest),
