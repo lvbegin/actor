@@ -45,7 +45,6 @@ proxyServer::~proxyServer() {
 
 void proxyServer::startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor) {
 	while (true) {
-		uint32_t command;
 		postType type;
 		try {
 			type = connection.readInt<postType>();
@@ -53,9 +52,9 @@ void proxyServer::startThread(ActorLink actor, Connection connection, std::funct
 		  catch (std::runtime_error &e) {  return; }
 		if (postType::Async != type)
 			continue;
-		const std::string name = connection.readString();
+		const auto name = connection.readString();
 		auto sender = (name.size() > 0) ? findActor(name) : ActorLink();
-		command = connection.readInt<uint32_t>();
+		const auto command = connection.readInt<uint32_t>();
 		actor->post(command, connection.readRawData(), sender);
 		if (Command::COMMAND_SHUTDOWN == command) {
 			notifyTerminate();
