@@ -53,7 +53,7 @@ void proxyServer::startThread(ActorLink actor, Connection connection, std::funct
 		if (postType::NewMessage != type)
 			continue;
 		const auto name = connection.readString();
-		auto sender = (name.size() > 0) ? findActor(name) : ActorLink();
+		const auto sender = (name.size() > 0) ? findActor(name) : ActorLink();
 		const auto command = connection.readInt<uint32_t>();
 		actor->post(command, connection.readRawData(), sender);
 		if (Command::COMMAND_SHUTDOWN == command) {
