@@ -35,7 +35,7 @@
 
 class ProxyContainer;
 
-enum class postType : uint32_t { Sync, Async, } ;
+enum class postType : uint32_t { Async, } ;
 
 using FindActor = std::function<ActorLink(const std::string &)> ;
 

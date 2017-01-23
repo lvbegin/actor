@@ -51,17 +51,12 @@ void proxyServer::startThread(ActorLink actor, Connection connection, std::funct
 			type = connection.readInt<postType>();
 		} catch (ConnectionTimeout &e) { continue ; }
 		  catch (std::runtime_error &e) {  return; }
-		switch (type) {
-			case postType::Async: {
-				const std::string name = connection.readString();
-				auto sender = (name.size() > 0) ? findActor(name) : ActorLink();
-				command = connection.readInt<uint32_t>();
-				actor->post(command, connection.readRawData(), sender);
-				break;
-			}
-			default:
-				continue;
-		}
+		if (postType::Async != type)
+			continue;
+		const std::string name = connection.readString();
+		auto sender = (name.size() > 0) ? findActor(name) : ActorLink();
+		command = connection.readInt<uint32_t>();
+		actor->post(command, connection.readRawData(), sender);
 		if (Command::COMMAND_SHUTDOWN == command) {
 			notifyTerminate();
 			return;

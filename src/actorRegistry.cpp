@@ -33,8 +33,9 @@
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body);
 
-ActorRegistry::ActorRegistry(std::string name, uint16_t port) : name(name), port(port), terminated(false),
-					t([this]() {  threadBody(this->port, [this](ServerSocket &s) { registryBody(s); }); }) { }
+ActorRegistry::ActorRegistry(std::string name, uint16_t port) : name(name), port(port),
+		findActorCallback([this](const std::string &name) { return this->getRemoteActor(name); }), terminated(false),
+		t([this]() {  threadBody(this->port, [this](ServerSocket &s) { registryBody(s); }); }) { }
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body) {
 	auto s = std::make_unique<ServerSocket>(port);
@@ -48,8 +49,8 @@ ActorRegistry::~ActorRegistry() {
 
 void ActorRegistry::registryBody(const ServerSocket &s) {
 	while (!terminated) {
-		struct NetAddr client_addr;
 		try {
+			struct NetAddr client_addr;
 			Connection connection = s.acceptOneConnection(2, &client_addr);
 			switch (connection.readInt<RegistryCommand>()) {
 				case RegistryCommand::REGISTER_REGISTRY: {
@@ -62,8 +63,7 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 					try {
 						auto actor = getLocalActor(connection.readString());
 						connection.writeInt(ACTOR_FOUND);
-						auto findActor = [this](const std::string &name) { return this->getRemoteActor(name); };
-						proxies.createNewProxy(actor, std::move(connection), findActor);
+						proxies.createNewProxy(actor, std::move(connection), findActorCallback);
 					} catch (std::out_of_range e) {
 						connection.writeInt(ACTOR_NOT_FOUND);
 					}

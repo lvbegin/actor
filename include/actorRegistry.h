@@ -58,9 +58,10 @@ private:
 	static const int ACTOR_FOUND = 1;
 	const std::string name;
 	const uint16_t port;
+	const FindActor findActorCallback;
 	bool terminated;
 	SharedMap<const std::string, const struct NetAddr> registryAddresses;
-	std::vector<ActorLink> actors;
+	std::vector<ActorLink> actors; //should be protected.
 	ProxyContainer proxies;
 	std::thread t;
 
