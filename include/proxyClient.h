@@ -44,7 +44,7 @@ public:
 	void post(int command, RawData params, ActorLink sender = ActorLink());
 	const std::string &getName(void) const;
 private:
-	std::string name;
+	const std::string name;
 	const Connection connection;
 };
 
