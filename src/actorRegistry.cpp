@@ -53,12 +53,11 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 			struct NetAddr client_addr;
 			Connection connection = s.acceptOneConnection(2, &client_addr);
 			switch (connection.readInt<RegistryCommand>()) {
-				case RegistryCommand::REGISTER_REGISTRY: {
+				case RegistryCommand::REGISTER_REGISTRY:
 					reinterpret_cast<sockaddr_in *>(&client_addr.ai_addr)->sin_port = htons(connection.readInt<uint32_t>());
 					registryAddresses.insert(connection.readString(), client_addr);
 					connection.writeString(this->name);
 					break;
-				}
 				case RegistryCommand::SEARCH_ACTOR:
 					try {
 						auto actor = getLocalActor(connection.readString());
