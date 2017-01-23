@@ -556,7 +556,7 @@ struct _test{
 
 #define runTest(suite) _runTest(suite, sizeof(suite)/sizeof(_test))
 
-int _runTest(_test *suite, size_t nbTests) {
+int _runTest(const _test *suite, size_t nbTests) {
 	int nbFailure = 0;
 
 	for (size_t i = 0; i < nbTests; i++) {
@@ -573,7 +573,7 @@ int _runTest(_test *suite, size_t nbTests) {
 }
 
 int main() {
-	_test suite[] = {
+	static const _test suite[] = {
 			TEST(basicActorTest),
 			TEST(basicActorWithParamsTest),
 			TEST(proxyTest),
