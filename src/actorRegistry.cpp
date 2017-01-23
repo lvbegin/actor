@@ -89,7 +89,11 @@ void ActorRegistry::removeReference(const std::string &registryName) { registryA
 
 void ActorRegistry::registerActor(ActorLink actor) { actors.push_back(std::move(actor)); }
 
-void ActorRegistry::unregisterActor(const std::string &name) { actors.erase(findActor(name)); }
+static inline std::function<bool(const ActorLink &)> actorIdentifier(const std::string &name) {
+	return [&name](const ActorLink &e) { return (0 == name.compare(e->getName()));};
+}
+
+void ActorRegistry::unregisterActor(const std::string &name) { actors.erase(actorIdentifier(name)); }
 
 ActorLink  ActorRegistry::getActor(const std::string &name) const {
 	try {
@@ -99,7 +103,7 @@ ActorLink  ActorRegistry::getActor(const std::string &name) const {
 	}
 }
 
-ActorLink ActorRegistry::getLocalActor(const std::string &name) const { return  *findActor(name); }
+ActorLink ActorRegistry::getLocalActor(const std::string &name) const { return actors.find_if(actorIdentifier(name)); }
 
 ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
 	ActorLink actor;
@@ -110,11 +114,4 @@ ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
 			actor.reset(new ProxyClient(name, std::move(connection)));
 	});
 	return actor;
-}
-
-std::vector<ActorLink>::const_iterator ActorRegistry::findActor(const std::string &name) const {
-	const auto it = std::find_if(actors.begin(), actors.end(), [&name](const ActorLink &e) { return (0 == name.compare(e->getName()));});
-	if (actors.end() == it)
-		THROW(std::out_of_range, "Actor not found locally");
-	return it;
 }

@@ -34,13 +34,13 @@
 #include <cstdint>
 #include <thread>
 #include <memory>
-#include <vector>
 
 #include <netinet/in.h>
 
 #include <proxyContainer.h>
 #include <serverSocket.h>
 #include <sharedMap.h>
+#include <sharedVector.h>
 
 class ActorRegistry {
 public:
@@ -61,14 +61,14 @@ private:
 	const FindActor findActorCallback;
 	bool terminated;
 	SharedMap<const std::string, const struct NetAddr> registryAddresses;
-	std::vector<ActorLink> actors; //should be protected.
+	SharedVector<ActorLink> actors;
 	ProxyContainer proxies;
 	std::thread t;
 
 	void registryBody(const ServerSocket &s);
 	ActorLink getLocalActor(const std::string &name) const;
 	ActorLink getRemoteActor(const std::string &name) const;
-	std::vector<ActorLink>::const_iterator findActor(const std::string &name) const;
+//	std::vector<ActorLink>::const_iterator findActor(const std::string &name) const;
 };
 
 #endif
