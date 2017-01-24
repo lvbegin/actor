@@ -43,7 +43,7 @@ public:
 		const int code;
 		RawData params;
 		std::shared_ptr<LinkApi> sender;
-		message(MessageType type, int code, RawData params, std::shared_ptr<LinkApi> sender);
+		message(MessageType type, int code, RawData params, ActorLink sender);
 		~message();
 		message(struct message &&m);
 		message (const struct message &m) = delete;

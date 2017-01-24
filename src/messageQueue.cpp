@@ -29,8 +29,7 @@
 
 #include <messageQueue.h>
 
-
-MessageQueue::message::message(MessageType type, int code, RawData params, std::shared_ptr<LinkApi> sender) :
+MessageQueue::message::message(MessageType type, int code, RawData params, ActorLink sender) :
 				type(type), code(code), params(std::move(params)), sender(std::move(sender)) { }
 
 MessageQueue::message::~message() = default;
