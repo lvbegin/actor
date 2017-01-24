@@ -39,21 +39,24 @@ MessageQueue::message::message(struct message &&m) = default;
 MessageQueue::MessageQueue(std::string name) : name(std::move(name)) { }
 MessageQueue::~MessageQueue() = default;
 
-void MessageQueue::post(int code, ActorLink sender) { post(code, RawData(), std::move(sender)); }
+void MessageQueue::post(int code, ActorLink sender) {
+	static const RawData emptyData;
+	post(code, emptyData, std::move(sender));
+}
 
-void MessageQueue::post(int code, RawData params, ActorLink sender) {
-	putMessage(MessageType::COMMAND_MESSAGE, code, std::move(params), std::move(sender));
+void MessageQueue::post(int code, const RawData &params, ActorLink sender) {
+	putMessage(MessageType::COMMAND_MESSAGE, code, params, std::move(sender));
 }
 
 const std::string &MessageQueue::getName(void) const { return name; }
 
 void MessageQueue::post(MessageType type, int code, RawData params) {
-	putMessage(type, code, std::move(params), std::shared_ptr<LinkApi>());
+	putMessage(type, code, std::move(params), ActorLink());
 }
 
 struct MessageQueue::message MessageQueue::get(void) { return queue.get(); }
 
-std::future<StatusCode> MessageQueue::putMessage(MessageType type, int code, RawData params, std::shared_ptr<LinkApi> sender) {
+std::future<StatusCode> MessageQueue::putMessage(MessageType type, int code, RawData params, ActorLink sender) {
 	struct message  m(type, code, std::move(params), std::move(sender));
 	auto future = m.promise.get_future();
 	queue.post(std::move(m));

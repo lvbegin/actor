@@ -54,14 +54,14 @@ public:
 	virtual ~MessageQueue();
 
 	void post(int code, ActorLink sender = ActorLink());
-	void post(int code, RawData params, ActorLink sender = ActorLink());
+	void post(int code, const RawData &params, ActorLink sender = ActorLink());
 	const std::string &getName(void) const;
 
 	void post(MessageType type, int code, RawData params = RawData());
 
 	message get(void);
 private:
-	std::future<StatusCode> putMessage(MessageType type, int i, RawData params, std::shared_ptr<LinkApi> sender);
+	std::future<StatusCode> putMessage(MessageType type, int code, RawData params, ActorLink sender);
 	const std::string name;
 	SharedQueue<message> queue;
 };
