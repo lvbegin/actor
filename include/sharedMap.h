@@ -81,7 +81,7 @@ public:
 		std::for_each(map.begin(), map.end(), f);
 	}
 private:
-	std::map<K, T> map;
+	std::map<const K, T> map;
 	mutable std::mutex mutex;
 };
 
