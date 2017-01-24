@@ -62,5 +62,5 @@ void ActorController::restartAll(void) const {
 }
 
 void ActorController::restart(const std::shared_ptr<MessageQueue> &link) {
-	link->post(MessageType::MANAGEMENT_MESSAGE, CommandValue::COMMAND_RESTART);
+	link->post(MessageType::MANAGEMENT_MESSAGE, CommandValue::RESTART);
 }

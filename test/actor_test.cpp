@@ -108,7 +108,7 @@ static int proxyTest(void) {
 	std::thread t(executeSeverProxy, port, &nbMessages);
 	ProxyClient client("client name", openOneConnection(port));
 	client.post(code);
-	client.post(CommandValue::COMMAND_SHUTDOWN);
+	client.post(CommandValue::SHUTDOWN);
 	t.join();
 	return (1 == nbMessages) ? 0 : 1;
 }
@@ -383,8 +383,8 @@ static int initSupervisionTest() {
 	supervisor.registerActor(supervised);
 	supervisor.unregisterActor(supervised);
 
-	supervisor.post(CommandValue::COMMAND_SHUTDOWN);
-	supervised.post(CommandValue::COMMAND_SHUTDOWN);
+	supervisor.post(CommandValue::SHUTDOWN);
+	supervised.post(CommandValue::SHUTDOWN);
 
 	return 0;
 }
@@ -395,9 +395,9 @@ static int unregisterToSupervisorWhenActorDestroyedTest() {
 	auto supervised = std::make_unique<Actor>("supervised", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	supervisor.registerActor(*supervised.get());
 
-	supervised->post(CommandValue::COMMAND_SHUTDOWN);
+	supervised->post(CommandValue::SHUTDOWN);
 	supervised.reset();
-	supervisor.post(CommandValue::COMMAND_SHUTDOWN);
+	supervisor.post(CommandValue::SHUTDOWN);
 
 	return 0;
 }
@@ -422,8 +422,8 @@ static int supervisorRestartsActorTest() {
 	supervised.post(otherCommand, link);
 	if (answer != link->get().code)
 		return 1;
-	supervisor.post(CommandValue::COMMAND_SHUTDOWN);
-	supervised.post(CommandValue::COMMAND_SHUTDOWN);
+	supervisor.post(CommandValue::SHUTDOWN);
+	supervised.post(CommandValue::SHUTDOWN);
 
 	return (exceptionThrown) ? 0 : 1;
 }
@@ -457,9 +457,9 @@ static int actorNotifiesErrorToSupervisorTest() {
 	if (supervisorRestarted || ! (2 == supervised1Restarted) || supervised2Restarted)
 		return 1;
 
-	supervisor.post(CommandValue::COMMAND_SHUTDOWN);
-	supervised1.post(CommandValue::COMMAND_SHUTDOWN);
-	supervised2.post(CommandValue::COMMAND_SHUTDOWN);
+	supervisor.post(CommandValue::SHUTDOWN);
+	supervised1.post(CommandValue::SHUTDOWN);
+	supervised2.post(CommandValue::SHUTDOWN);
 	return 0;
 }
 
@@ -473,7 +473,7 @@ static int actorDoesNothingIfNoSupervisorTest() {
 	supervised.post(someCommand);
 	supervised.post(someCommand);
 
-	supervised.post(CommandValue::COMMAND_SHUTDOWN);
+	supervised.post(CommandValue::SHUTDOWN);
 
 	return 0;
 }
@@ -488,7 +488,7 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 	supervised.post(someCommand);
 	supervised.post(someCommand);
 
-	supervised.post(CommandValue::COMMAND_SHUTDOWN);
+	supervised.post(CommandValue::SHUTDOWN);
 
 	return 0;
 }
@@ -525,9 +525,9 @@ static int restartAllActorBySupervisorTest() {
 	if (supervisorRestarted || !supervised1Restarted || !supervised2Restarted)
 		return 1;
 
-	supervisor.post(CommandValue::COMMAND_SHUTDOWN);
-	supervised1.post(CommandValue::COMMAND_SHUTDOWN);
-	supervised2.post(CommandValue::COMMAND_SHUTDOWN);
+	supervisor.post(CommandValue::SHUTDOWN);
+	supervised1.post(CommandValue::SHUTDOWN);
+	supervised2.post(CommandValue::SHUTDOWN);
 
 	return 0;
 }
@@ -535,7 +535,7 @@ static int restartAllActorBySupervisorTest() {
 static int executorTest() {
 	MessageQueue messageQueue("queue name");
 	Executor executor([](MessageType, int, const RawData &, const ActorLink &) { return StatusCode::shutdown; }, messageQueue);
-	messageQueue.post(MessageType::COMMAND_MESSAGE, CommandValue::COMMAND_SHUTDOWN);
+	messageQueue.post(MessageType::COMMAND_MESSAGE, CommandValue::SHUTDOWN);
 	return 0;
 }
 

@@ -44,8 +44,8 @@ Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atResta
 
 Actor::~Actor() {
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
-	supervisor.notifySupervisor(CommandValue::COMMAND_UNREGISTER_ACTOR);
-	executorQueue->post(CommandValue::COMMAND_SHUTDOWN);
+	supervisor.notifySupervisor(CommandValue::UNREGISTER_ACTOR);
+	executorQueue->post(CommandValue::SHUTDOWN);
 }
 
 void Actor::post(int i, ActorLink sender) const { executorQueue->post(i, RawData(), std::move(sender)); }
@@ -102,9 +102,9 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, cons
 
 StatusCode Actor::executeActorManagement(int code, const RawData &params) {
 	switch (code) {
-		case CommandValue::COMMAND_RESTART:
+		case CommandValue::RESTART:
 			return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
-		case CommandValue::COMMAND_UNREGISTER_ACTOR:
+		case CommandValue::UNREGISTER_ACTOR:
 			supervisor.removeSupervised(UniqueId::unserialize(params));
 			return StatusCode::ok;
 		default:

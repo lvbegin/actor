@@ -36,7 +36,7 @@
 ProxyContainer::ProxyContainer() :
 	executor([this](MessageType, int, const RawData &id, const ActorLink &) { return (this->deleteProxy(UniqueId::unserialize(id)), StatusCode::ok);}, executorQueue) { }
 
-ProxyContainer::~ProxyContainer() { executorQueue.post(CommandValue::COMMAND_SHUTDOWN); }
+ProxyContainer::~ProxyContainer() { executorQueue.post(CommandValue::SHUTDOWN); }
 
 void ProxyContainer::createNewProxy(ActorLink actor, Connection connection, FindActor findActor) {
 	const auto id = UniqueId::newId();
