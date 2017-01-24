@@ -38,23 +38,23 @@ MessageQueue::Message::Message(struct Message &&m) = default;
 MessageQueue::MessageQueue(std::string name) : name(std::move(name)) { }
 MessageQueue::~MessageQueue() = default;
 
-void MessageQueue::post(int code, ActorLink sender) {
+void MessageQueue::post(Command command, ActorLink sender) {
 	static const RawData emptyData;
-	post(code, emptyData, std::move(sender));
+	post(command, emptyData, std::move(sender));
 }
 
-void MessageQueue::post(int code, const RawData &params, ActorLink sender) {
-	putMessage(MessageType::COMMAND_MESSAGE, code, params, std::move(sender));
+void MessageQueue::post(Command command, const RawData &params, ActorLink sender) {
+	putMessage(MessageType::COMMAND_MESSAGE, command, params, std::move(sender));
 }
 
 const std::string &MessageQueue::getName(void) const { return name; }
 
-void MessageQueue::post(MessageType type, int code, RawData params) {
-	putMessage(type, code, std::move(params), ActorLink());
+void MessageQueue::post(MessageType type, Command command, RawData params) {
+	putMessage(type, command, std::move(params), ActorLink());
 }
 
 struct MessageQueue::Message MessageQueue::get(void) { return queue.get(); }
 
-void MessageQueue::putMessage(MessageType type, int code, RawData params, ActorLink sender) {
-	queue.post(Message(type, code, std::move(params), std::move(sender)));
+void MessageQueue::putMessage(MessageType type, Command command, RawData params, ActorLink sender) {
+	queue.post(Message(type, command, std::move(params), std::move(sender)));
 }

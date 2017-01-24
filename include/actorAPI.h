@@ -36,11 +36,12 @@
 
 class LinkApi;
 using ActorLink = std::shared_ptr<LinkApi>;
+using Command = uint32_t;
 
 class LinkApi {
 public:
-	virtual void post(int code, std::shared_ptr<LinkApi> sender = std::shared_ptr<LinkApi>()) = 0;
-	virtual void post(int code, const RawData &data, std::shared_ptr<LinkApi> sender = std::shared_ptr<LinkApi>()) = 0;
+	virtual void post(Command command, std::shared_ptr<LinkApi> sender = std::shared_ptr<LinkApi>()) = 0;
+	virtual void post(Command command, const RawData &data, std::shared_ptr<LinkApi> sender = std::shared_ptr<LinkApi>()) = 0;
 
 	virtual const std::string &getName(void) const = 0;
 protected:

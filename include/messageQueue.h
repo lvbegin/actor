@@ -52,15 +52,15 @@ public:
 	MessageQueue(std::string name = std::string());
 	virtual ~MessageQueue();
 
-	void post(int code, ActorLink sender = ActorLink());
-	void post(int code, const RawData &params, ActorLink sender = ActorLink());
+	void post(Command command, ActorLink sender = ActorLink());
+	void post(Command command, const RawData &params, ActorLink sender = ActorLink());
 	const std::string &getName(void) const;
 
-	void post(MessageType type, int code, RawData params = RawData());
+	void post(MessageType type, Command command, RawData params = RawData());
 
 	Message get(void);
 private:
-	void putMessage(MessageType type, int code, RawData params, ActorLink sender);
+	void putMessage(MessageType type, Command command, RawData params, ActorLink sender);
 	const std::string name;
 	SharedQueue<Message> queue;
 };

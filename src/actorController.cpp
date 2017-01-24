@@ -29,7 +29,7 @@
 
 #include <actorController.h>
 #include <exception.h>
-#include <command.h>
+#include <commandValue.h>
 
 #include <algorithm>
 
@@ -62,5 +62,5 @@ void ActorController::restartAll(void) const {
 }
 
 void ActorController::restart(const std::shared_ptr<MessageQueue> &link) {
-	link->post(MessageType::MANAGEMENT_MESSAGE, Command::COMMAND_RESTART);
+	link->post(MessageType::MANAGEMENT_MESSAGE, CommandValue::COMMAND_RESTART);
 }

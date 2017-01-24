@@ -27,12 +27,12 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef COMMAND_H__
-#define COMMAND_H__
+#ifndef COMMAND_VALUE_H__
+#define COMMAND_VALUE_H__
 
-class Command {
+class CommandValue {
 public:
-	Command() = delete;
+	CommandValue() = delete;
 	static const uint32_t COMMAND_SHUTDOWN = 0;
 	static const uint32_t COMMAND_RESTART = 1;
 	static const uint32_t COMMAND_UNREGISTER_ACTOR = 2;

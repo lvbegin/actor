@@ -30,7 +30,7 @@
 #include <proxyServer.h>
 #include <serverSocket.h>
 #include <proxyContainer.h>
-#include <command.h>
+#include <commandValue.h>
 
 #include <arpa/inet.h>
 
@@ -56,7 +56,7 @@ void proxyServer::startThread(ActorLink actor, Connection connection, std::funct
 		const auto sender = (name.size() > 0) ? findActor(name) : ActorLink();
 		const auto command = connection.readInt<uint32_t>();
 		actor->post(command, connection.readRawData(), sender);
-		if (Command::COMMAND_SHUTDOWN == command) {
+		if (CommandValue::COMMAND_SHUTDOWN == command) {
 			notifyTerminate();
 			return;
 		}

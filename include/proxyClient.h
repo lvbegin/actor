@@ -40,8 +40,8 @@ public:
 	ProxyClient(std::string name, Connection connection);
 	~ProxyClient();
 
-	void post(int command, ActorLink sender = ActorLink());
-	void post(int command, const RawData &params, ActorLink sender = ActorLink());
+	void post(Command command, ActorLink sender = ActorLink());
+	void post(Command command, const RawData &params, ActorLink sender = ActorLink());
 	const std::string &getName(void) const;
 private:
 	const std::string name;

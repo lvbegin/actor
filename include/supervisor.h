@@ -32,7 +32,7 @@
 
 #include <actorController.h>
 #include <messageQueue.h>
-#include <command.h>
+#include <commandValue.h>
 #include <uniqueId.h>
 #include <restartStragegy.h>
 
