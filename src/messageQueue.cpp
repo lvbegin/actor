@@ -29,11 +29,11 @@
 
 #include <messageQueue.h>
 
-MessageQueue::message::message(MessageType type, int code, RawData params, ActorLink sender) :
+MessageQueue::Message::Message(MessageType type, int code, RawData params, ActorLink sender) :
 				type(type), code(code), params(std::move(params)), sender(std::move(sender)) { }
 
-MessageQueue::message::~message() = default;
-MessageQueue::message::message(struct message &&m) = default;
+MessageQueue::Message::~Message() = default;
+MessageQueue::Message::Message(struct Message &&m) = default;
 
 MessageQueue::MessageQueue(std::string name) : name(std::move(name)) { }
 MessageQueue::~MessageQueue() = default;
@@ -53,8 +53,8 @@ void MessageQueue::post(MessageType type, int code, RawData params) {
 	putMessage(type, code, std::move(params), ActorLink());
 }
 
-struct MessageQueue::message MessageQueue::get(void) { return queue.get(); }
+struct MessageQueue::Message MessageQueue::get(void) { return queue.get(); }
 
 void MessageQueue::putMessage(MessageType type, int code, RawData params, ActorLink sender) {
-	queue.post(message(type, code, std::move(params), std::move(sender)));
+	queue.post(Message(type, code, std::move(params), std::move(sender)));
 }

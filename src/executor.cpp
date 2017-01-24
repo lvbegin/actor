@@ -41,7 +41,7 @@ Executor::~Executor() {
 void Executor::executeBody(ExecutorBody body) {
 
 	while (true) {
-		struct MessageQueue::message message(messageQueue.get());
+		struct MessageQueue::Message message(messageQueue.get());
 		const StatusCode status = (MessageType::COMMAND_MESSAGE == message.type && Command::COMMAND_SHUTDOWN == message.code) ?
 				StatusCode::shutdown : body(message.type, message.code, message.params, message.sender);
 

@@ -38,16 +38,16 @@
 
 class MessageQueue : public LinkApi {
 public:
-	struct message {
+	struct Message {
 		const MessageType type;
 		const int code;
 		RawData params;
 		std::shared_ptr<LinkApi> sender;
-		message(MessageType type, int code, RawData params, ActorLink sender);
-		~message();
-		message(struct message &&m);
-		message (const struct message &m) = delete;
-		struct message &operator=(const struct message &m) = delete;
+		Message(MessageType type, int code, RawData params, ActorLink sender);
+		~Message();
+		Message(struct Message &&m);
+		Message (const struct Message &m) = delete;
+		struct Message &operator=(const struct Message &m) = delete;
 	};
 	MessageQueue(std::string name = std::string());
 	virtual ~MessageQueue();
@@ -58,11 +58,11 @@ public:
 
 	void post(MessageType type, int code, RawData params = RawData());
 
-	message get(void);
+	Message get(void);
 private:
 	void putMessage(MessageType type, int code, RawData params, ActorLink sender);
 	const std::string name;
-	SharedQueue<message> queue;
+	SharedQueue<Message> queue;
 };
 
 #endif
