@@ -44,7 +44,7 @@ public:
 	void deleteProxy(Id id);
 private:
 	static const uint32_t USELESS_CODE = 0;
-	SharedMap<uint32_t, proxyServer> proxies;
+	SharedMap<Id, proxyServer> proxies;
 	MessageQueue executorQueue;
 	Executor executor;
 };
