@@ -56,9 +56,6 @@ void MessageQueue::post(MessageType type, int code, RawData params) {
 
 struct MessageQueue::message MessageQueue::get(void) { return queue.get(); }
 
-std::future<StatusCode> MessageQueue::putMessage(MessageType type, int code, RawData params, ActorLink sender) {
-	struct message  m(type, code, std::move(params), std::move(sender));
-	auto future = m.promise.get_future();
-	queue.post(std::move(m));
-	return future;
+void MessageQueue::putMessage(MessageType type, int code, RawData params, ActorLink sender) {
+	queue.post(message(type, code, std::move(params), std::move(sender)));
 }

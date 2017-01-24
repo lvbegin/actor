@@ -39,12 +39,11 @@
 class MessageQueue : public LinkApi {
 public:
 	struct message {
-		MessageType type;
-		int code;
+		const MessageType type;
+		const int code;
 		RawData params;
-		std::promise<StatusCode> promise;
 		std::shared_ptr<LinkApi> sender;
-		message(MessageType type, int c, RawData params, std::shared_ptr<LinkApi> sender);
+		message(MessageType type, int code, RawData params, std::shared_ptr<LinkApi> sender);
 		~message();
 		message(struct message &&m);
 		message (const struct message &m) = delete;
@@ -61,7 +60,7 @@ public:
 
 	message get(void);
 private:
-	std::future<StatusCode> putMessage(MessageType type, int code, RawData params, ActorLink sender);
+	void putMessage(MessageType type, int code, RawData params, ActorLink sender);
 	const std::string name;
 	SharedQueue<message> queue;
 };

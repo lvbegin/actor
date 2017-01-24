@@ -47,13 +47,10 @@ void Executor::executeBody(ExecutorBody body) {
 
 		switch (status) {
 			case StatusCode::ok:
-				message.promise.set_value(StatusCode::ok);
 				break;
 			case StatusCode::shutdown:
-				message.promise.set_value(StatusCode::ok);
 				return;
 			case StatusCode::error:
-				message.promise.set_value(StatusCode::error);
 				break;
 			default:
 				THROW(std::runtime_error, "Unknown status code.");
