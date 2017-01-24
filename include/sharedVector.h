@@ -75,7 +75,7 @@ private:
 	VectorIterator<T> internalFind_if(FindTest<T> findTest) const {
 		const auto it = std::find_if(vector.begin(), vector.end(), findTest);
 		if (vector.end() == it)
-			THROW(std::out_of_range, "Actor not found locally");
+			THROW(std::out_of_range, "element not found in shared vector.");
 		return it;
 	}
 };
