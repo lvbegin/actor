@@ -55,7 +55,7 @@ void proxyServer::startThread(ActorLink actor, Connection connection, std::funct
 		const auto name = connection.readString();
 		const auto sender = (name.size() > 0) ? findActor(name) : ActorLink();
 		const auto command = connection.readInt<uint32_t>();
-		actor->post(command, connection.readRawData(), sender);
+		actor->post(command, connection.readRawData(), std::move(sender));
 		if (CommandValue::SHUTDOWN == command) {
 			notifyTerminate();
 			return;

@@ -40,14 +40,13 @@ using Command = uint32_t;
 
 class LinkApi {
 public:
-	virtual void post(Command command, std::shared_ptr<LinkApi> sender = std::shared_ptr<LinkApi>()) = 0;
-	virtual void post(Command command, const RawData &data, std::shared_ptr<LinkApi> sender = std::shared_ptr<LinkApi>()) = 0;
+	virtual void post(Command command, ActorLink sender = ActorLink()) = 0;
+	virtual void post(Command command, const RawData &data, ActorLink sender = ActorLink()) = 0;
 
 	virtual const std::string &getName(void) const = 0;
 protected:
 	LinkApi() = default;
 	virtual ~LinkApi() = default;
 };
-
 
 #endif
