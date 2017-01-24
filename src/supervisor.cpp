@@ -52,7 +52,7 @@ void Supervisor::removeSupervised(Id id) {
 	supervisedRefs.remove(id);
 }
 
-void Supervisor::doSupervisorOperation(int code, const RawData &params) {
+void Supervisor::doSupervisorOperation(int code, const RawData &params) const {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
 	switch (restartStrategy())
