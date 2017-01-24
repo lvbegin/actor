@@ -50,7 +50,7 @@ public:
 		message (const struct message &m) = delete;
 		struct message &operator=(const struct message &m) = delete;
 	};
-	MessageQueue(std::string name);
+	MessageQueue(std::string name = std::string());
 	virtual ~MessageQueue();
 
 	void post(int code, ActorLink sender = ActorLink());
