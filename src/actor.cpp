@@ -63,7 +63,7 @@ StatusCode Actor::doRestart(void) {
 	auto status = std::promise<StatusCode>();
 	auto e = std::promise<std::unique_ptr<Executor> &>();
 	std::unique_ptr<Executor> newExecutor = std::make_unique<Executor>(
-			[this](MessageType type, int command, const RawData &params, const std::shared_ptr<LinkApi> &sender) {
+			[this](MessageType type, int command, const RawData &params, const ActorLink &sender) {
 				return this->actorExecutor(this->body, type, command, params, sender);
 			}, *executorQueue,
 			[this, &status, & e]() mutable {
