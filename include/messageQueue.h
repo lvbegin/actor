@@ -40,7 +40,7 @@ class MessageQueue : public LinkApi {
 public:
 	struct Message {
 		const MessageType type;
-		const int code;
+		const Command code;
 		RawData params;
 		std::shared_ptr<LinkApi> sender;
 		Message(MessageType type, int code, RawData params, ActorLink sender);

@@ -39,7 +39,7 @@ Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy) 
 
 Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
 						executorQueue(new MessageQueue(std::move(name))), supervisor(std::move(restartStrategy), executorQueue), atRestart(atRestart), body(body),
-						executor(new Executor([this](MessageType type, int command, const RawData &params, const std::shared_ptr<LinkApi> &sender)
+						executor(new Executor([this](MessageType type, Command command, const RawData &params, const std::shared_ptr<LinkApi> &sender)
 								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue)) { }
 
 Actor::~Actor() {
@@ -48,9 +48,12 @@ Actor::~Actor() {
 	executorQueue->post(CommandValue::SHUTDOWN);
 }
 
-void Actor::post(int i, ActorLink sender) const { executorQueue->post(i, RawData(), std::move(sender)); }
+void Actor::post(Command command, ActorLink sender) const {
+	static const RawData emptyData;
+	executorQueue->post(command, emptyData, std::move(sender));
+}
 
-void Actor::post(int i, RawData params, ActorLink sender) const { executorQueue->post(i, params, std::move(sender)); }
+void Actor::post(Command command, const RawData &params, ActorLink sender) const { executorQueue->post(command, params, std::move(sender)); }
 
 StatusCode Actor::restartSateMachine(void) {
 	stateMachine.moveTo(ActorStateMachine::ActorState::RESTARTING);
@@ -63,7 +66,7 @@ StatusCode Actor::doRestart(void) {
 	auto status = std::promise<StatusCode>();
 	auto e = std::promise<std::unique_ptr<Executor> &>();
 	std::unique_ptr<Executor> newExecutor = std::make_unique<Executor>(
-			[this](MessageType type, int command, const RawData &params, const ActorLink &sender) {
+			[this](MessageType type, Command command, const RawData &params, const ActorLink &sender) {
 				return this->actorExecutor(this->body, type, command, params, sender);
 			}, *executorQueue,
 			[this, &status, & e]() mutable {
@@ -84,37 +87,37 @@ void Actor::unregisterActor(Actor &monitored) { supervisor.unregisterMonitored(m
 
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
-StatusCode Actor::actorExecutor(ActorBody body, MessageType type, int code, const RawData &params, const ActorLink &sender) {
+StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command command, const RawData &params, const ActorLink &sender) {
 	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED)) //FIX: race condition when the actor is stopped just after.
 		return StatusCode::ok;
 
 	switch (type) {
 		case MessageType::ERROR_MESSAGE:
-			return (supervisor.doSupervisorOperation(code, params), StatusCode::ok);
+			return (supervisor.doSupervisorOperation(command, params), StatusCode::ok);
 		case MessageType::MANAGEMENT_MESSAGE:
-			return executeActorManagement(code, params);
+			return executeActorManagement(command, params);
 		case MessageType::COMMAND_MESSAGE:
-			return executeActorBody(body, code, params, sender);
+			return executeActorBody(body, command, params, sender);
 		default:
 			THROW(std::runtime_error, "unsupported message type.");
 	}
 }
 
-StatusCode Actor::executeActorManagement(int code, const RawData &params) {
-	switch (code) {
+StatusCode Actor::executeActorManagement(Command command, const RawData &params) {
+	switch (command) {
 		case CommandValue::RESTART:
 			return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
 		case CommandValue::UNREGISTER_ACTOR:
 			supervisor.removeSupervised(UniqueId::unserialize(params));
 			return StatusCode::ok;
 		default:
-			THROW(std::runtime_error, "unsupported management message code.");
+			THROW(std::runtime_error, "unsupported management message command.");
 	}
 }
 
-StatusCode Actor::executeActorBody(ActorBody body, int code, const RawData &params, const ActorLink &sender) {
+StatusCode Actor::executeActorBody(ActorBody body, Command command, const RawData &params, const ActorLink &sender) {
 	try {
-		return body(code, params, sender);
+		return body(command, params, sender);
 	} catch (ActorException &e) {
 		supervisor.sendErrorToSupervisor(e.getErrorCode());
 		return StatusCode::error;
