@@ -36,10 +36,10 @@ Executor::Executor(ExecutorBody body, MessageQueue &queue, std::function<void(vo
 
 Executor::~Executor() { thread.join(); };
 
-void Executor::executeBody(ExecutorBody body) {
+void Executor::executeBody(ExecutorBody body) const {
 
 	while (true) {
-		struct MessageQueue::Message message(messageQueue.get());
+		const struct MessageQueue::Message message(messageQueue.get());
 		const StatusCode status = (MessageType::COMMAND_MESSAGE == message.type && CommandValue::SHUTDOWN == message.code) ?
 				StatusCode::shutdown : body(message.type, message.code, message.params, message.sender);
 
