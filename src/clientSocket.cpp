@@ -40,8 +40,7 @@
 
 
 Connection ClientSocket::openHostConnection(const std::string &host, uint16_t port) {
-	struct NetAddr addr = toNetAddr(host, port);
-	return openHostConnection(addr);
+	return openHostConnection(toNetAddr(host, port));
 }
 
 Connection ClientSocket::openHostConnection(const struct NetAddr &sin) {
