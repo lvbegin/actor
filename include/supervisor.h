@@ -41,10 +41,10 @@ public:
 	Supervisor(RestartStrategy strategy, std::shared_ptr<MessageQueue> self);
 	~Supervisor();
 
-	void notifySupervisor(uint32_t code) const;
-	void sendErrorToSupervisor(uint32_t code) const;
+	void notifySupervisor(Command command) const;
+	void sendErrorToSupervisor(Command command) const;
 	void removeSupervised(Id id);
-	void doSupervisorOperation(int code, const RawData &params) const;
+	void doSupervisorOperation(Command command, const RawData &params) const;
 
 	void registerMonitored(Supervisor &monitored);
 	void unregisterMonitored(Supervisor &monitored);
