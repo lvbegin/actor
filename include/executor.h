@@ -41,7 +41,7 @@ using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawDat
 
 class Executor {
 public:
-	Executor(ExecutorBody body, MessageQueue &queue, std::function<void(void)> atStart = ([](void) {}));
+	Executor(ExecutorBody body, MessageQueue &queue, std::function<void(void)> atStart = ([](void) { }));
 	~Executor();
 
 	Executor() = delete;
