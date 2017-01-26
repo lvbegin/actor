@@ -82,7 +82,7 @@ int ServerSocket::listenOnSocket(uint16_t port) {
 	const int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == sockfd)
 		THROW(std::runtime_error, "cannot create socket.");
-	int enable = 1;
+	static const int enable = 1;
 	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
 		THROW(std::runtime_error, "setsockopt(SO_REUSEADDR) failed.");
 	serv_addr.sin_family = AF_INET;
