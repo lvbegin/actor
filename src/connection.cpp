@@ -33,21 +33,25 @@
 
 #include <stdexcept>
 
-Connection::Connection() : fd(-1) {}
+Connection::Connection() : fd(-1) { }
 
 Connection::Connection(int fd) : fd(fd) {
 	FD_ZERO(&set);
 	FD_SET(fd, &set);
 }
 
-Connection::~Connection() {
+Connection::~Connection() { closeConnection(); }
+
+void Connection::closeConnection(void) {
 	if (-1 != fd)
 		close(fd);
 }
 
+
 Connection::Connection(Connection &&connection) : fd(-1) { *this = std::move(connection); }
 
 Connection &Connection::operator=(Connection &&connection) {
+	closeConnection();
 	std::swap(fd, connection.fd);
 	std::swap(set, connection.set);
 	return *this;

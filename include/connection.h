@@ -50,11 +50,13 @@ class Connection {
 public:
 	Connection();
 	Connection(int fd);
+
 	~Connection();
 	Connection(const Connection &connection) = delete;
 	Connection &operator=(const Connection &connection) = delete;
 	Connection(Connection &&connection);
 	Connection &operator=(Connection &&connection);
+
 	template<typename T>
 	const Connection &writeInt(T hostValue) const {
 		const uint32_t sentValue = htonl(static_cast<uint32_t>(hostValue));
@@ -71,10 +73,11 @@ public:
 	std::string readString(void) const;
 	const Connection &writeRawData(const RawData &data) const;
 	RawData readRawData(void) const;
+private:
 	const Connection &writeBytes(const void *buffer, size_t count) const;
 	void readBytes(void *buffer, size_t count, int timeout = 5) const;
-private:
 	void readBytesNonBlocking(void *buffer, size_t count) const;
+	void closeConnection(void);
 
 	int fd;
 	fd_set set;
