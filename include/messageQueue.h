@@ -60,9 +60,10 @@ public:
 
 	Message get(void);
 private:
-	void putMessage(MessageType type, Command command, RawData params, ActorLink sender);
 	const std::string name;
 	SharedQueue<Message> queue;
+
+	void putMessage(MessageType type, Command command, RawData params, ActorLink sender);
 };
 
 #endif

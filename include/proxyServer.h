@@ -50,6 +50,7 @@ public:
 	proxyServer(proxyServer &&p) = delete;
 private:
 	std::thread t;
+
 	static void startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor);
 };
 

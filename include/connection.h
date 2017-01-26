@@ -74,13 +74,13 @@ public:
 	const Connection &writeRawData(const RawData &data) const;
 	RawData readRawData(void) const;
 private:
+	int fd;
+	fd_set set;
+
 	const Connection &writeBytes(const void *buffer, size_t count) const;
 	void readBytes(void *buffer, size_t count, int timeout = 5) const;
 	void readBytesNonBlocking(void *buffer, size_t count) const;
 	void closeConnection(void);
-
-	int fd;
-	fd_set set;
 };
 
 #endif

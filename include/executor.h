@@ -50,11 +50,11 @@ public:
 	Executor(Executor &&a) = delete;
 	Executor &operator=(Executor &&a) = delete;
 private:
-	void executeBody(ExecutorBody body) const;
 	bool started;
 	MessageQueue &messageQueue;
 	std::thread thread;
 
+	void executeBody(ExecutorBody body) const;
 };
 
 

@@ -48,6 +48,7 @@ public:
 private:
 	mutable std::mutex mutex;
 	std::map<const Id, const std::shared_ptr<MessageQueue>> actors;
+
 	static void restart(const std::shared_ptr<MessageQueue> &link);
 };
 

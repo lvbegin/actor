@@ -37,6 +37,7 @@ struct NetAddr{
 	  size_t ai_addrlen;
 	  NetAddr(struct sockaddr ai_addr, size_t ai_addrlen) : ai_addr(ai_addr), ai_addrlen(ai_addrlen) { }
 	  NetAddr() = default;
+	  ~NetAddr() = default;
 };
 
 #endif

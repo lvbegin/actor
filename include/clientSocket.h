@@ -39,7 +39,6 @@
 class ClientSocket {
 public:
 	ClientSocket() = delete;
-	~ClientSocket() = delete;
 
 	static Connection openHostConnection(const std::string &host, uint16_t port);
 	static Connection openHostConnection(const struct NetAddr &sin);

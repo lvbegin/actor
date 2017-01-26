@@ -46,9 +46,9 @@ Id UniqueId::unserialize(const RawData &value) {
 
 	if (sizeof(rc) != value.size())
 		THROW(std::runtime_error, "serialized unteger does not have correct size.");
-	void *ptr = &rc;
-	auto first = static_cast<const uint8_t *>(ptr);
-	std::for_each(static_cast<uint8_t *>(ptr), static_cast<uint8_t *>(ptr) + 4, [first, &value](uint8_t &p) { p = value[&p - first]; });
+	void * const ptr = &rc;
+	const auto first = static_cast<uint8_t *>(ptr);
+	std::for_each(first, first + 4, [first, &value](uint8_t &p) { p = value[&p - first]; });
 	return rc;
 }
 

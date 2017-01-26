@@ -39,6 +39,7 @@
 class ServerSocket {
 public:
 	ServerSocket(uint16_t port);
+	~ServerSocket();
 
 	ServerSocket(const ServerSocket &s) = delete;
 	ServerSocket &operator=(const ServerSocket &s) = delete;
@@ -46,15 +47,14 @@ public:
 	ServerSocket(ServerSocket&& s);
 	ServerSocket &operator=(ServerSocket&& s);
 
-	~ServerSocket();
-
 	Connection acceptOneConnection(int timeout = 2, struct NetAddr *client_addr = NULL) const;
 	static Connection getConnection(int port);
 private:
-	static int listenOnSocket(uint16_t port);
-	void closeSocket(void);
 	int acceptFd;
 	fd_set set;
+
+	static int listenOnSocket(uint16_t port);
+	void closeSocket(void);
 };
 
 #endif
