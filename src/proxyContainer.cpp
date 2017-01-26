@@ -41,7 +41,7 @@ ProxyContainer::~ProxyContainer() { executorQueue.post(CommandValue::SHUTDOWN); 
 void ProxyContainer::createNewProxy(ActorLink actor, Connection connection, FindActor findActor) {
 	const auto id = UniqueId::newId();
 	const auto terminate = [this, id]() { this->executorQueue.post(MessageType::MANAGEMENT_MESSAGE, USELESS_CODE, UniqueId::serialize(id)); };
-	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id), std::forward_as_tuple(actor, std::move(connection), terminate, std::move(findActor)));
+	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id), std::forward_as_tuple(std::move(actor), std::move(connection), terminate, std::move(findActor)));
 }
 
 void ProxyContainer::deleteProxy(Id id) { proxies.erase(id); }
