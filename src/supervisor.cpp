@@ -30,7 +30,7 @@
 #include <supervisor.h>
 #include <uniqueId.h>
 
-Supervisor::Supervisor(RestartStrategy strategy, std::shared_ptr<MessageQueue> self) : id(UniqueId::newId()),
+Supervisor::Supervisor(RestartStrategy strategy, std::shared_ptr<MessageQueue> self) : /*id(UniqueId::newId()),*/
 						restartStrategy(std::move(strategy)), self(std::move(self)) { }
 Supervisor::~Supervisor() = default;
 
@@ -43,13 +43,13 @@ void Supervisor::sendToSupervisor(MessageType type, Command command) const {
 
 	const auto ref = supervisorRef.lock();
 	if (nullptr != ref.get())
-		ref->post(type, command, UniqueId::serialize(id));
+		ref->post(type, command, RawData(self->getName().begin(), self->getName().end()));
 }
 
-void Supervisor::removeSupervised(Id id) {
+void Supervisor::removeSupervised(const std::string &name) {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
-	supervisedRefs.remove(id);
+	supervisedRefs.remove(name);
 }
 
 void Supervisor::doSupervisorOperation(Command command, const RawData &params) const {
@@ -58,7 +58,7 @@ void Supervisor::doSupervisorOperation(Command command, const RawData &params) c
 	switch (restartStrategy())
 	{
 		case RestartType::RESTART_ONE:
-			supervisedRefs.restartOne(UniqueId::unserialize(params));
+			supervisedRefs.restartOne(std::string(params.begin(), params.end()));
 			break;
 		case RestartType::RESTART_ALL:
 			supervisedRefs.restartAll();
@@ -70,11 +70,13 @@ void Supervisor::doSupervisorOperation(Command command, const RawData &params) c
 }
 
 void Supervisor::registerMonitored(Supervisor &monitored) {
-	doRegistrationOperation(monitored, [this, &monitored](void) { this->supervisedRefs.add(monitored.id, monitored.self); } );
+	doRegistrationOperation(monitored, [this, &monitored](void) { this->supervisedRefs.add(monitored.self); } );
 }
 
 void Supervisor::unregisterMonitored(Supervisor &monitored) {
-	doRegistrationOperation(monitored, [this, &monitored](void) { this->supervisedRefs.remove(monitored.id); } );
+	doRegistrationOperation(monitored, [this, &monitored](void) {
+		this->supervisedRefs.remove(monitored.self->getName());
+	} );
 }
 
 void Supervisor::doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const {

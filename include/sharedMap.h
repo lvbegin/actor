@@ -67,22 +67,14 @@ public:
 			THROW(std::runtime_error, "element to erase does not exist. WTF");
 		map.erase(it);
 	}
-	T find (const K &key) const {
-		std::unique_lock<std::mutex> l(mutex);
-
-		const auto it = map.find(key);
-		if (map.end() == it)
-			THROW(std::out_of_range, "element not found.");
-		return it->second;
-	}
 	void for_each(std::function<void(const std::pair<const K, const T> &)> f) const {
 		std::unique_lock<std::mutex> l(mutex);
 
 		std::for_each(map.begin(), map.end(), f);
 	}
 private:
-	std::map<const K, const T> map;
 	mutable std::mutex mutex;
+	std::map<const K, const T> map;
 };
 
 #endif

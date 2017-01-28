@@ -31,23 +31,19 @@
 #define ACTOR_CONTROLLER_H__
 
 #include <messageQueue.h>
-
-#include <mutex>
-#include <map>
-
+#include <sharedVector.h>
 
 class ActorController {
 public:
 	ActorController();
 	~ActorController();
 
-	void add(Id id, std::shared_ptr<MessageQueue> actorLink);
-	void remove(Id id);
-	void restartOne(Id id) const;
+	void add(std::shared_ptr<MessageQueue> actorLink);
+	void remove(const std::string &name);
+	void restartOne(const std::string &name) const;
 	void restartAll(void) const;
 private:
-	mutable std::mutex mutex;
-	std::map<const Id, const std::shared_ptr<MessageQueue>> actors;
+	SharedVector<std::shared_ptr<MessageQueue>> actors;
 
 	static void restart(const std::shared_ptr<MessageQueue> &link);
 };

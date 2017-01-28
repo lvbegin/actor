@@ -43,7 +43,7 @@ public:
 
 	void notifySupervisor(Command command) const;
 	void sendErrorToSupervisor(Command command) const;
-	void removeSupervised(Id id);
+	void removeSupervised(const std::string &name);
 	void doSupervisorOperation(Command command, const RawData &params) const;
 
 	void registerMonitored(Supervisor &monitored);
@@ -51,7 +51,7 @@ public:
 
 private:
 	mutable std::mutex monitorMutex;
-	const Id id;
+//	const Id id;
 	const RestartStrategy restartStrategy;
 	const std::shared_ptr<MessageQueue> self;
 	ActorController supervisedRefs;

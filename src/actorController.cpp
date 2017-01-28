@@ -36,30 +36,18 @@
 ActorController::ActorController() = default;
 ActorController::~ActorController() = default;
 
-void ActorController::add(Id id, std::shared_ptr<MessageQueue> actorLink) {
-	std::unique_lock<std::mutex> l(mutex);
+void ActorController::add(std::shared_ptr<MessageQueue> actorLink) { actors.push_back(std::move(actorLink)); }
 
-	actors.insert(std::pair<Id, std::shared_ptr<MessageQueue>>(id, std::move(actorLink)));
-}
-void ActorController::remove(Id id) {
-	std::unique_lock<std::mutex> l(mutex);
+void ActorController::remove(const std::string &name) { actors.erase([&name](const auto &e){ return (0 == name.compare(e->getName())); }); }
 
-	actors.erase(id);
-}
-void ActorController::restartOne(Id id) const {
-	std::unique_lock<std::mutex> l(mutex);
-
-	auto it = actors.find(id);
-	if (actors.end() != it)
-		restart(it->second);
+void ActorController::restartOne(const std::string &name) const {
+	try {
+		auto actor = actors.find_if([&name](const auto &e){ return (0 == name.compare(e->getName())); });
+		restart(actor);
+	} catch (std::out_of_range &) { }
 }
 
-void ActorController::restartAll(void) const {
-	std::unique_lock<std::mutex> l(mutex);
-
-	std::for_each(actors.begin(), actors.end(),
-			[](const std::pair<const Id, const std::shared_ptr<MessageQueue>> &e) { restart(e.second);} );
-}
+void ActorController::restartAll(void) const { actors.for_each([](const auto &e) { restart(e);} ); }
 
 void ActorController::restart(const std::shared_ptr<MessageQueue> &link) {
 	link->post(MessageType::MANAGEMENT_MESSAGE, CommandValue::RESTART);

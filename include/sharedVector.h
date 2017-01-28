@@ -30,6 +30,8 @@
 #ifndef SHARED_VECTOR_H__
 #define SHARED_VECTOR_H__
 
+#include <exception.h>
+
 #include <vector>
 #include <mutex>
 #include <algorithm>
@@ -67,6 +69,12 @@ public:
 		std::unique_lock<std::mutex> l(mutex);
 
 		return *internalFind_if(findTest);
+	}
+
+	void for_each(std::function<void(const T&)> f) const {
+		std::unique_lock<std::mutex> l(mutex);
+
+		std::for_each(vector.begin(), vector.end(), f);
 	}
 private:
 	mutable std::mutex mutex;
