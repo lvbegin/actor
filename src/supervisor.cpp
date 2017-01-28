@@ -30,8 +30,8 @@
 #include <supervisor.h>
 #include <uniqueId.h>
 
-Supervisor::Supervisor(RestartStrategy strategy, std::shared_ptr<MessageQueue> self) : /*id(UniqueId::newId()),*/
-						restartStrategy(std::move(strategy)), self(std::move(self)) { }
+Supervisor::Supervisor(RestartStrategy strategy, std::shared_ptr<MessageQueue> self) :
+					restartStrategy(std::move(strategy)), self(std::move(self)) { }
 Supervisor::~Supervisor() = default;
 
 void Supervisor::notifySupervisor(Command command) const{ sendToSupervisor(MessageType::COMMAND_MESSAGE, command); }
