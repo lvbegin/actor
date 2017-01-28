@@ -62,7 +62,7 @@ public:
 	static void notifyError(int e);
 private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
-	std::shared_ptr<MessageQueue> executorQueue;
+	const std::shared_ptr<MessageQueue> executorQueue;
 	Supervisor supervisor;
 	const std::function<void(void)> atRestart;
 	const ActorBody body;
