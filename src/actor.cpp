@@ -39,7 +39,7 @@ Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy) 
 
 Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
 						executorQueue(new MessageQueue(std::move(name))), supervisor(std::move(restartStrategy), executorQueue), atRestart(atRestart), body(body),
-						executor(new Executor([this](MessageType type, Command command, const RawData &params, const std::shared_ptr<LinkApi> &sender)
+						executor(new Executor([this](auto type, auto command, auto &params, auto &sender)
 								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue)) { }
 
 Actor::~Actor() {
@@ -66,7 +66,7 @@ StatusCode Actor::doRestart(void) {
 	auto status = std::promise<StatusCode>();
 	auto e = std::promise<std::unique_ptr<Executor> &>();
 	std::unique_ptr<Executor> newExecutor = std::make_unique<Executor>(
-			[this](MessageType type, Command command, const RawData &params, const ActorLink &sender) {
+			[this](auto type, auto command, auto &params, auto &sender) {
 				return this->actorExecutor(this->body, type, command, params, sender);
 			}, *executorQueue,
 			[this, &status, & e]() mutable {
