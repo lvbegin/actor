@@ -46,7 +46,7 @@ private:
 	static const uint32_t USELESS_CODE = 0;
 	SharedMap<Id, proxyServer> proxies;
 	MessageQueue executorQueue;
-	Executor executor;
+	const Executor executor;
 };
 
 #endif
