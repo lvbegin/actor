@@ -38,16 +38,16 @@ ActorController::~ActorController() = default;
 
 void ActorController::add(std::shared_ptr<MessageQueue> actorLink) { actors.push_back(std::move(actorLink)); }
 
-void ActorController::remove(const std::string &name) { actors.erase([&name](const auto &e){ return (0 == name.compare(e->getName())); }); }
+void ActorController::remove(const std::string &name) { actors.erase([&name](auto &e){ return (0 == name.compare(e->getName())); }); }
 
 void ActorController::restartOne(const std::string &name) const {
 	try {
-		auto actor = actors.find_if([&name](const auto &e){ return (0 == name.compare(e->getName())); });
+		auto actor = actors.find_if([&name](auto &e){ return (0 == name.compare(e->getName())); });
 		restart(actor);
 	} catch (std::out_of_range &) { }
 }
 
-void ActorController::restartAll(void) const { actors.for_each([](const auto &e) { restart(e);} ); }
+void ActorController::restartAll(void) const { actors.for_each([](auto &e) { restart(e);} ); }
 
 void ActorController::restart(const std::shared_ptr<MessageQueue> &link) {
 	link->post(MessageType::MANAGEMENT_MESSAGE, CommandValue::RESTART);
