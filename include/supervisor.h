@@ -51,7 +51,6 @@ public:
 
 private:
 	mutable std::mutex monitorMutex;
-//	const Id id;
 	const RestartStrategy restartStrategy;
 	const std::shared_ptr<MessageQueue> self;
 	ActorController supervisedRefs;
