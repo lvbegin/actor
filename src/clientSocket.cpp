@@ -44,7 +44,7 @@ Connection ClientSocket::openHostConnection(const std::string &host, uint16_t po
 }
 
 Connection ClientSocket::openHostConnection(const struct NetAddr &sin) {
-	const int fd = socket(AF_INET, SOCK_STREAM, 0);
+	const auto fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == fd)
 		THROW(std::runtime_error, "socket creation failed.");
 	if (-1 == connect(fd, &sin.ai_addr, sin.ai_addrlen))

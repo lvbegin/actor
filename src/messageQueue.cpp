@@ -39,8 +39,8 @@ MessageQueue::MessageQueue(std::string name) : name(std::move(name)) { }
 MessageQueue::~MessageQueue() = default;
 
 void MessageQueue::post(Command command, ActorLink sender) {
-	static const RawData emptyData;
-	post(command, emptyData, std::move(sender));
+	static const RawData EMPTY_DATA;
+	post(command, EMPTY_DATA, std::move(sender));
 }
 
 void MessageQueue::post(Command command, const RawData &params, ActorLink sender) {

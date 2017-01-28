@@ -79,7 +79,7 @@ std::string ActorRegistry::addReference(const std::string &host, uint16_t port) 
 	const auto connection = ClientSocket::openHostConnection(host, port);
 	connection.writeInt(RegistryCommand::REGISTER_REGISTRY).writeInt<uint32_t>(this->port).writeString(name);
 	//should read status...and react in consequence: what if failure returned?
-	const std::string otherName = connection.readString();
+	const auto otherName = connection.readString();
 	registryAddresses.insert(otherName, ClientSocket::toNetAddr(host, port));
 	return otherName;
 }

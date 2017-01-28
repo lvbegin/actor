@@ -67,7 +67,7 @@ RawData Connection::readRawData(void) const {
 }
 
 const Connection &Connection::writeString(const std::string &hostValue) const {
-	const size_t nbBytesToWrite = hostValue.size();
+	const auto nbBytesToWrite = hostValue.size();
 	return writeInt(nbBytesToWrite).writeBytes(hostValue.c_str(), nbBytesToWrite);
 }
 
@@ -79,9 +79,9 @@ std::string Connection::readString(void) const {
 const Connection &Connection::writeBytes(const void *buffer, size_t count) const {
 	if (-1 == fd)
 		THROW(std::runtime_error, "invalid writeByte");
-	const char *ptr = static_cast<const char *>(buffer);
+	auto ptr = static_cast<const char *>(buffer);
 	for (size_t nbTotalWritten = 0; nbTotalWritten < count; ) {
-		const ssize_t nbWritten = write(fd, ptr + nbTotalWritten, count - nbTotalWritten);
+		const auto nbWritten = write(fd, ptr + nbTotalWritten, count - nbTotalWritten);
 		if (-1 == nbWritten && !(EINTR == errno))
 			THROW(std::runtime_error, "send bytes failed");
 		nbTotalWritten += nbWritten;
@@ -95,14 +95,14 @@ void Connection::readBytes(void *buffer, size_t count, int timeoutInSeconds) con
 }
 
 void Connection::readBytesNonBlocking(void *buffer, size_t count) const {
-	static const int timeoutOnRead = 60;
+	static const int TIMEOUT_ON_READ = 60;
 	if (-1 == fd)
 		THROW(std::runtime_error, "invalid fd in readBytesNonBlocking");
-	char *ptr = static_cast<char *>(buffer);
-	struct timeval timeout { timeoutOnRead, 0 };
+	auto ptr = static_cast<char *>(buffer);
+	struct timeval timeout { TIMEOUT_ON_READ, 0 };
 	for (size_t nbTotalRead = 0; nbTotalRead < count; ) {
 		waitForRead<std::runtime_error, std::runtime_error>(fd, set, &timeout);
-		const ssize_t nbRead = read(fd, ptr + nbTotalRead, count - nbTotalRead);
+		const auto nbRead = read(fd, ptr + nbTotalRead, count - nbTotalRead);
 		if (0 >= nbRead)
 			THROW(std::runtime_error, "read bytes failed");
 		nbTotalRead += nbRead;

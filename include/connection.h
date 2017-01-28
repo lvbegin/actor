@@ -59,7 +59,7 @@ public:
 
 	template<typename T>
 	const Connection &writeInt(T hostValue) const {
-		const uint32_t sentValue = htonl(static_cast<uint32_t>(hostValue));
+		const auto sentValue = htonl(static_cast<uint32_t>(hostValue));
 		return writeBytes(&sentValue, sizeof(sentValue));
 	}
 
