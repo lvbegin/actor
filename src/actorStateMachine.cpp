@@ -60,4 +60,8 @@ void ActorStateMachine::moveTo(ActorState newState) {
 	}
 }
 
-bool ActorStateMachine::isIn(ActorState state) const { return (this->state == state); }
+bool ActorStateMachine::isIn(ActorState state) const {
+	std::unique_lock<std::mutex> l(mutex);
+
+	return (this->state == state);
+}

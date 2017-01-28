@@ -41,7 +41,7 @@ public:
 	void moveTo(ActorState newState);
 	bool isIn(ActorState state) const;
 private:
-	std::mutex mutex;
+	mutable std::mutex mutex;
 	std::condition_variable stateChanged;
 	ActorState state;
 };
