@@ -27,8 +27,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ACTOR_API_H__
-#define ACTOR_API_H__
+#ifndef LINK_API_H__
+#define LINK_API_H__
 
 #include <types.h>
 
