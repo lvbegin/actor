@@ -27,8 +27,9 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <actor.h>
+#include <proxyClient.h>
 #include <proxyServer.h>
+#include <actor.h>
 #include <actorRegistry.h>
 #include <clientSocket.h>
 #include <commandValue.h>
@@ -36,8 +37,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <unistd.h>
-
-#include "../include/proxyClient.h"
 
 
 static int basicActorTest(void) {
@@ -90,7 +89,7 @@ static void executeSeverProxy(uint16_t port, int *nbMessages) {
 	const Actor actor("actor name", [nbMessages](int i, const RawData &, const ActorLink &) { (*nbMessages)++; return StatusCode::ok; });
 	const auto doNothing = []() { };
 	const auto DummyGetConnection = [] (std::string) { return ActorLink(); };
-	const proxyServer server(actor.getActorLinkRef(), ServerSocket::getConnection(port), doNothing, DummyGetConnection);
+	const ProxyServer server(actor.getActorLinkRef(), ServerSocket::getConnection(port), doNothing, DummyGetConnection);
 }
 
 static Connection openOneConnection(uint16_t port) {

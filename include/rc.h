@@ -41,4 +41,6 @@ typedef std::vector<uint8_t> RawData;
 
 typedef uint32_t Id;
 
+enum class postType : uint32_t { NewMessage = 0xFFFFFFFF, } ;
+
 #endif

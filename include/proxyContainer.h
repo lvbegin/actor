@@ -32,9 +32,9 @@
 
 #include <executor.h>
 #include <sharedMap.h>
-#include <proxyServer.h>
 #include <actor.h>
 #include <uniqueId.h>
+#include "proxyServer.h"
 
 class ProxyContainer {
 public:
@@ -44,7 +44,7 @@ public:
 	void deleteProxy(Id id);
 private:
 	static const uint32_t USELESS_CODE = 0;
-	SharedMap<Id, proxyServer> proxies;
+	SharedMap<Id, ProxyServer> proxies;
 	MessageQueue executorQueue;
 	const Executor executor;
 };

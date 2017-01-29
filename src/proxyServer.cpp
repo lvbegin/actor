@@ -34,16 +34,16 @@
 
 #include <arpa/inet.h>
 
-proxyServer::proxyServer(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor) :
+ProxyServer::ProxyServer(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor) :
 	t([actor, connection {std::move(connection)}, notifyTerminate, findActor]() mutable
 						{ startThread(std::move(actor), std::move(connection), notifyTerminate, findActor); }) { }
 
-proxyServer::~proxyServer() {
+ProxyServer::~ProxyServer() {
 	if (t.joinable())
 		t.join();
 };
 
-void proxyServer::startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor) {
+void ProxyServer::startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor) {
 	while (true) {
 		postType type;
 		try {

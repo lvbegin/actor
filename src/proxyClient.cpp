@@ -27,9 +27,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <proxyServer.h>
 #include <clientSocket.h>
-#include "../include/proxyClient.h"
+#include <proxyClient.h>
 
 ProxyClient::ProxyClient(std::string name, Connection connection) : name(std::move(name)), connection(std::move(connection)) { }
 ProxyClient::~ProxyClient() = default;
