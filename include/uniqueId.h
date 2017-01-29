@@ -30,7 +30,7 @@
 #ifndef UNIQUE_ID_H__
 #define UNIQUE_ID_H__
 
-#include <rc.h>
+#include <types.h>
 
 #include <atomic>
 

@@ -31,11 +31,9 @@
 #define EXECUTOR_H__
 
 #include <messageQueue.h>
-#include <rc.h>
 
 #include <functional>
 #include <thread>
-#include <future>
 
 using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const std::shared_ptr<LinkApi> &sender)>;
 

@@ -30,14 +30,13 @@
 #ifndef CONNECTION_H__
 #define CONNECTION_H__
 
-#include <rc.h>
+#include <types.h>
 
 #include <cstdint>
 #include <unistd.h>
 #include <string>
 #include <vector>
 #include <stdexcept>
-
 #include <arpa/inet.h>
 
 

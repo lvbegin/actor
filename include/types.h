@@ -27,8 +27,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RC_H__
-#define RC_H__
+#ifndef TYPES_H__
+#define TYPES_H__
 
 #include <cstdint>
 #include <vector>

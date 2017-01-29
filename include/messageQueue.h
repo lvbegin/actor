@@ -31,10 +31,10 @@
 #define MESSAGE_QUEUE_H__
 
 #include <sharedQueue.h>
-#include <rc.h>
 #include <actorAPI.h>
 
 #include <future>
+#include "types.h"
 
 class MessageQueue : public LinkApi {
 public:

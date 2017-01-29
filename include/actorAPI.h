@@ -30,7 +30,7 @@
 #ifndef ACTOR_API_H__
 #define ACTOR_API_H__
 
-#include <rc.h>
+#include <types.h>
 
 #include <memory>
 
