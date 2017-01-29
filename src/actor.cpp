@@ -32,6 +32,8 @@
 #include <commandValue.h>
 #include <exception.h>
 
+#include <future>
+
 static const std::function<void(void)> doNothing = [](void) { };
 
 Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy) :

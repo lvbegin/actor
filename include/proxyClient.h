@@ -30,8 +30,8 @@
 #ifndef PROXY_CLIENT_H__
 #define PROXY_CLIENT_H__
 
-#include <actorAPI.h>
 #include <connection.h>
+#include <linkApi.h>
 
 #include <string>
 
