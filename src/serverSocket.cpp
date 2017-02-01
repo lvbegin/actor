@@ -79,11 +79,11 @@ Connection ServerSocket::acceptOneConnection(int timeout, struct NetAddr *client
 
 int ServerSocket::listenOnSocket(uint16_t port) {
 	struct sockaddr_in serv_addr { };
-	const int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	const auto sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == sockfd)
 		THROW(std::runtime_error, "cannot create socket.");
-	static const int enable = 1;
-	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+	static const int ENABLE = 1;
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &ENABLE, sizeof(int)) < 0)
 		THROW(std::runtime_error, "setsockopt(SO_REUSEADDR) failed.");
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
