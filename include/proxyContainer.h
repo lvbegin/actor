@@ -34,7 +34,7 @@
 #include <sharedMap.h>
 #include <actor.h>
 #include <uniqueId.h>
-#include "proxyServer.h"
+#include <proxyServer.h>
 
 class ProxyContainer {
 public:

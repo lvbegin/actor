@@ -29,7 +29,7 @@
 
 #include <actorRegistry.h>
 #include <clientSocket.h>
-#include "../include/proxyClient.h"
+#include <proxyClient.h>
 
 static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body);
 
