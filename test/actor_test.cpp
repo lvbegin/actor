@@ -469,32 +469,37 @@ static int actorNotifiesErrorToSupervisorTest() {
 
 static int actorDoesNothingIfNoSupervisorTest() {
 	static const int SOME_COMMAND = 0xaa;
-	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &) {
+	bool supervisorRestarted = false;
+
+	auto supervised = std::make_shared<Actor>("supervised", [](int i, const RawData &, const ActorLink &) {
 		Actor::notifyError(0x69);
 		return StatusCode::ok;
-	 });
-	/* ADD A RESTART HOOK TO CHECK THAT IT IS NOT RESTARTED */
-	supervised.post(SOME_COMMAND);
-	supervised.post(SOME_COMMAND);
+	 },
+	[&supervisorRestarted](){ supervisorRestarted = true; });
 
-	supervised.post(CommandValue::SHUTDOWN);
+	supervised->post(SOME_COMMAND);
+	supervised->post(SOME_COMMAND);
 
-	return 0;
+	supervised->post(CommandValue::SHUTDOWN);
+	supervised.reset();
+	return !supervisorRestarted ? 0 : 1;
 }
 
 static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 	static const int SOME_COMMAND = 0xaa;
-	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &) {
+	bool supervisorRestarted = false;
+
+	auto supervised = std::make_shared<Actor>("supervised", [](int i, const RawData &, const ActorLink &) {
 		throw std::runtime_error("some error");
-		return StatusCode::ok; //remove that ?
-	 });
-	/* ADD A RESTART HOOK TO CHECK THAT IT IS NOT RESTARTED */
-	supervised.post(SOME_COMMAND);
-	supervised.post(SOME_COMMAND);
+		return StatusCode::ok;
+	 },
+	[&supervisorRestarted](){ supervisorRestarted = true; });
+	supervised->post(SOME_COMMAND);
+	supervised->post(SOME_COMMAND);
 
-	supervised.post(CommandValue::SHUTDOWN);
-
-	return 0;
+	supervised->post(CommandValue::SHUTDOWN);
+	supervised.reset();
+	return !supervisorRestarted ? 0 : 1;
 }
 
 static int restartAllActorBySupervisorTest() {
