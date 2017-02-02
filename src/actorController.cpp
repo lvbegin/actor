@@ -38,11 +38,11 @@ ActorController::~ActorController() = default;
 
 void ActorController::add(std::shared_ptr<MessageQueue> actorLink) { actors.push_back(std::move(actorLink)); }
 
-void ActorController::remove(const std::string &name) { actors.erase([&name](auto &e){ return (0 == name.compare(e->getName())); }); }
+void ActorController::remove(const std::string &name) { actors.erase(LinkApi::nameComparator(name)); }
 
 void ActorController::restartOne(const std::string &name) const {
 	try {
-		auto actor = actors.find_if([&name](auto &e){ return (0 == name.compare(e->getName())); });
+		auto actor = actors.find_if(LinkApi::nameComparator(name));
 		restart(actor);
 	} catch (std::out_of_range &) { }
 }

@@ -33,8 +33,6 @@
 #include <connection.h>
 #include <linkApi.h>
 
-#include <string>
-
 class ProxyClient : public LinkApi {
 public:
 	ProxyClient(std::string name, Connection connection);
@@ -42,9 +40,7 @@ public:
 
 	void post(Command command, ActorLink sender = ActorLink());
 	void post(Command command, const RawData &params, ActorLink sender = ActorLink());
-	const std::string &getName(void) const;
 private:
-	const std::string name;
 	const Connection connection;
 };
 

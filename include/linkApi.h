@@ -43,10 +43,19 @@ public:
 	virtual void post(Command command, ActorLink sender = ActorLink()) = 0;
 	virtual void post(Command command, const RawData &data, ActorLink sender = ActorLink()) = 0;
 
-	virtual const std::string &getName(void) const = 0;
+	const std::string &getName(void) const { return name; }
+	bool hasName(const std::string &n) const { return 0 == name.compare(n); }
+
+	static std::function<bool(const ActorLink &l)> nameComparator(const std::string &name) {
+		return [&name](const ActorLink &l) { return 0 == l->getName().compare(name); };
+	}
+
 protected:
-	LinkApi() = default;
+	LinkApi(std::string name) : name(std::move(name)) { }
 	virtual ~LinkApi() = default;
+private :
+	const std::string name;
 };
+
 
 #endif

@@ -88,11 +88,7 @@ void ActorRegistry::removeReference(const std::string &registryName) { registryA
 
 void ActorRegistry::registerActor(ActorLink actor) { actors.push_back(std::move(actor)); }
 
-static inline std::function<bool(const ActorLink &)> IdCheckFunction(const std::string &name) {
-	return [&name](auto &e) { return (0 == name.compare(e->getName()));};
-}
-
-void ActorRegistry::unregisterActor(const std::string &name) { actors.erase(IdCheckFunction(name)); }
+void ActorRegistry::unregisterActor(const std::string &name) { actors.erase(LinkApi::nameComparator(name)); }
 
 ActorLink  ActorRegistry::getActor(const std::string &name) const {
 	try {
@@ -102,7 +98,7 @@ ActorLink  ActorRegistry::getActor(const std::string &name) const {
 	}
 }
 
-ActorLink ActorRegistry::getLocalActor(const std::string &name) const { return actors.find_if(IdCheckFunction(name)); }
+ActorLink ActorRegistry::getLocalActor(const std::string &name) const { return actors.find_if(LinkApi::nameComparator(name)); }
 
 ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
 	ActorLink actor;

@@ -30,7 +30,7 @@
 #include <clientSocket.h>
 #include <proxyClient.h>
 
-ProxyClient::ProxyClient(std::string name, Connection connection) : name(std::move(name)), connection(std::move(connection)) { }
+ProxyClient::ProxyClient(std::string name, Connection connection) : LinkApi(std::move(name)), connection(std::move(connection)) { }
 ProxyClient::~ProxyClient() = default;
 
 void ProxyClient::post(Command command, ActorLink sender) {
@@ -42,5 +42,3 @@ void ProxyClient::post(Command command, const RawData &params, ActorLink sender)
 	const auto senderName = (nullptr == sender.get()) ?  std::string() : sender->getName();
 	connection.writeInt(postType::NewMessage).writeString(senderName).writeInt(command).writeRawData(params);
 }
-
-const std::string &ProxyClient::getName(void) const { return name; }

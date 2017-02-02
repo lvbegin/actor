@@ -52,13 +52,11 @@ public:
 
 	void post(Command command, ActorLink sender = ActorLink());
 	void post(Command command, const RawData &params, ActorLink sender = ActorLink());
-	const std::string &getName(void) const;
 
 	void post(MessageType type, Command command, RawData params = RawData());
 
 	Message get(void);
 private:
-	const std::string name;
 	SharedQueue<Message> queue;
 
 	void putMessage(MessageType type, Command command, RawData params, ActorLink sender);
