@@ -44,8 +44,8 @@ using ActorBody = std::function<StatusCode(Command, const RawData &, const Actor
 
 class Actor {
 public:
-	Actor(std::string name, ActorBody body, RestartStrategy restartStrategy = defaultRestartStrategy);
-	Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy = defaultRestartStrategy);
+	Actor(std::string name, ActorBody body, RestartStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
+	Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
 	~Actor();
 
 	Actor(const Actor &a) = delete;

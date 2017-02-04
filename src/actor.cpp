@@ -90,7 +90,7 @@ void Actor::unregisterActor(Actor &monitored) { supervisor.unregisterMonitored(m
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
 StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command command, const RawData &params, const ActorLink &sender) {
-	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED)) //FIX: race condition when the actor is stopped just after.
+	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED))
 		return StatusCode::ok;
 
 	switch (type) {
@@ -110,7 +110,7 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 		case CommandValue::RESTART:
 			return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
 		case CommandValue::UNREGISTER_ACTOR:
-			supervisor.removeSupervised(std::string(params.begin(), params.end()));
+			supervisor.removeSupervised(toString(params));
 			return StatusCode::ok;
 		default:
 			THROW(std::runtime_error, "unsupported management message command.");

@@ -29,6 +29,7 @@
 
 #include <supervisor.h>
 #include <uniqueId.h>
+#include <conversion.h>
 
 Supervisor::Supervisor(RestartStrategy strategy, std::shared_ptr<MessageQueue> self) :
 					restartStrategy(std::move(strategy)), self(std::move(self)) { }
@@ -43,7 +44,7 @@ void Supervisor::sendToSupervisor(MessageType type, Command command) const {
 
 	const auto ref = supervisorRef.lock();
 	if (nullptr != ref.get())
-		ref->post(type, command, RawData(self->getName().begin(), self->getName().end()));
+		ref->post(type, command, toRawData(self->getName()));
 }
 
 void Supervisor::removeSupervised(const std::string &name) {
@@ -58,7 +59,7 @@ void Supervisor::doSupervisorOperation(Command command, const RawData &params) c
 	switch (restartStrategy())
 	{
 		case RestartType::RESTART_ONE:
-			supervisedRefs.restartOne(std::string(params.begin(), params.end()));
+			supervisedRefs.restartOne(toString(params));
 			break;
 		case RestartType::RESTART_ALL:
 			supervisedRefs.restartAll();

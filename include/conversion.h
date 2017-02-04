@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,32 +27,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EXECUTOR_H__
-#define EXECUTOR_H__
+#ifndef CONVERSION_H__
+#define CONVERSION_H__
 
-#include <messageQueue.h>
+#include <types.h>
 
-#include <functional>
-#include <thread>
+static inline std::string toString(const RawData &v) { return std::string(v.begin(), v.end()); }
 
-using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const std::shared_ptr<LinkApi> &sender)>;
-
-class Executor {
-public:
-	Executor(ExecutorBody body, MessageQueue &queue, std::function<void(void)> atStart = ([](void) { }));
-	~Executor();
-
-	Executor() = delete;
-	Executor(const Executor &a) = delete;
-	Executor &operator=(const Executor &a) = delete;
-	Executor(Executor &&a) = delete;
-	Executor &operator=(Executor &&a) = delete;
-private:
-	MessageQueue &messageQueue;
-	std::thread thread;
-
-	void executeBody(ExecutorBody body) const;
-};
-
+static inline RawData toRawData(const std::string &s) { return RawData(s.begin(), s.end()); }
 
 #endif

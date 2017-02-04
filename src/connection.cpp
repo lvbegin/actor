@@ -30,6 +30,7 @@
 #include <connection.h>
 #include <descriptorWait.h>
 #include <exception.h>
+#include <conversion.h>
 
 #include <stdexcept>
 
@@ -71,10 +72,7 @@ const Connection &Connection::writeString(const std::string &hostValue) const {
 	return writeInt(nbBytesToWrite).writeBytes(hostValue.c_str(), nbBytesToWrite);
 }
 
-std::string Connection::readString(void) const {
-	auto string = readRawData();
-	return std::string(string.begin(), string.end());
-}
+std::string Connection::readString(void) const { return toString(readRawData()); }
 
 const Connection &Connection::writeBytes(const void *buffer, size_t count) const {
 	if (-1 == fd)
