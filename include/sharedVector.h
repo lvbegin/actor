@@ -56,7 +56,7 @@ public:
 	void push_back(T&& value) {
 		std::unique_lock<std::mutex> l(mutex);
 
-		vector.push_back(value);
+		vector.push_back(std::forward<T>(value));
 	}
 
 	void erase(FindTest<T> findTest) {
