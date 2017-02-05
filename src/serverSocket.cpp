@@ -78,13 +78,13 @@ Connection ServerSocket::acceptOneConnection(int timeout, struct NetAddr *client
 }
 
 int ServerSocket::listenOnSocket(uint16_t port) {
-	struct sockaddr_in serv_addr { };
 	const auto sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (-1 == sockfd)
 		THROW(std::runtime_error, "cannot create socket.");
 	static const int ENABLE = 1;
-	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &ENABLE, sizeof(int)) < 0)
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &ENABLE, sizeof(ENABLE)) < 0)
 		THROW(std::runtime_error, "setsockopt(SO_REUSEADDR) failed.");
+	struct sockaddr_in serv_addr;
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
 	serv_addr.sin_port = htons(port);
