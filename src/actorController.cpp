@@ -42,7 +42,7 @@ void ActorController::remove(const std::string &name) { actors.erase(LinkApi::na
 
 void ActorController::restartOne(const std::string &name) const {
 	try {
-		auto actor = actors.find_if(LinkApi::nameComparator(name));
+		const auto actor = actors.find_if(LinkApi::nameComparator(name));
 		restart(actor);
 	} catch (std::out_of_range &) { }
 }
