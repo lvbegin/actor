@@ -31,6 +31,7 @@
 #include <actorException.h>
 #include <commandValue.h>
 #include <exception.h>
+#include <conversion.h>
 
 #include <future>
 
