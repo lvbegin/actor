@@ -31,15 +31,14 @@
 #include <clientSocket.h>
 #include <proxyClient.h>
 
-static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body);
+static void threadBody(uint16_t port, std::function<void(const ServerSocket &s)> body);
 
 ActorRegistry::ActorRegistry(std::string name, uint16_t port) : name(name), port(port),
 		findActorCallback([this](auto &name) { return this->getRemoteActor(name); }), terminated(false),
-		t([this]() {  threadBody(this->port, [this](ServerSocket &s) { registryBody(s); }); }) { }
+		t([this]() {  threadBody(this->port, [this](const ServerSocket &s) { registryBody(s); }); }) { }
 
-static void threadBody(uint16_t port, std::function<void(ServerSocket &s)> body) {
-	auto s = std::make_unique<ServerSocket>(port);
-	body(*s);
+static void threadBody(uint16_t port, std::function<void(const ServerSocket &s)> body) {
+	body(*std::make_unique<ServerSocket>(port));
 }
 
 ActorRegistry::~ActorRegistry() {
