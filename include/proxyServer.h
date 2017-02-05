@@ -33,8 +33,6 @@
 #include <actor.h>
 #include <connection.h>
 
-class ProxyContainer;
-
 using FindActor = std::function<ActorLink(const std::string &)> ;
 
 class ProxyServer {
