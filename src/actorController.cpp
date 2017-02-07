@@ -29,7 +29,6 @@
 
 #include <actorController.h>
 #include <exception.h>
-#include <commandValue.h>
 
 #include <algorithm>
 
@@ -42,13 +41,20 @@ void ActorController::remove(const std::string &name) { actors.erase(LinkApi::na
 
 void ActorController::restartOne(const std::string &name) const {
 	try {
-		const auto actor = actors.find_if(LinkApi::nameComparator(name));
-		restart(actor);
+		restart(actors.find_if(LinkApi::nameComparator(name)));
+	} catch (std::out_of_range &) { }
+}
+
+void ActorController::stopOne(const std::string &name) const {
+	try {
+		sendMessage(actors.find_if(LinkApi::nameComparator(name)), CommandValue::SHUTDOWN);
 	} catch (std::out_of_range &) { }
 }
 
 void ActorController::restartAll(void) const { actors.for_each([](auto &e) { restart(e);} ); }
 
-void ActorController::restart(const std::shared_ptr<MessageQueue> &link) {
-	link->post(MessageType::MANAGEMENT_MESSAGE, CommandValue::RESTART);
+void ActorController::restart(const std::shared_ptr<MessageQueue> &link) { sendMessage(link, CommandValue::RESTART); }
+
+void ActorController::sendMessage(const std::shared_ptr<MessageQueue> &link, uint32_t command) {
+	link->post(MessageType::MANAGEMENT_MESSAGE, command);
 }

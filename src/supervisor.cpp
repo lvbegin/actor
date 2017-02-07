@@ -61,6 +61,9 @@ void Supervisor::doSupervisorOperation(Command command, const RawData &params) c
 		case RestartType::RESTART_ONE:
 			supervisedRefs.restartOne(toString(params));
 			break;
+		case RestartType::STOP_ONE:
+			supervisedRefs.stopOne(toString(params));
+			break;
 		case RestartType::RESTART_ALL:
 			supervisedRefs.restartAll();
 			break;

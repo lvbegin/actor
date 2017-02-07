@@ -386,10 +386,6 @@ static int initSupervisionTest() {
 	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; });
 	supervisor.registerActor(supervised);
 	supervisor.unregisterActor(supervised);
-
-	supervisor.post(CommandValue::SHUTDOWN);
-	supervised.post(CommandValue::SHUTDOWN);
-
 	return 0;
 }
 
@@ -401,7 +397,6 @@ static int unregisterToSupervisorWhenActorDestroyedTest() {
 
 	supervised->post(CommandValue::SHUTDOWN);
 	supervised.reset();
-	supervisor.post(CommandValue::SHUTDOWN);
 
 	return 0;
 }
@@ -426,11 +421,32 @@ static int supervisorRestartsActorTest() {
 	supervised.post(OTHER_COMMAND, link);
 	if (OK_ANSWER != link->get().code)
 		return 1;
-	supervisor.post(CommandValue::SHUTDOWN);
-	supervised.post(CommandValue::SHUTDOWN);
-
 	return (exceptionThrown) ? 0 : 1;
 }
+
+/* To improve when there will be some hook for stopActor. */
+static int supervisorStopActorTest() {
+	static const int STOP_COMMAND = 0x99;
+	static const int OK_ANSWER = 0x99;
+	static bool exceptionThrown = false;
+	const auto link = std::make_shared<MessageQueue>("queue for reply");
+	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
+			RestartStrategy([](void) { return RestartType::STOP_ONE; }));
+	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
+		if (i == STOP_COMMAND) {
+			exceptionThrown = true;
+			throw std::runtime_error("some error");
+		}
+		link->post(OK_ANSWER);
+		 return StatusCode::ok;
+	 });
+	supervisor.registerActor(supervised);
+	supervised.post(STOP_COMMAND, link);
+
+	for (int i = 0; i < 5 && !exceptionThrown; i++) sleep(1);
+	return (exceptionThrown) ? 0 : 1;
+}
+
 
 static int actorNotifiesErrorToSupervisorTest() {
 	static const int SOME_COMMAND = 0xaa;
@@ -458,13 +474,7 @@ static int actorNotifiesErrorToSupervisorTest() {
 
 	for (int i = 0; i < 5 && !supervised1Restarted; i++)
 		sleep(1);
-	if (supervisorRestarted || ! (2 == supervised1Restarted) || supervised2Restarted)
-		return 1;
-
-	supervisor.post(CommandValue::SHUTDOWN);
-	supervised1.post(CommandValue::SHUTDOWN);
-	supervised2.post(CommandValue::SHUTDOWN);
-	return 0;
+	return (supervisorRestarted || ! (2 == supervised1Restarted) || supervised2Restarted) ? 1 : 0;
 }
 
 static int actorDoesNothingIfNoSupervisorTest() {
@@ -480,7 +490,6 @@ static int actorDoesNothingIfNoSupervisorTest() {
 	supervised->post(SOME_COMMAND);
 	supervised->post(SOME_COMMAND);
 
-	supervised->post(CommandValue::SHUTDOWN);
 	supervised.reset();
 	return !supervisorRestarted ? 0 : 1;
 }
@@ -497,7 +506,6 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 	supervised->post(SOME_COMMAND);
 	supervised->post(SOME_COMMAND);
 
-	supervised->post(CommandValue::SHUTDOWN);
 	supervised.reset();
 	return !supervisorRestarted ? 0 : 1;
 }
@@ -531,14 +539,7 @@ static int restartAllActorBySupervisorTest() {
 	for (int i = 0; i < 5 && !supervised1Restarted && !supervised2Restarted; i++)
 		sleep(1);
 
-	if (supervisorRestarted || !supervised1Restarted || !supervised2Restarted)
-		return 1;
-
-	supervisor.post(CommandValue::SHUTDOWN);
-	supervised1.post(CommandValue::SHUTDOWN);
-	supervised2.post(CommandValue::SHUTDOWN);
-
-	return 0;
+	return (supervisorRestarted || !supervised1Restarted || !supervised2Restarted) ? 1 : 0;
 }
 
 static int executorTest() {
@@ -601,6 +602,7 @@ int main() {
 			TEST(initSupervisionTest),
 			TEST(unregisterToSupervisorWhenActorDestroyedTest),
 			TEST(supervisorRestartsActorTest),
+			TEST(supervisorStopActorTest),
 		 	TEST(actorNotifiesErrorToSupervisorTest),
 			TEST(actorDoesNothingIfNoSupervisorTest),
 			TEST(actorDoesNothingIfNoSupervisorAndExceptionThrownTest),

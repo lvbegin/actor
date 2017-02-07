@@ -113,6 +113,8 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 		case CommandValue::UNREGISTER_ACTOR:
 			supervisor.removeSupervised(toString(params));
 			return StatusCode::ok;
+		case CommandValue::SHUTDOWN:
+			return StatusCode::shutdown;
 		default:
 			THROW(std::runtime_error, "unsupported management message command.");
 	}

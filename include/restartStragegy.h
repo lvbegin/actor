@@ -32,7 +32,7 @@
 
 #include <functional>
 
-enum class RestartType { RESTART_ONE, RESTART_ALL, };
+enum class RestartType { RESTART_ONE, RESTART_ALL, STOP_ONE, };
 
 using  RestartStrategy = std::function<RestartType(void)>;
 
