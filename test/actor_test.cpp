@@ -447,6 +447,36 @@ static int supervisorStopActorTest() {
 	return (exceptionThrown) ? 0 : 1;
 }
 
+/* This test must be adapted once the children are restarted */
+static int supervisorForwardErrorTest() {
+	static const int STOP_COMMAND = 0x99;
+	static const int OK_ANSWER = 0x99;
+	static bool exceptionThrown = false;
+	static bool actorRestarted = false;
+	const auto link = std::make_shared<MessageQueue>("queue for reply");
+	Actor rootSupervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
+			RestartStrategy([](void) { return RestartType::RESTART_ONE; }));
+	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
+			[]() { actorRestarted = true; },
+			RestartStrategy([](void) { return RestartType::ESCALATE; }));
+	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
+		if (i == STOP_COMMAND) {
+			exceptionThrown = true;
+			throw std::runtime_error("some error");
+		}
+		link->post(OK_ANSWER);
+		 return StatusCode::ok;
+	 },
+	 [](){ actorRestarted = true; });
+	supervisor.registerActor(supervised);
+	supervised.post(STOP_COMMAND, link);
+
+	for (int i = 0; i < 5 && !exceptionThrown; i++) sleep(1);
+	for (int i = 0; i < 5 && !actorRestarted; i++) sleep(1);
+	return (exceptionThrown) ? 0 : 1;
+
+	return 0;
+}
 
 static int actorNotifiesErrorToSupervisorTest() {
 	static const int SOME_COMMAND = 0xaa;
@@ -603,6 +633,7 @@ int main() {
 			TEST(unregisterToSupervisorWhenActorDestroyedTest),
 			TEST(supervisorRestartsActorTest),
 			TEST(supervisorStopActorTest),
+			TEST(supervisorForwardErrorTest),
 		 	TEST(actorNotifiesErrorToSupervisorTest),
 			TEST(actorDoesNothingIfNoSupervisorTest),
 			TEST(actorDoesNothingIfNoSupervisorAndExceptionThrownTest),

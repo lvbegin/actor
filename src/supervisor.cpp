@@ -67,6 +67,12 @@ void Supervisor::doSupervisorOperation(Command command, const RawData &params) c
 		case RestartType::RESTART_ALL:
 			supervisedRefs.restartAll();
 			break;
+		case RestartType::ESCALATE: {
+			const auto ref = supervisorRef.lock();
+			if (nullptr != ref.get())
+				ref->post(MessageType::ERROR_MESSAGE, command);
+			break;
+		}
 		default:
 			/* should escalate to supervisor */
 			throw std::runtime_error("unexpected case.");
