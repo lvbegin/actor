@@ -96,7 +96,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command comman
 
 	switch (type) {
 		case MessageType::ERROR_MESSAGE:
-			return (supervisor.doSupervisorOperation(command, params), StatusCode::ok);
+			return (supervisor.manageCommandFromSupervised(command, params), StatusCode::ok);
 		case MessageType::MANAGEMENT_MESSAGE:
 			return executeActorManagement(command, params);
 		case MessageType::COMMAND_MESSAGE:

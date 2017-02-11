@@ -53,7 +53,7 @@ void Supervisor::removeSupervised(const std::string &name) {
 	supervisedRefs.remove(name);
 }
 
-void Supervisor::doSupervisorOperation(Command command, const RawData &params) const {
+void Supervisor::manageCommandFromSupervised(Command command, const RawData &params) const {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
 	switch (restartStrategy())
@@ -70,7 +70,7 @@ void Supervisor::doSupervisorOperation(Command command, const RawData &params) c
 		case RestartType::ESCALATE: {
 			const auto ref = supervisorRef.lock();
 			if (nullptr != ref.get())
-				ref->post(MessageType::ERROR_MESSAGE, command);
+				ref->post(MessageType::ERROR_MESSAGE, command, toRawData(self->getName()));
 			break;
 		}
 		default:
