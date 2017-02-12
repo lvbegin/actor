@@ -447,7 +447,7 @@ static int supervisorStopActorTest() {
 	return (exceptionThrown) ? 0 : 1;
 }
 
-static int supervisorForwardErrorTest() {
+static int supervisorForwardErrorRestartTest() {
 	static const int STOP_COMMAND = 0x99;
 	static const int OK_ANSWER = 0x99;
 	static bool exceptionThrown = false;
@@ -477,6 +477,32 @@ static int supervisorForwardErrorTest() {
 	for (int i = 0; i < 5 && !exceptionThrown; i++) sleep(1);
 	for (int i = 0; i < 5 && (!actorRestarted2 || !actorRestarted3); i++) sleep(1);
 	return (exceptionThrown && !actorRestarted1 && actorRestarted2 && actorRestarted3) ? 0 : 1;
+}
+
+/* To improve when there will be some hook for stopActor. */
+static int supervisorForwardErrorStopTest() {
+	static const int STOP_COMMAND = 0x99;
+	static const int OK_ANSWER = 0x99;
+	static bool exceptionThrown = false;
+	const auto link = std::make_shared<MessageQueue>("queue for reply");
+	Actor rootSupervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
+			RestartStrategy([](void) { return RestartType::STOP_ONE; }));
+	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
+			RestartStrategy([](void) { return RestartType::ESCALATE; }));
+	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
+		if (i == STOP_COMMAND) {
+			exceptionThrown = true;
+			throw std::runtime_error("some error");
+		}
+		link->post(OK_ANSWER);
+		 return StatusCode::ok;
+	 });
+	rootSupervisor.registerActor(supervisor);
+	supervisor.registerActor(supervised);
+	supervised.post(STOP_COMMAND, link);
+
+	for (int i = 0; i < 5 && !exceptionThrown; i++) sleep(1);
+	return exceptionThrown ? 0 : 1;
 }
 
 static int actorNotifiesErrorToSupervisorTest() {
@@ -634,7 +660,8 @@ int main() {
 			TEST(unregisterToSupervisorWhenActorDestroyedTest),
 			TEST(supervisorRestartsActorTest),
 			TEST(supervisorStopActorTest),
-			TEST(supervisorForwardErrorTest),
+			TEST(supervisorForwardErrorRestartTest),
+			TEST(supervisorForwardErrorStopTest),
 		 	TEST(actorNotifiesErrorToSupervisorTest),
 			TEST(actorDoesNothingIfNoSupervisorTest),
 			TEST(actorDoesNothingIfNoSupervisorAndExceptionThrownTest),
