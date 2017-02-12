@@ -42,12 +42,14 @@ public:
 	void add(std::shared_ptr<MessageQueue> actorLink);
 	void remove(const std::string &name);
 	void stopOne(const std::string &name) const;
+	void stopAll(void) const;
 	void restartOne(const std::string &name) const;
 	void restartAll(void) const;
 private:
 	SharedVector<std::shared_ptr<MessageQueue>> actors;
 
 	static void restart(const std::shared_ptr<MessageQueue> &link);
+	static void stop(const std::shared_ptr<MessageQueue> &link);
 	static void sendMessage(const std::shared_ptr<MessageQueue> &link, uint32_t command);
 };
 

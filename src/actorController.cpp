@@ -47,13 +47,17 @@ void ActorController::restartOne(const std::string &name) const {
 
 void ActorController::stopOne(const std::string &name) const {
 	try {
-		sendMessage(actors.find_if(LinkApi::nameComparator(name)), CommandValue::SHUTDOWN);
+		stop(actors.find_if(LinkApi::nameComparator(name)));
 	} catch (std::out_of_range &) { }
 }
+
+void ActorController::stopAll(void) const { actors.for_each([](auto &e) { stop(e);} ); }
 
 void ActorController::restartAll(void) const { actors.for_each([](auto &e) { restart(e);} ); }
 
 void ActorController::restart(const std::shared_ptr<MessageQueue> &link) { sendMessage(link, CommandValue::RESTART); }
+
+void ActorController::stop(const std::shared_ptr<MessageQueue> &link) { sendMessage(link, CommandValue::SHUTDOWN); }
 
 void ActorController::sendMessage(const std::shared_ptr<MessageQueue> &link, uint32_t command) {
 	link->post(MessageType::MANAGEMENT_MESSAGE, command);

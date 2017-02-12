@@ -47,13 +47,25 @@ void Supervisor::sendToSupervisor(MessageType type, Command command) const {
 		ref->post(type, command, toRawData(self->getName()));
 }
 
-void Supervisor::removeSupervised(const std::string &name) {
+void Supervisor::manageCommand(Command command, const RawData &params) {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
-	supervisedRefs.remove(name);
+	switch (command) {
+		case CommandValue::RESTART:
+			supervisedRefs.restartAll();
+			break;
+		case CommandValue::SHUTDOWN:
+			supervisedRefs.stopAll();
+			break;
+		case CommandValue::UNREGISTER_ACTOR:
+			supervisedRefs.remove(toString(params));
+			break;
+		default:
+			break;
+	}
 }
 
-void Supervisor::manageCommandFromSupervised(Command command, const RawData &params) const {
+void Supervisor::manageErrorFromSupervised(Command command, const RawData &params) const {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
 	switch (restartStrategy())

@@ -96,7 +96,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command comman
 
 	switch (type) {
 		case MessageType::ERROR_MESSAGE:
-			return (supervisor.manageCommandFromSupervised(command, params), StatusCode::ok);
+			return (supervisor.manageErrorFromSupervised(command, params), StatusCode::ok);
 		case MessageType::MANAGEMENT_MESSAGE:
 			return executeActorManagement(command, params);
 		case MessageType::COMMAND_MESSAGE:
@@ -107,11 +107,11 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command comman
 }
 
 StatusCode Actor::executeActorManagement(Command command, const RawData &params) {
+	supervisor.manageCommand(command, params);
 	switch (command) {
 		case CommandValue::RESTART:
 			return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
 		case CommandValue::UNREGISTER_ACTOR:
-			supervisor.removeSupervised(toString(params));
 			return StatusCode::ok;
 		case CommandValue::SHUTDOWN:
 			return StatusCode::shutdown;

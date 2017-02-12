@@ -43,8 +43,8 @@ public:
 
 	void notifySupervisor(Command command) const;
 	void sendErrorToSupervisor(Command command) const;
-	void removeSupervised(const std::string &name);
-	void manageCommandFromSupervised(Command command, const RawData &params) const;
+	void manageErrorFromSupervised(Command command, const RawData &params) const;
+	void manageCommand(Command command, const RawData &params);
 
 	void registerMonitored(Supervisor &monitored);
 	void unregisterMonitored(Supervisor &monitored);

@@ -447,17 +447,19 @@ static int supervisorStopActorTest() {
 	return (exceptionThrown) ? 0 : 1;
 }
 
-/* This test must be adapted once the children are restarted */
 static int supervisorForwardErrorTest() {
 	static const int STOP_COMMAND = 0x99;
 	static const int OK_ANSWER = 0x99;
 	static bool exceptionThrown = false;
-	static bool actorRestarted = false;
+	static bool actorRestarted1 = false;
+	static bool actorRestarted2 = false;
+	static bool actorRestarted3 = false;
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
 	Actor rootSupervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
+			[]() { actorRestarted1 = true; },
 			RestartStrategy([](void) { return RestartType::RESTART_ONE; }));
 	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
-			[]() { actorRestarted = true; },
+			[]() { actorRestarted2 = true; },
 			RestartStrategy([](void) { return RestartType::ESCALATE; }));
 	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
 		if (i == STOP_COMMAND) {
@@ -467,15 +469,14 @@ static int supervisorForwardErrorTest() {
 		link->post(OK_ANSWER);
 		 return StatusCode::ok;
 	 },
-	 [](){ actorRestarted = true; });
+	 [](){ actorRestarted3 = true; });
+	rootSupervisor.registerActor(supervisor);
 	supervisor.registerActor(supervised);
 	supervised.post(STOP_COMMAND, link);
 
 	for (int i = 0; i < 5 && !exceptionThrown; i++) sleep(1);
-	for (int i = 0; i < 5 && !actorRestarted; i++) sleep(1);
-	return (exceptionThrown) ? 0 : 1;
-
-	return 0;
+	for (int i = 0; i < 5 && (!actorRestarted2 || !actorRestarted3); i++) sleep(1);
+	return (exceptionThrown && !actorRestarted1 && actorRestarted2 && actorRestarted3) ? 0 : 1;
 }
 
 static int actorNotifiesErrorToSupervisorTest() {
