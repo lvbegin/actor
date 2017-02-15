@@ -39,26 +39,28 @@ void ActorController::add(std::shared_ptr<MessageQueue> actorLink) { actors.push
 
 void ActorController::remove(const std::string &name) { actors.erase(LinkApi::nameComparator(name)); }
 
-void ActorController::restartOne(const std::string &name) const {
-	try {
-		restart(actors.find_if(LinkApi::nameComparator(name)));
-	} catch (std::out_of_range &) { }
-}
+void ActorController::restartOne(const std::string &name) const { doOperationOneActor(name, restart); }
 
-void ActorController::stopOne(const std::string &name) const {
-	try {
-		stop(actors.find_if(LinkApi::nameComparator(name)));
-	} catch (std::out_of_range &) { }
-}
+void ActorController::stopOne(const std::string &name) const { doOperationOneActor(name, stop); }
 
-void ActorController::stopAll(void) const { actors.for_each([](auto &e) { stop(e);} ); }
+void ActorController::stopAll(void) const { doOperationAllActors(stop); }
 
-void ActorController::restartAll(void) const { actors.for_each([](auto &e) { restart(e);} ); }
+void ActorController::restartAll(void) const { doOperationAllActors(restart); }
 
 void ActorController::restart(const std::shared_ptr<MessageQueue> &link) { sendMessage(link, CommandValue::RESTART); }
 
 void ActorController::stop(const std::shared_ptr<MessageQueue> &link) { sendMessage(link, CommandValue::SHUTDOWN); }
 
-void ActorController::sendMessage(const std::shared_ptr<MessageQueue> &link, uint32_t command) {
+void ActorController::sendMessage(const std::shared_ptr<MessageQueue> &link, Command command) {
 	link->post(MessageType::MANAGEMENT_MESSAGE, command);
+}
+
+void ActorController::doOperationOneActor(const std::string &name, std::function<void(const std::shared_ptr<MessageQueue> &)> op) const {
+	try {
+		op(actors.find_if(LinkApi::nameComparator(name)));
+	} catch (std::out_of_range &) { }
+}
+
+void ActorController::doOperationAllActors(std::function<void(const std::shared_ptr<MessageQueue> &)> op) const {
+	actors.for_each([&op](auto &e) { op(e);} );
 }

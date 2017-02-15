@@ -48,9 +48,11 @@ public:
 private:
 	SharedVector<std::shared_ptr<MessageQueue>> actors;
 
+	void doOperationOneActor(const std::string &name, std::function<void(const std::shared_ptr<MessageQueue> &)> op) const;
+	void doOperationAllActors(std::function<void(const std::shared_ptr<MessageQueue> &)> op) const;
 	static void restart(const std::shared_ptr<MessageQueue> &link);
 	static void stop(const std::shared_ptr<MessageQueue> &link);
-	static void sendMessage(const std::shared_ptr<MessageQueue> &link, uint32_t command);
+	static void sendMessage(const std::shared_ptr<MessageQueue> &link, Command command);
 };
 
 #endif
