@@ -27,15 +27,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RESTART_STRATEGY_H__
-#define RESTART_STRATEGY_H__
+#ifndef SUPERVISOR_STRATEGY_H__
+#define SUPERVISOR_STRATEGY_H__
 
 #include <functional>
 
-enum class RestartType { RESTART_ONE, RESTART_ALL, STOP_ONE, ESCALATE, };
+enum class SupervisorAction { RESTART_ONE, RESTART_ALL, STOP_ONE, ESCALATE, };
 
-using  RestartStrategy = std::function<RestartType(void)>;
+using  SupervisorStrategy = std::function<SupervisorAction(void)>;
 
-static const RestartStrategy DEFAULT_RESTART_STRATEGY = [](void) { return RestartType::RESTART_ONE; };
+static const SupervisorStrategy DEFAULT_SUPERVISOR_STRATEGY = [](void) { return SupervisorAction::RESTART_ONE; };
 
 #endif

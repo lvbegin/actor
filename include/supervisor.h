@@ -34,11 +34,11 @@
 #include <messageQueue.h>
 #include <commandValue.h>
 #include <uniqueId.h>
-#include <restartStragegy.h>
+#include <supervisorStragegy.h>
 
 class Supervisor {
 public:
-	Supervisor(RestartStrategy strategy, std::shared_ptr<MessageQueue> self);
+	Supervisor(SupervisorStrategy strategy, std::shared_ptr<MessageQueue> self);
 	~Supervisor();
 
 	void notifySupervisor(Command command) const;
@@ -51,7 +51,7 @@ public:
 
 private:
 	mutable std::mutex monitorMutex;
-	const RestartStrategy restartStrategy;
+	const SupervisorStrategy restartStrategy;
 	const std::shared_ptr<MessageQueue> self;
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;

@@ -31,7 +31,7 @@
 #include <uniqueId.h>
 #include <conversion.h>
 
-Supervisor::Supervisor(RestartStrategy strategy, std::shared_ptr<MessageQueue> self) :
+Supervisor::Supervisor(SupervisorStrategy strategy, std::shared_ptr<MessageQueue> self) :
 					restartStrategy(std::move(strategy)), self(std::move(self)) { }
 Supervisor::~Supervisor() = default;
 
@@ -70,16 +70,16 @@ void Supervisor::manageErrorFromSupervised(Command command, const RawData &param
 
 	switch (restartStrategy())
 	{
-		case RestartType::RESTART_ONE:
+		case SupervisorAction::RESTART_ONE:
 			supervisedRefs.restartOne(toString(params));
 			break;
-		case RestartType::STOP_ONE:
+		case SupervisorAction::STOP_ONE:
 			supervisedRefs.stopOne(toString(params));
 			break;
-		case RestartType::RESTART_ALL:
+		case SupervisorAction::RESTART_ALL:
 			supervisedRefs.restartAll();
 			break;
-		case RestartType::ESCALATE: {
+		case SupervisorAction::ESCALATE: {
 			const auto ref = supervisorRef.lock();
 			if (nullptr != ref.get())
 				ref->post(MessageType::ERROR_MESSAGE, command, toRawData(self->getName()));

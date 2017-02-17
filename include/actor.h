@@ -32,9 +32,9 @@
 
 #include <actorController.h>
 #include <executor.h>
-#include <restartStragegy.h>
 #include <actorStateMachine.h>
 #include <supervisor.h>
+#include <supervisorStragegy.h>
 
 #include <functional>
 #include <memory>
@@ -44,8 +44,8 @@ using ActorBody = std::function<StatusCode(Command, const RawData &, const Actor
 
 class Actor {
 public:
-	Actor(std::string name, ActorBody body, RestartStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
-	Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
+	Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
+	Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
 	~Actor();
 
 	Actor(const Actor &a) = delete;

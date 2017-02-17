@@ -37,10 +37,10 @@
 
 static const std::function<void(void)> doNothing = [](void) { };
 
-Actor::Actor(std::string name, ActorBody body, RestartStrategy restartStrategy) :
+Actor::Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy) :
 		Actor(std::move(name), std::move(body), doNothing, std::move(restartStrategy)) { }
 
-Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, RestartStrategy restartStrategy) :
+Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, SupervisorStrategy restartStrategy) :
 						executorQueue(new MessageQueue(std::move(name))), supervisor(std::move(restartStrategy), executorQueue), atRestart(atRestart), body(body),
 						executor(new Executor([this](auto type, auto command, auto &params, auto &sender)
 								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue)) { }

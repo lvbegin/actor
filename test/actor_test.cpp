@@ -431,7 +431,7 @@ static int supervisorStopActorTest() {
 	static bool exceptionThrown = false;
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
 	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
-			RestartStrategy([](void) { return RestartType::STOP_ONE; }));
+			SupervisorStrategy([](void) { return SupervisorAction::STOP_ONE; }));
 	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
 		if (i == STOP_COMMAND) {
 			exceptionThrown = true;
@@ -457,10 +457,10 @@ static int supervisorForwardErrorRestartTest() {
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
 	Actor rootSupervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
 			[]() { actorRestarted1 = true; },
-			RestartStrategy([](void) { return RestartType::RESTART_ONE; }));
+			SupervisorStrategy([](void) { return SupervisorAction::RESTART_ONE; }));
 	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
 			[]() { actorRestarted2 = true; },
-			RestartStrategy([](void) { return RestartType::ESCALATE; }));
+			SupervisorStrategy([](void) { return SupervisorAction::ESCALATE; }));
 	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
 		if (i == STOP_COMMAND) {
 			exceptionThrown = true;
@@ -486,9 +486,9 @@ static int supervisorForwardErrorStopTest() {
 	static bool exceptionThrown = false;
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
 	Actor rootSupervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
-			RestartStrategy([](void) { return RestartType::STOP_ONE; }));
+			SupervisorStrategy([](void) { return SupervisorAction::STOP_ONE; }));
 	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
-			RestartStrategy([](void) { return RestartType::ESCALATE; }));
+			SupervisorStrategy([](void) { return SupervisorAction::ESCALATE; }));
 	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
 		if (i == STOP_COMMAND) {
 			exceptionThrown = true;
@@ -575,7 +575,7 @@ static int restartAllActorBySupervisorTest() {
 	Actor supervisor("supervisor",
 			[](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
 			[&supervisorRestarted](void) { supervisorRestarted = true; },
-			[](void) { return RestartType::RESTART_ALL; });
+			[](void) { return SupervisorAction::RESTART_ALL; });
 	Actor supervised1("supervised1",
 			[](int i, const RawData &, const ActorLink &) {
 				Actor::notifyError(0x69);
