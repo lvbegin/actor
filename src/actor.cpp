@@ -35,16 +35,19 @@
 
 #include <future>
 
-static const LifeCycleHook DEFAULT_HOOK = [](const ActorContext&) { };
+static const LifeCycleHook DEFAULT_START_HOOK = [](const ActorContext&) { };
+static const LifeCycleHook DEFAULT_STOP_HOOK = [](const ActorContext&c) { c.stopActors(); };
 static const LifeCycleHook DEFAULT_RESTART_HOOK = [](const ActorContext&c) { c.restartActors(); };
 
 Actor::Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy) :
-		Actor(std::move(name), std::move(body), DEFAULT_RESTART_HOOK, std::move(restartStrategy)) { }
+		Actor(std::move(name), std::move(body), DEFAULT_START_HOOK, DEFAULT_STOP_HOOK, DEFAULT_RESTART_HOOK, std::move(restartStrategy)) { }
 
-Actor::Actor(std::string name, ActorBody body, LifeCycleHook atRestart, SupervisorStrategy restartStrategy) :
-						executorQueue(new MessageQueue(std::move(name))), supervisor(std::move(restartStrategy), executorQueue), atRestart(atRestart), body(body),
+Actor::Actor(std::string name, ActorBody body, LifeCycleHook atStart, LifeCycleHook atStop, LifeCycleHook atRestart, SupervisorStrategy restartStrategy) :
+						executorQueue(new MessageQueue(std::move(name))), supervisor(std::move(restartStrategy), executorQueue),
+						atStart(atStart), atStop(atStop), atRestart(atRestart), body(body),
 						executor(new Executor([this](auto type, auto command, auto &params, auto &sender)
-								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue)) { }
+								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue,
+								[this]() { this->atStart(this->supervisor); })) { }
 
 Actor::~Actor() {
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
@@ -77,6 +80,7 @@ StatusCode Actor::doRestart(void) {
 				std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
 				std::swap(this->executor, ref);
 				status.set_value(StatusCode::ok);
+				this->atRestart(this->supervisor);
 			});
 	e.set_value(newExecutor);
 	return status.get_future().get();
@@ -109,13 +113,12 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command comman
 StatusCode Actor::executeActorManagement(Command command, const RawData &params) {
 	switch (command) {
 		case CommandValue::RESTART:
-			atRestart(supervisor);
 			return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
 		case CommandValue::UNREGISTER_ACTOR:
 			supervisor.removeActor(toString(params));
 			return StatusCode::ok;
 		case CommandValue::SHUTDOWN:
-			supervisor.stopActors();
+			atStop(supervisor);
 			return StatusCode::shutdown;
 		default:
 			THROW(std::runtime_error, "unsupported management message command.");

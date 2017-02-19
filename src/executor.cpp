@@ -31,8 +31,8 @@
 #include <exception.h>
 #include <commandValue.h>
 
-Executor::Executor(ExecutorBody body, MessageQueue &queue, std::function<void(void)> atStart) : messageQueue(queue),
-					thread([this, body, atStart]() { atStart(); executeBody(body); }) { }
+Executor::Executor(ExecutorBody body, MessageQueue &queue, ExecutorHook atStart) : messageQueue(queue),
+					thread([this, body, atStart]() { atStart();  executeBody(body); }) { }
 
 Executor::~Executor() { thread.join(); };
 

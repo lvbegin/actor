@@ -36,10 +36,11 @@
 #include <thread>
 
 using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const std::shared_ptr<LinkApi> &sender)>;
+using ExecutorHook = std::function<void(void)>;
 
 class Executor {
 public:
-	Executor(ExecutorBody body, MessageQueue &queue, std::function<void(void)> atStart = ([](void) { }));
+	Executor(ExecutorBody body, MessageQueue &queue, ExecutorHook atStart = ([](void) { }));
 	~Executor();
 
 	Executor() = delete;
