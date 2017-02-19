@@ -42,10 +42,12 @@
 
 using ActorBody = std::function<StatusCode(Command, const RawData &, const ActorLink &)>;
 
+using LifeCycleHook = std::function<void(const ActorContext &)>;
+
 class Actor {
 public:
 	Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
-	Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
+	Actor(std::string name, ActorBody body, LifeCycleHook atRestart, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
 	~Actor();
 
 	Actor(const Actor &a) = delete;
@@ -64,10 +66,13 @@ private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
 	const std::shared_ptr<MessageQueue> executorQueue;
 	Supervisor supervisor;
-	const std::function<void(void)> atRestart;
+	LifeCycleHook atStart;
+	LifeCycleHook atStop;
+	LifeCycleHook atRestart;
 	const ActorBody body;
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
+
 
 	StatusCode actorExecutor(ActorBody body, MessageType type, Command command, const RawData &params, const ActorLink &sender);
 	StatusCode executeActorBody(ActorBody body, Command command, const RawData &params, const ActorLink &sender);

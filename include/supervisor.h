@@ -36,7 +36,18 @@
 #include <uniqueId.h>
 #include <supervisorStragegy.h>
 
-class Supervisor {
+class ActorContext {
+public:
+	virtual void restartActors() const = 0;
+	virtual void stopActors() const = 0;
+	virtual void notifySupervisor(Command command) const = 0;
+	virtual void sendErrorToSupervisor(Command command) const = 0;
+protected:
+	ActorContext() = default;
+	virtual ~ActorContext() = default;
+};
+
+class Supervisor : public ActorContext {
 public:
 	Supervisor(SupervisorStrategy strategy, std::shared_ptr<MessageQueue> self);
 	~Supervisor();
@@ -44,7 +55,9 @@ public:
 	void notifySupervisor(Command command) const;
 	void sendErrorToSupervisor(Command command) const;
 	void manageErrorFromSupervised(Command command, const RawData &params) const;
-	void manageCommand(Command command, const RawData &params);
+	void removeActor(const std::string &name);
+	void restartActors() const;
+	void stopActors() const;
 
 	void registerMonitored(Supervisor &monitored);
 	void unregisterMonitored(Supervisor &monitored);
@@ -57,6 +70,7 @@ private:
 	std::weak_ptr<MessageQueue> supervisorRef;
 
 	void sendToSupervisor(MessageType type, uint32_t code) const;
+	void doOperation(std::function<void(void)> op) const;
 	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
 };
 

@@ -35,12 +35,13 @@
 
 #include <future>
 
-static const std::function<void(void)> doNothing = [](void) { };
+static const LifeCycleHook DEFAULT_HOOK = [](const ActorContext&) { };
+static const LifeCycleHook DEFAULT_RESTART_HOOK = [](const ActorContext&c) { c.restartActors(); };
 
 Actor::Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy) :
-		Actor(std::move(name), std::move(body), doNothing, std::move(restartStrategy)) { }
+		Actor(std::move(name), std::move(body), DEFAULT_RESTART_HOOK, std::move(restartStrategy)) { }
 
-Actor::Actor(std::string name, ActorBody body, std::function<void(void)> atRestart, SupervisorStrategy restartStrategy) :
+Actor::Actor(std::string name, ActorBody body, LifeCycleHook atRestart, SupervisorStrategy restartStrategy) :
 						executorQueue(new MessageQueue(std::move(name))), supervisor(std::move(restartStrategy), executorQueue), atRestart(atRestart), body(body),
 						executor(new Executor([this](auto type, auto command, auto &params, auto &sender)
 								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue)) { }
@@ -75,7 +76,6 @@ StatusCode Actor::doRestart(void) {
 			[this, &status, & e]() mutable {
 				std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
 				std::swap(this->executor, ref);
-				this->atRestart();
 				status.set_value(StatusCode::ok);
 			});
 	e.set_value(newExecutor);
@@ -107,13 +107,15 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command comman
 }
 
 StatusCode Actor::executeActorManagement(Command command, const RawData &params) {
-	supervisor.manageCommand(command, params);
 	switch (command) {
 		case CommandValue::RESTART:
+			atRestart(supervisor);
 			return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
 		case CommandValue::UNREGISTER_ACTOR:
+			supervisor.removeActor(toString(params));
 			return StatusCode::ok;
 		case CommandValue::SHUTDOWN:
+			supervisor.stopActors();
 			return StatusCode::shutdown;
 		default:
 			THROW(std::runtime_error, "unsupported management message command.");
