@@ -424,11 +424,11 @@ static int supervisorRestartsActorTest() {
 	return (exceptionThrown) ? 0 : 1;
 }
 
-/* To improve when there will be some hook for stopActor. */
 static int supervisorStopActorTest() {
 	static const int STOP_COMMAND = 0x99;
 	static const int OK_ANSWER = 0x99;
 	static bool exceptionThrown = false;
+	static bool actorStopped = false;
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
 	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
 			SupervisorStrategy([](void) { return SupervisorAction::STOP_ONE; }));
@@ -439,12 +439,16 @@ static int supervisorStopActorTest() {
 		}
 		link->post(OK_ANSWER);
 		 return StatusCode::ok;
-	 });
+	 },
+	 [](const ActorContext&) {},
+	 [](const ActorContext&) { actorStopped = true; },
+	 [](const ActorContext&) {});
 	supervisor.registerActor(supervised);
 	supervised.post(STOP_COMMAND, link);
 
 	for (int i = 0; i < 5 && !exceptionThrown; i++) sleep(1);
-	return (exceptionThrown) ? 0 : 1;
+	for (int i = 0; i < 5 && !actorStopped; i++) sleep(1);
+	return (exceptionThrown && actorStopped) ? 0 : 1;
 }
 
 static int supervisorForwardErrorRestartTest() {
@@ -621,6 +625,45 @@ static int restartAllActorBySupervisorTest() {
 	return (supervisorRestarted || !supervised1Restarted || !supervised2Restarted) ? 1 : 0;
 }
 
+#if 0
+static int stoppingSupervisorStopsSupervisedTest() {
+	static const int STOP_COMMAND = 0x99;
+	static bool supervisorStopped = false;
+	static bool supervisedStopped = false;
+	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::shutdown; },
+	 [](const ActorContext&) { },
+	 [](const ActorContext&c) { c.stopActors(); supervisorStopped = true; },
+	 [](const ActorContext&) { });
+	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) { return StatusCode::ok; },
+	 [](const ActorContext&) { },
+	 [](const ActorContext&) { supervisedStopped = true; },
+	 [](const ActorContext&) { });
+	supervisor.registerActor(supervised);
+	supervisor.post(STOP_COMMAND);
+
+	for (int i = 0; i < 5 && !(supervisedStopped && supervisorStopped); i++) sleep(1);
+	return (supervisorStopped && supervisedStopped) ? 0 : 1;
+}
+#else
+static int stoppingSupervisorStopsSupervisedTest() {
+	static bool supervisorStopped = false;
+	static bool supervisedStopped = false;
+	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::shutdown; },
+	 [](const ActorContext&) { },
+	 [](const ActorContext&c) { c.stopActors(); supervisorStopped = true; },
+	 [](const ActorContext&) { });
+	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) { return StatusCode::ok; },
+	 [](const ActorContext&) { },
+	 [](const ActorContext&) { supervisedStopped = true; },
+	 [](const ActorContext&) { });
+	supervisor.registerActor(supervised);
+	supervisor.post(CommandValue::SHUTDOWN); // ==> should be another command that implies a shutdown ...
+
+	for (int i = 0; i < 5 && !(supervisedStopped && supervisorStopped); i++) sleep(1);
+	return (supervisorStopped && supervisedStopped) ? 0 : 1;
+}
+#endif
+
 static int executorTest() {
 	MessageQueue messageQueue;
 	Executor executor([](MessageType, int, const RawData &, const ActorLink &) { return StatusCode::shutdown; }, messageQueue);
@@ -663,6 +706,7 @@ int _runTest(const _test *suite, size_t nbTests) {
 
 int main() {
 	static const _test suite[] = {
+#if 1
 			TEST(basicActorTest),
 			TEST(basicActorWithParamsTest),
 			TEST(proxyTest),
@@ -688,8 +732,12 @@ int main() {
 			TEST(actorDoesNothingIfNoSupervisorTest),
 			TEST(actorDoesNothingIfNoSupervisorAndExceptionThrownTest),
 			TEST(restartAllActorBySupervisorTest),
+#endif
+			TEST(stoppingSupervisorStopsSupervisedTest),
+#if 1
 			TEST(executorTest),
 			TEST(serializationTest),
+#endif
 	};
 
 	const auto nbFailure = runTest(suite);

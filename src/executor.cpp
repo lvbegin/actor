@@ -31,8 +31,8 @@
 #include <exception.h>
 #include <commandValue.h>
 
-Executor::Executor(ExecutorBody body, MessageQueue &queue, ExecutorHook atStart) : messageQueue(queue),
-					thread([this, body, atStart]() { atStart();  executeBody(body); }) { }
+Executor::Executor(ExecutorBody body, MessageQueue &queue, ExecutorHook atStart, ExecutorHook atStop) : messageQueue(queue),
+					thread([this, body, atStart, atStop]() { atStart();  executeBody(body); atStop(); }) { }
 
 Executor::~Executor() { thread.join(); };
 
@@ -40,10 +40,7 @@ void Executor::executeBody(ExecutorBody body) const {
 
 	while (true) {
 		const struct MessageQueue::Message message(messageQueue.get());
-		const StatusCode status = (MessageType::COMMAND_MESSAGE == message.type && CommandValue::SHUTDOWN == message.code) ?
-				StatusCode::shutdown : body(message.type, message.code, message.params, message.sender);
-
-		switch (status) {
+		switch (body(message.type, message.code, message.params, message.sender)) {
 			case StatusCode::ok:
 				break;
 			case StatusCode::shutdown:

@@ -44,15 +44,22 @@ Actor::Actor(std::string name, ActorBody body, SupervisorStrategy restartStrateg
 
 Actor::Actor(std::string name, ActorBody body, LifeCycleHook atStart, LifeCycleHook atStop, LifeCycleHook atRestart, SupervisorStrategy restartStrategy) :
 						executorQueue(new MessageQueue(std::move(name))), supervisor(std::move(restartStrategy), executorQueue),
-						atStart(atStart), atStop(atStop), atRestart(atRestart), body(body),
+						atStart(atStart), atStop(atStop), atRestart(atRestart), body(body), stopped(false),
 						executor(new Executor([this](auto type, auto command, auto &params, auto &sender)
 								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue,
-								[this]() { this->atStart(this->supervisor); })) { }
+								[this]() { this->atStart(this->supervisor); }, [this]() { executorStopCb(); } )) { }
 
 Actor::~Actor() {
+	stopped = true;
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
 	supervisor.notifySupervisor(CommandValue::UNREGISTER_ACTOR);
 	executorQueue->post(CommandValue::SHUTDOWN);
+}
+
+void Actor::executorStopCb(void) {
+	if (this->stopped) {
+		this->atStop(this->supervisor);
+	}
 }
 
 void Actor::post(Command command, ActorLink sender) const {
@@ -81,7 +88,8 @@ StatusCode Actor::doRestart(void) {
 				std::swap(this->executor, ref);
 				status.set_value(StatusCode::ok);
 				this->atRestart(this->supervisor);
-			});
+			},
+			[this]() { executorStopCb(); } );
 	e.set_value(newExecutor);
 	return status.get_future().get();
 }
@@ -96,15 +104,19 @@ void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
 StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command command, const RawData &params, const ActorLink &sender) {
 	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED))
-		return StatusCode::ok;
+		return StatusCode::shutdown;
 
 	switch (type) {
 		case MessageType::ERROR_MESSAGE:
 			return (supervisor.manageErrorFromSupervised(command, params), StatusCode::ok);
 		case MessageType::MANAGEMENT_MESSAGE:
 			return executeActorManagement(command, params);
-		case MessageType::COMMAND_MESSAGE:
-			return executeActorBody(body, command, params, sender);
+		case MessageType::COMMAND_MESSAGE: {
+			const auto status = executeActorBody(body, command, params, sender);
+			if (StatusCode::shutdown == status)
+				stopped = true;
+			return status;
+		}
 		default:
 			THROW(std::runtime_error, "unsupported message type.");
 	}
@@ -118,7 +130,7 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 			supervisor.removeActor(toString(params));
 			return StatusCode::ok;
 		case CommandValue::SHUTDOWN:
-			atStop(supervisor);
+			stopped = true;
 			return StatusCode::shutdown;
 		default:
 			THROW(std::runtime_error, "unsupported management message command.");
@@ -126,6 +138,8 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 }
 
 StatusCode Actor::executeActorBody(ActorBody body, Command command, const RawData &params, const ActorLink &sender) {
+	if ( CommandValue::SHUTDOWN == command )
+		return StatusCode::shutdown;
 	try {
 		return body(command, params, sender);
 	} catch (ActorException &e) {

@@ -66,19 +66,20 @@ private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
 	const std::shared_ptr<MessageQueue> executorQueue;
 	Supervisor supervisor;
-	LifeCycleHook atStart;
-	LifeCycleHook atStop;
-	LifeCycleHook atRestart;
+	const LifeCycleHook atStart;
+	const LifeCycleHook atStop;
+	const LifeCycleHook atRestart;
 	const ActorBody body;
+	bool stopped;
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
-
 
 	StatusCode actorExecutor(ActorBody body, MessageType type, Command command, const RawData &params, const ActorLink &sender);
 	StatusCode executeActorBody(ActorBody body, Command command, const RawData &params, const ActorLink &sender);
 	StatusCode executeActorManagement(Command command, const RawData &params);
 	StatusCode doRestart(void);
 	StatusCode restartSateMachine(void);
+	void executorStopCb(void);
 };
 
 #endif

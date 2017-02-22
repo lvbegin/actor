@@ -40,7 +40,7 @@ using ExecutorHook = std::function<void(void)>;
 
 class Executor {
 public:
-	Executor(ExecutorBody body, MessageQueue &queue, ExecutorHook atStart = ([](void) { }));
+	Executor(ExecutorBody body, MessageQueue &queue, ExecutorHook atStart = ([](void) { }), ExecutorHook atStop = ([](void) { }));
 	~Executor();
 
 	Executor() = delete;
