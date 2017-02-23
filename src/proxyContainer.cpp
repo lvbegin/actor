@@ -36,9 +36,7 @@
 #include <iostream>
 ProxyContainer::ProxyContainer() :
 	executor([this](MessageType, Command command, const RawData &id, const ActorLink &) {
-		if (CommandValue::SHUTDOWN == command)
-			return StatusCode::shutdown;
-		return (this->deleteProxy(UniqueId::unserialize(id)), StatusCode::ok);
+		return this->executeCommand(command, id);
 	}, executorQueue) { }
 
 ProxyContainer::~ProxyContainer() { executorQueue.post(CommandValue::SHUTDOWN); }
@@ -49,4 +47,8 @@ void ProxyContainer::createNewProxy(ActorLink actor, Connection connection, Find
 	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id), std::forward_as_tuple(std::move(actor), std::move(connection), terminate, std::move(findActor)));
 }
 
-void ProxyContainer::deleteProxy(Id id) { proxies.erase(id); }
+StatusCode ProxyContainer::executeCommand(Command command, const RawData &id) {
+	if (CommandValue::SHUTDOWN == command)
+		return StatusCode::shutdown;
+	return (proxies.erase(UniqueId::unserialize(id)), StatusCode::ok);
+}
