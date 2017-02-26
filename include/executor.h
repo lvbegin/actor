@@ -31,7 +31,6 @@
 #define EXECUTOR_H__
 
 #include <messageQueue.h>
-
 #include <functional>
 #include <thread>
 
@@ -40,7 +39,7 @@ using ExecutorHook = std::function<void(void)>;
 
 class Executor {
 public:
-	Executor(ExecutorBody body, MessageQueue &queue, ExecutorHook atStart = ([](void) { }), ExecutorHook atStop = ([](void) { }));
+	Executor(ExecutorBody body, MessageQueue &queue, ExecutorHook atStart = [](void) { }, ExecutorHook atStop = [](void) { });
 	~Executor();
 
 	Executor() = delete;
