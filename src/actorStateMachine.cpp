@@ -51,8 +51,8 @@ void ActorStateMachine::moveTo(ActorState newState) {
 			break;
 		case ActorState::STOPPED:
 			if (ActorState::STOPPED == state)
-				THROW(std::runtime_error, "actor cannot move to stopped state.");
-			stateChanged.wait(l, [this]() { return ActorState::RUNNING == this->state; });
+				break;
+			stateChanged.wait(l, [this]() { return ActorState::RUNNING == state; });
 			state = newState;
 			break;
 	default:

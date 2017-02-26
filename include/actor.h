@@ -71,7 +71,6 @@ private:
 	const LifeCycleHook atStop;
 	const LifeCycleHook atRestart;
 	const ActorBody body;
-	bool stopped;
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
 

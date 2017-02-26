@@ -42,22 +42,20 @@ Actor::Actor(std::string name, ActorBody body, SupervisorStrategy restartStrateg
 
 Actor::Actor(std::string name, ActorBody body, LifeCycleHook atStart, LifeCycleHook atStop, LifeCycleHook atRestart, SupervisorStrategy restartStrategy) :
 						executorQueue(new MessageQueue(std::move(name))), supervisor(std::move(restartStrategy), executorQueue),
-						atStart(atStart), atStop(atStop), atRestart(atRestart), body(body), stopped(false),
+						atStart(atStart), atStop(atStop), atRestart(atRestart), body(body),
 						executor(new Executor([this](auto type, auto command, auto &params, auto &sender)
 								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue,
 								[this]() { this->atStart(this->supervisor); }, [this]() { executorStopCb(); } )) { }
 
 Actor::~Actor() {
-	stopped = true;
 	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
 	supervisor.notifySupervisor(CommandValue::UNREGISTER_ACTOR);
 	executorQueue->post(CommandValue::SHUTDOWN);
 }
 
 void Actor::executorStopCb(void) {
-	if (this->stopped) {
-		this->atStop(this->supervisor);
-	}
+	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED))
+		atStop(supervisor);
 }
 
 void Actor::post(Command command, ActorLink sender) const {
@@ -114,7 +112,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command comman
 		case MessageType::COMMAND_MESSAGE: {
 			const auto status = executeActorBody(body, command, params, sender);
 			if (StatusCode::shutdown == status)
-				stopped = true;
+				stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
 			return status;
 		}
 		default:
@@ -130,7 +128,7 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 			supervisor.removeActor(toString(params));
 			return StatusCode::ok;
 		case CommandValue::SHUTDOWN:
-			stopped = true;
+			stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
 			return StatusCode::shutdown;
 		default:
 			THROW(std::runtime_error, "unsupported management message command.");
