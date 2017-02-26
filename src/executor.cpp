@@ -39,7 +39,7 @@ Executor::~Executor() { thread.join(); };
 void Executor::executeBody(ExecutorBody body) const {
 
 	while (true) {
-		const struct MessageQueue::Message message(messageQueue.get());
+		const auto message(messageQueue.get());
 		switch (body(message.type, message.code, message.params, message.sender)) {
 			case StatusCode::ok:
 				break;
