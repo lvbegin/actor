@@ -86,13 +86,11 @@ void Supervisor::manageErrorFromSupervised(Command command, const RawData &param
 }
 
 void Supervisor::registerMonitored(Supervisor &monitored) {
-	doRegistrationOperation(monitored, [this, &monitored](void) { this->supervisedRefs.add(monitored.self); } );
+	doRegistrationOperation(monitored, [this, &monitored](void) { supervisedRefs.add(monitored.self); } );
 }
 
 void Supervisor::unregisterMonitored(Supervisor &monitored) {
-	doRegistrationOperation(monitored, [this, &monitored](void) {
-		this->supervisedRefs.remove(monitored.self->getName());
-	} );
+	doRegistrationOperation(monitored, [this, &monitored](void) { supervisedRefs.remove(monitored.self->getName()); } );
 }
 
 void Supervisor::doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const {
