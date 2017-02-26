@@ -39,6 +39,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <future>
 
 using ActorBody = std::function<StatusCode(Command, const RawData &, const ActorLink &)>;
 
@@ -80,6 +81,7 @@ private:
 	StatusCode doRestart(void);
 	StatusCode restartSateMachine(void);
 	void executorStopCb(void);
+	void executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e);
 };
 
 #endif

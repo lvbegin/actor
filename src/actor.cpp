@@ -33,8 +33,6 @@
 #include <exception.h>
 #include <conversion.h>
 
-#include <future>
-
 static const LifeCycleHook DEFAULT_START_HOOK = [](const ActorContext&) { };
 static const LifeCycleHook DEFAULT_STOP_HOOK = [](const ActorContext&c) { c.stopActors(); };
 static const LifeCycleHook DEFAULT_RESTART_HOOK = [](const ActorContext&c) { c.restartActors(); };
@@ -77,21 +75,23 @@ StatusCode Actor::restartSateMachine(void) {
 }
 
 StatusCode Actor::doRestart(void) {
-	auto status = std::promise<StatusCode>();
-	auto e = std::promise<std::unique_ptr<Executor> &>();
+	std::promise<StatusCode> status;
+	std::promise<std::unique_ptr<Executor> &> e;
 	std::unique_ptr<Executor> newExecutor = std::make_unique<Executor>(
 			[this](auto type, auto command, auto &params, auto &sender) {
-				return this->actorExecutor(this->body, type, command, params, sender);
+				return this->actorExecutor(body, type, command, params, sender);
 			}, *executorQueue,
-			[this, &status, & e]() mutable {
-				std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
-				std::swap(this->executor, ref);
-				status.set_value(StatusCode::ok);
-				this->atRestart(this->supervisor);
-			},
+			[this, &status, & e]() { executorRestartCb(status, e); },
 			[this]() { executorStopCb(); } );
 	e.set_value(newExecutor);
 	return status.get_future().get();
+}
+
+void Actor::executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e) {
+	std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
+	std::swap(this->executor, ref);
+	status.set_value(StatusCode::ok);
+	this->atRestart(this->supervisor);
 }
 
 ActorLink Actor::getActorLinkRef() const { return executorQueue; }
