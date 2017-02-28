@@ -40,15 +40,7 @@ void Executor::executeBody(ExecutorBody body) const {
 
 	while (true) {
 		const auto message(messageQueue.get());
-		switch (body(message.type, message.code, message.params, message.sender)) {
-			case StatusCode::ok:
-				break;
-			case StatusCode::shutdown:
-				return;
-			case StatusCode::error:
-				break;
-			default:
-				THROW(std::runtime_error, "Unknown status code.");
-		}
+		if (StatusCode::shutdown == body(message.type, message.code, message.params, message.sender))
+			return ;
 	}
 }
