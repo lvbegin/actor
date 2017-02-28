@@ -87,9 +87,9 @@ StatusCode Actor::doRestart(void) {
 
 void Actor::executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e) {
 	std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
-	std::swap(this->executor, ref);
+	std::swap(executor, ref);
 	status.set_value(StatusCode::ok);
-	this->atRestart(this->supervisor);
+	atRestart(supervisor);
 }
 
 ActorLink Actor::getActorLinkRef() const { return executorQueue; }
