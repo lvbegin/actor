@@ -40,11 +40,13 @@ void Supervisor::notifySupervisor(Command command) const{ sendToSupervisor(Messa
 void Supervisor::sendErrorToSupervisor(Command command) const { sendToSupervisor(MessageType::ERROR_MESSAGE, command); }
 
 void Supervisor::sendToSupervisor(MessageType type, Command command) const {
-	std::unique_lock<std::mutex> l(monitorMutex);
+	doOperation([this, type, command](){ postSupervisor(type, command, toRawData(self->getName())); });
+}
 
+void Supervisor::postSupervisor(MessageType type, Command command, const RawData &data) const {
 	const auto ref = supervisorRef.lock();
 	if (nullptr != ref.get())
-		ref->post(type, command, toRawData(self->getName()));
+		ref->post(type, command, data);
 }
 
 void Supervisor::removeActor(const std::string &name) { doOperation([&name, this](){ supervisedRefs.remove(name); } ); }
@@ -73,12 +75,9 @@ void Supervisor::manageErrorFromSupervised(Command command, const RawData &param
 		case SupervisorAction::RESTART_ALL:
 			supervisedRefs.restartAll();
 			break;
-		case SupervisorAction::ESCALATE: {
-			const auto ref = supervisorRef.lock();
-			if (nullptr != ref.get())
-				ref->post(MessageType::ERROR_MESSAGE, command, toRawData(self->getName()));
+		case SupervisorAction::ESCALATE:
+			postSupervisor(MessageType::ERROR_MESSAGE, command, toRawData(self->getName()));
 			break;
-		}
 		default:
 			/* should escalate to supervisor */
 			throw std::runtime_error("unexpected case.");

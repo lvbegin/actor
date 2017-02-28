@@ -69,6 +69,7 @@ private:
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;
 
+	void postSupervisor(MessageType type, Command command, const RawData &data) const;
 	void sendToSupervisor(MessageType type, uint32_t code) const;
 	void doOperation(std::function<void(void)> op) const;
 	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
