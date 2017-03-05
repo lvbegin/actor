@@ -33,7 +33,7 @@
 
 static void threadBody(uint16_t port, std::function<void(const ServerSocket &s)> body);
 
-ActorRegistry::ActorRegistry(std::string name, uint16_t port) : name(name), port(port),
+ActorRegistry::ActorRegistry(std::string name, uint16_t port) : name(std::move(name)), port(port),
 		findActorCallback([this](auto &name) { return this->getRemoteActor(name); }), terminated(false),
 		t([this]() {  threadBody(this->port, [this](const ServerSocket &s) { registryBody(s); }); }) { }
 
