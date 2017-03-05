@@ -35,7 +35,7 @@
 #include <commandValue.h>
 #include <uniqueId.h>
 #include <supervisorStragegy.h>
-#include "actorContext.h"
+#include <actorContext.h>
 
 class Supervisor : public ActorContext {
 public:
