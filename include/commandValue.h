@@ -30,6 +30,8 @@
 #ifndef COMMAND_VALUE_H__
 #define COMMAND_VALUE_H__
 
+#include <cstdint>
+
 class CommandValue {
 public:
 	CommandValue() = delete;
