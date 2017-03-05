@@ -35,9 +35,8 @@
 
 #include <iostream>
 ProxyContainer::ProxyContainer() :
-	executor([this](MessageType, Command command, const RawData &id, const ActorLink &) {
-		return this->executeCommand(command, id);
-	}, executorQueue) { }
+	executor([this](MessageType, Command command, const RawData &id, const ActorLink &) { return executeCommand(command, id); },
+			executorQueue) { }
 
 ProxyContainer::~ProxyContainer() { executorQueue.post(CommandValue::SHUTDOWN); }
 

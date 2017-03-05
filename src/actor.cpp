@@ -41,8 +41,8 @@ Actor::Actor(std::string name, ActorBody body, SupervisorStrategy restartStrateg
 		Actor(std::move(name), std::move(body), DEFAULT_START_HOOK, DEFAULT_STOP_HOOK, DEFAULT_RESTART_HOOK, std::move(restartStrategy)) { }
 
 Actor::Actor(std::string name, ActorBody body, LifeCycleHook atStart, LifeCycleHook atStop, LifeCycleHook atRestart, SupervisorStrategy restartStrategy) :
-						executorQueue(new MessageQueue(std::move(name))), supervisor(std::move(restartStrategy), executorQueue),
-						atStart(atStart), atStop(atStop), atRestart(atRestart), body(body),
+						executorQueue(new MessageQueue(std::move(name))),
+						atStart(atStart), atStop(atStop), atRestart(atRestart), body(body), supervisor(std::move(restartStrategy), executorQueue),
 						executor(new Executor([this](auto type, auto command, auto &params, auto &sender)
 								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue,
 								[this]() { this->atStart(this->supervisor); }, [this]() { executorStopCb(); } )) { }

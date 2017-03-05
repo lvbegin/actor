@@ -31,7 +31,7 @@
 #include <uniqueId.h>
 #include <conversion.h>
 
-Supervisor::Supervisor(SupervisorStrategy strategy, std::shared_ptr<MessageQueue> self) :
+Supervisor::Supervisor(SupervisorStrategy strategy, LinkRef self) :
 					restartStrategy(std::move(strategy)), self(std::move(self)) { }
 Supervisor::~Supervisor() = default;
 

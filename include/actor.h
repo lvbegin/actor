@@ -65,12 +65,12 @@ public:
 	static void notifyError(int e);
 private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
-	const std::shared_ptr<MessageQueue> executorQueue;
-	Supervisor supervisor;
+	const LinkRef executorQueue;
 	const LifeCycleHook atStart;
 	const LifeCycleHook atStop;
 	const LifeCycleHook atRestart;
 	const ActorBody body;
+	Supervisor supervisor;
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
 

@@ -34,7 +34,7 @@
 #include <functional>
 #include <thread>
 
-using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const std::shared_ptr<LinkApi> &sender)>;
+using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const ActorLink &sender)>;
 using ExecutorHook = std::function<void(void)>;
 
 class Executor {

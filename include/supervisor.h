@@ -49,7 +49,7 @@ protected:
 
 class Supervisor : public ActorContext {
 public:
-	Supervisor(SupervisorStrategy strategy, std::shared_ptr<MessageQueue> self);
+	Supervisor(SupervisorStrategy strategy, LinkRef self);
 	~Supervisor();
 
 	void notifySupervisor(Command command) const;
@@ -65,7 +65,7 @@ public:
 private:
 	mutable std::mutex monitorMutex;
 	const SupervisorStrategy restartStrategy;
-	const std::shared_ptr<MessageQueue> self;
+	const LinkRef self;
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;
 
