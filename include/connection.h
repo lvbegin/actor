@@ -32,7 +32,6 @@
 
 #include <types.h>
 
-#include <cstdint>
 #include <unistd.h>
 #include <string>
 #include <vector>
