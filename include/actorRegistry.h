@@ -31,16 +31,13 @@
 #define ACTOR_REGISTRY_H__
 
 #include <actor.h>
-#include <cstdint>
-#include <thread>
-#include <memory>
-
-#include <netinet/in.h>
-
 #include <proxyContainer.h>
 #include <serverSocket.h>
 #include <sharedMap.h>
 #include <sharedVector.h>
+
+#include <cstdint>
+#include <thread>
 
 class ActorRegistry {
 public:
@@ -51,7 +48,6 @@ public:
 	void registerActor(ActorLink actor);
 	void unregisterActor(const std::string &name);
 	ActorLink  getActor(const std::string &name) const;
-
 private:
 	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY = 0, SEARCH_ACTOR = 1, };
 	enum class ActorSearchResult : uint32_t { ACTOR_NOT_FOUND = 0, ACTOR_FOUND = 1, };
