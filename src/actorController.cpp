@@ -53,10 +53,10 @@ void ActorController::stop(const LinkRef &link) { sendMessage(link, CommandValue
 
 void ActorController::sendMessage(const LinkRef &link, Command command) { link->post(MessageType::MANAGEMENT_MESSAGE, command); }
 
-void ActorController::doOperationOneActor(const std::string &name, linkRefOperation op) const {
+void ActorController::doOperationOneActor(const std::string &name, LinkRefOperation op) const {
 	try {
 		op(actors.find_if(LinkApi::nameComparator(name)));
 	} catch (std::out_of_range &) { }
 }
 
-void ActorController::doOperationAllActors(linkRefOperation op) const { actors.for_each([&op](auto &e) { op(e);} ); }
+void ActorController::doOperationAllActors(LinkRefOperation op) const { actors.for_each([&op](auto &e) { op(e);} ); }

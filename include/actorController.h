@@ -35,7 +35,7 @@
 #include <commandValue.h>
 
 using LinkRef = std::shared_ptr<MessageQueue>;
-using linkRefOperation = std::function<void(const LinkRef &)>;
+using LinkRefOperation = std::function<void(const LinkRef &)>;
 
 class ActorController {
 public:
@@ -51,8 +51,8 @@ public:
 private:
 	SharedVector<LinkRef> actors;
 
-	void doOperationOneActor(const std::string &name, linkRefOperation op) const;
-	void doOperationAllActors(linkRefOperation op) const;
+	void doOperationOneActor(const std::string &name, LinkRefOperation op) const;
+	void doOperationAllActors(LinkRefOperation op) const;
 	static void restart(const LinkRef &link);
 	static void stop(const LinkRef &link);
 	static void sendMessage(const LinkRef &link, Command command);
