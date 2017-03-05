@@ -34,25 +34,28 @@
 #include <sharedVector.h>
 #include <commandValue.h>
 
+using linkRef = std::shared_ptr<MessageQueue>;
+using linkRefOperation = std::function<void(const linkRef &)>;
+
 class ActorController {
 public:
 	ActorController();
 	~ActorController();
 
-	void add(std::shared_ptr<MessageQueue> actorLink);
+	void add(linkRef actorLink);
 	void remove(const std::string &name);
 	void stopOne(const std::string &name) const;
 	void stopAll(void) const;
 	void restartOne(const std::string &name) const;
 	void restartAll(void) const;
 private:
-	SharedVector<std::shared_ptr<MessageQueue>> actors;
+	SharedVector<linkRef> actors;
 
-	void doOperationOneActor(const std::string &name, std::function<void(const std::shared_ptr<MessageQueue> &)> op) const;
-	void doOperationAllActors(std::function<void(const std::shared_ptr<MessageQueue> &)> op) const;
-	static void restart(const std::shared_ptr<MessageQueue> &link);
-	static void stop(const std::shared_ptr<MessageQueue> &link);
-	static void sendMessage(const std::shared_ptr<MessageQueue> &link, Command command);
+	void doOperationOneActor(const std::string &name, linkRefOperation op) const;
+	void doOperationAllActors(linkRefOperation op) const;
+	static void restart(const linkRef &link);
+	static void stop(const linkRef &link);
+	static void sendMessage(const linkRef &link, Command command);
 };
 
 #endif
