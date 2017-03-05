@@ -48,7 +48,8 @@ void MessageQueue::post(Command command, const RawData &params, ActorLink sender
 }
 
 void MessageQueue::post(MessageType type, Command command, RawData params) {
-	putMessage(type, command, std::move(params), ActorLink());
+	static const ActorLink NO_LINK;
+	putMessage(type, command, std::move(params), NO_LINK);
 }
 
 struct MessageQueue::Message MessageQueue::get(void) { return queue.get(); }
