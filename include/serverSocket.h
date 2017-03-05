@@ -32,7 +32,6 @@
 
 #include <connection.h>
 #include <netAddr.h>
-#include <cstdint>
 #include <cstddef>
 #include <string>
 
