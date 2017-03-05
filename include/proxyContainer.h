@@ -43,7 +43,6 @@ public:
 	void createNewProxy(ActorLink actor, Connection connection, FindActor findActor);
 	StatusCode executeCommand(Command command, const RawData &id);
 private:
-	static const uint32_t USELESS_CODE = 0;
 	SharedMap<Id, ProxyServer> proxies;
 	MessageQueue executorQueue;
 	const Executor executor;
