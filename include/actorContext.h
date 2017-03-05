@@ -27,42 +27,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SUPERVISOR_H__
-#define SUPERVISOR_H__
+#ifndef ACTOR_CONTEXT_H__
+#define ACTOR_CONTEXT_H__
 
-#include <actorController.h>
-#include <messageQueue.h>
-#include <commandValue.h>
-#include <uniqueId.h>
-#include <supervisorStragegy.h>
-#include "actorContext.h"
+#include <linkApi.h>
 
-class Supervisor : public ActorContext {
+class ActorContext {
 public:
-	Supervisor(SupervisorStrategy strategy, LinkRef self);
-	~Supervisor();
-
-	void notifySupervisor(Command command) const;
-	void sendErrorToSupervisor(Command command) const;
-	void manageErrorFromSupervised(Command command, const RawData &params) const;
-	void removeActor(const std::string &name);
-	void restartActors() const;
-	void stopActors() const;
-
-	void registerMonitored(Supervisor &monitored);
-	void unregisterMonitored(Supervisor &monitored);
-
-private:
-	mutable std::mutex monitorMutex;
-	const SupervisorStrategy restartStrategy;
-	const LinkRef self;
-	ActorController supervisedRefs;
-	std::weak_ptr<MessageQueue> supervisorRef;
-
-	void postSupervisor(MessageType type, Command command, const RawData &data) const;
-	void sendToSupervisor(MessageType type, uint32_t code) const;
-	void doOperation(std::function<void(void)> op) const;
-	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
+	virtual void restartActors() const = 0;
+	virtual void stopActors() const = 0;
+	virtual void notifySupervisor(Command command) const = 0;
+	virtual void sendErrorToSupervisor(Command command) const = 0;
+protected:
+	ActorContext() = default;
+	virtual ~ActorContext() = default;
 };
 
 #endif
