@@ -31,6 +31,7 @@
 #define CONNECTION_H__
 
 #include <types.h>
+#include <rawData.h>
 
 #include <unistd.h>
 #include <string>

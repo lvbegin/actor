@@ -29,7 +29,6 @@
 
 #include <supervisor.h>
 #include <uniqueId.h>
-#include <conversion.h>
 
 Supervisor::Supervisor(SupervisorStrategy strategy, LinkRef self) :
 					restartStrategy(std::move(strategy)), self(std::move(self)) { }
@@ -40,7 +39,7 @@ void Supervisor::notifySupervisor(Command command) const{ sendToSupervisor(Messa
 void Supervisor::sendErrorToSupervisor(Command command) const { sendToSupervisor(MessageType::ERROR_MESSAGE, command); }
 
 void Supervisor::sendToSupervisor(MessageType type, Command command) const {
-	doOperation([this, type, command](){ postSupervisor(type, command, toRawData(self->getName())); });
+	doOperation([this, type, command](){ postSupervisor(type, command, self->getName()); });
 }
 
 void Supervisor::postSupervisor(MessageType type, Command command, const RawData &data) const {
@@ -67,16 +66,16 @@ void Supervisor::manageErrorFromSupervised(Command command, const RawData &param
 	switch (restartStrategy())
 	{
 		case SupervisorAction::RESTART_ONE:
-			supervisedRefs.restartOne(toString(params));
+			supervisedRefs.restartOne(params.toString());
 			break;
 		case SupervisorAction::STOP_ONE:
-			supervisedRefs.stopOne(toString(params));
+			supervisedRefs.stopOne(params.toString());
 			break;
 		case SupervisorAction::RESTART_ALL:
 			supervisedRefs.restartAll();
 			break;
 		case SupervisorAction::ESCALATE:
-			postSupervisor(MessageType::ERROR_MESSAGE, command, toRawData(self->getName()));
+			postSupervisor(MessageType::ERROR_MESSAGE, command, self->getName());
 			break;
 		default:
 			/* should escalate to supervisor */

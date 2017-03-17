@@ -33,6 +33,7 @@
 #include <actorRegistry.h>
 #include <clientSocket.h>
 #include <commandValue.h>
+#include <rawData.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -50,19 +51,18 @@ static int basicActorTest(void) {
 
 static int basicActorWithParamsTest(void) {
 	static const std::string paramValue("Hello World");
-	const RawData params(paramValue.begin(), paramValue.end());
 	static const int OK_ANSWER = 0x22;
 	static const int NOK_ANSWER = 0x88;
 	const auto link = std::make_shared<MessageQueue>();
 
-	const Actor a("actor name", [](int i, const std::vector<unsigned char> &params, const ActorLink &link) {
-				if (0 == paramValue.compare(std::string(params.begin(), params.end())))
+	const Actor a("actor name", [](int i, const RawData &params, const ActorLink &link) {
+				if (0 == paramValue.compare(params.toString()))
 					link->post(OK_ANSWER);
 				else
 					link->post(NOK_ANSWER);
 				return StatusCode::ok;
 	});
-	a.post(1, params, link);
+	a.post(1, paramValue, link);
 	return (OK_ANSWER == link->get().code) ? 0 : 1;
 }
 
@@ -70,17 +70,16 @@ static int actorSendMessageAndReceiveAnAnswerTest(void) {
 	static const std::string paramValue("Hello World");
 	static const uint32_t OK_ANSWER = 0x00;
 	static const uint32_t NOK_ANSWER = 0x01;
-	const RawData params(paramValue.begin(), paramValue.end());
 
-	const Actor a("actor name", [](int i, const std::vector<unsigned char> &params, const ActorLink &sender) {
-				if (0 == paramValue.compare(std::string(params.begin(), params.end())))
+	const Actor a("actor name", [](int i, const RawData &params, const ActorLink &sender) {
+				if (0 == paramValue.compare(params.toString()))
 					sender->post(OK_ANSWER);
 				else
 					sender->post(NOK_ANSWER);
 				return StatusCode::ok;
 	});
 	auto queue = std::make_shared<MessageQueue>();
-	a.post(1, params, queue);
+	a.post(1, paramValue, queue);
 	return (OK_ANSWER == queue->get().code) ? 0 : 1;
 }
 
@@ -244,7 +243,7 @@ static int findActorFromOtherRegistryAndSendMessageTest() {
 	const std::string name = registry1.addReference("localhost", PORT2);
 	if (NAME2.compare(name))
 		return 1;
-	const Actor a(ACTOR_NAME, [&rc](int i, const std::vector<unsigned char> &params, const ActorLink &link) {
+	const Actor a(ACTOR_NAME, [&rc](int i, const RawData &params, const ActorLink &link) {
 		if (i == DUMMY_COMMAND && 0 == params.size()) {
 			rc = true;
 			link->post(OK_ANSWER);
@@ -292,7 +291,7 @@ static int findActorFromOtherRegistryAndSendWithSenderForwardToAnotherActorMessa
 	registry1.addReference("localhost", PORT3);
 	registry2.addReference("localhost", PORT3);
 
-	const Actor actor2(ACTOR_NAME2, [](int i, const std::vector<unsigned char> &params, const ActorLink &link) {
+	const Actor actor2(ACTOR_NAME2, [](int i, const RawData &params, const ActorLink &link) {
 		if (i == INTERMEDIATE_COMMAND && 0 == params.size()) {
 			link->post(OK_ANSWER);
 			return StatusCode::ok;
@@ -306,7 +305,7 @@ static int findActorFromOtherRegistryAndSendWithSenderForwardToAnotherActorMessa
 
 	auto linkActor2 = registry3.getActor(ACTOR_NAME2);
 
-	const Actor actor1(ACTOR_NAME1, [linkActor2](int i, const std::vector<unsigned char> &params, const ActorLink &link) {
+	const Actor actor1(ACTOR_NAME1, [linkActor2](int i, const RawData &params, const ActorLink &link) {
 		if (i == DUMMY_COMMAND && 0 == params.size()) {
 			linkActor2->post(INTERMEDIATE_COMMAND, link);
 			return StatusCode::ok;
@@ -344,8 +343,8 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	const std::string name = registry1.addReference("localhost", PORT2);
 	if (NAME2.compare(name))
 		return 1;
-	const Actor a(ACTOR_NAME, [](int i, const std::vector<unsigned char> &params, const ActorLink &link) {
-		if (i == DUMMY_COMMAND && 0 == PARAM_VALUE.compare(std::string(params.begin(), params.end())))
+	const Actor a(ACTOR_NAME, [](int i, const RawData &params, const ActorLink &link) {
+		if (i == DUMMY_COMMAND && 0 == PARAM_VALUE.compare(params.toString()))
 			link->post(OK_ANSWER);
 		else
 			link->post(NOK_ANSWER);
@@ -356,7 +355,7 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	const auto actor = registry1.getActor(ACTOR_NAME);
 	if (nullptr == actor.get())
 		return 1;
-	actor->post(DUMMY_COMMAND, std::vector<unsigned char>(PARAM_VALUE.begin(), PARAM_VALUE.end()), link);
+	actor->post(DUMMY_COMMAND, PARAM_VALUE, link);
 	return OK_ANSWER == link->get().code ? 0 : 1;
 }
 
@@ -674,8 +673,8 @@ static int executorTest() {
 static int serializationTest() {
 	static const uint32_t EXPECTED_VALUE = 0x11223344;
 
-	const auto s = UniqueId::serialize(EXPECTED_VALUE);
-	return (EXPECTED_VALUE == UniqueId::unserialize(s)) ? 0 : 1;
+	const RawData s(EXPECTED_VALUE);
+	return (EXPECTED_VALUE == s.toId()) ? 0 : 1;
 }
 
 struct _test{

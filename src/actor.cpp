@@ -31,7 +31,6 @@
 #include <actorException.h>
 #include <commandValue.h>
 #include <exception.h>
-#include <conversion.h>
 
 static const LifeCycleHook DEFAULT_START_HOOK = [](const ActorContext&) { };
 static const LifeCycleHook DEFAULT_STOP_HOOK = [](const ActorContext&c) { c.stopActors(); };
@@ -125,7 +124,7 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 		case CommandValue::RESTART:
 			return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
 		case CommandValue::UNREGISTER_ACTOR:
-			supervisor.removeActor(toString(params));
+			supervisor.removeActor(params.toString());
 			return StatusCode::ok;
 		case CommandValue::SHUTDOWN:
 			stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);

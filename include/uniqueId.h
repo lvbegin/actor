@@ -39,8 +39,6 @@ public:
 	UniqueId() = delete;
 
 	static Id newId(void);
-	static RawData serialize(Id value);
-	static Id unserialize(const RawData &value);
 private:
 	static std::atomic<Id> id;
 };

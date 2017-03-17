@@ -29,26 +29,6 @@
 
 #include <uniqueId.h>
 
-#include <algorithm>
-#include <exception.h>
-
 std::atomic<Id> UniqueId::id { 0 };
 
 Id UniqueId::newId(void) { return UniqueId::id++; }
-
-RawData UniqueId::serialize(Id value) {
-	void *ptr = &value;
-	return RawData(static_cast<uint8_t *>(ptr), static_cast<uint8_t *>(ptr) + sizeof(value));
-}
-
-Id UniqueId::unserialize(const RawData &value) {
-	Id rc;
-
-	if (sizeof(rc) != value.size())
-		THROW(std::runtime_error, "serialized integer does not have correct size.");
-	void * const ptr = &rc;
-	const auto first = static_cast<uint8_t *>(ptr);
-	std::for_each(first, first + 4, [first, &value](uint8_t &p) { p = value[&p - first]; });
-	return rc;
-}
-
