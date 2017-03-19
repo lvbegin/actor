@@ -48,6 +48,6 @@ void ProxyContainer::createNewProxy(ActorLink actor, Connection connection, Find
 
 StatusCode ProxyContainer::executeCommand(Command command, const RawData &id) {
 	if (CommandValue::SHUTDOWN == command)
-		return StatusCode::shutdown;
-	return (proxies.erase(id.toId()), StatusCode::ok);
+		return StatusCode::SHUTDOWN;
+	return (proxies.erase(id.toId()), StatusCode::OK);
 }

@@ -40,7 +40,7 @@ void Executor::executeBody(ExecutorBody body) const {
 
 	while (true) {
 		const auto message(messageQueue.get());
-		if (StatusCode::shutdown == body(message.type, message.code, message.params, message.sender))
+		if (StatusCode::SHUTDOWN == body(message.type, message.code, message.params, message.sender))
 			return ;
 	}
 }

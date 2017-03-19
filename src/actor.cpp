@@ -87,7 +87,7 @@ StatusCode Actor::doRestart(void) {
 void Actor::executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e) {
 	std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
 	std::swap(executor, ref);
-	status.set_value(StatusCode::ok);
+	status.set_value(StatusCode::OK);
 	atRestart(supervisor);
 }
 
@@ -101,16 +101,16 @@ void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
 StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command command, const RawData &params, const ActorLink &sender) {
 	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED))
-		return StatusCode::shutdown;
+		return StatusCode::SHUTDOWN;
 
 	switch (type) {
 		case MessageType::ERROR_MESSAGE:
-			return (supervisor.manageErrorFromSupervised(command, params), StatusCode::ok);
+			return (supervisor.manageErrorFromSupervised(command, params), StatusCode::OK);
 		case MessageType::MANAGEMENT_MESSAGE:
 			return executeActorManagement(command, params);
 		case MessageType::COMMAND_MESSAGE: {
 			const auto status = executeActorBody(body, command, params, sender);
-			if (StatusCode::shutdown == status)
+			if (StatusCode::SHUTDOWN == status)
 				stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
 			return status;
 		}
@@ -122,13 +122,13 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command comman
 StatusCode Actor::executeActorManagement(Command command, const RawData &params) {
 	switch (command) {
 		case CommandValue::RESTART:
-			return (StatusCode::ok == restartSateMachine()) ? StatusCode::shutdown : StatusCode::error;
+			return (StatusCode::OK == restartSateMachine()) ? StatusCode::SHUTDOWN : StatusCode::ERROR;
 		case CommandValue::UNREGISTER_ACTOR:
 			supervisor.removeActor(params.toString());
-			return StatusCode::ok;
+			return StatusCode::OK;
 		case CommandValue::SHUTDOWN:
 			stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
-			return StatusCode::shutdown;
+			return StatusCode::SHUTDOWN;
 		default:
 			THROW(std::runtime_error, "unsupported management message command.");
 	}
@@ -136,14 +136,14 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 
 StatusCode Actor::executeActorBody(ActorBody body, Command command, const RawData &params, const ActorLink &sender) {
 	if ( CommandValue::SHUTDOWN == command )
-		return StatusCode::shutdown;
+		return StatusCode::SHUTDOWN;
 	try {
 		return body(command, params, sender);
 	} catch (const ActorException &e) {
 		supervisor.sendErrorToSupervisor(e.getErrorCode());
-		return StatusCode::error;
+		return StatusCode::ERROR;
 	} catch (const std::exception &e) {
 		supervisor.sendErrorToSupervisor(EXCEPTION_THROWN_ERROR);
-		return StatusCode::error;
+		return StatusCode::ERROR;
 	}
 }

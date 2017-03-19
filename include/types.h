@@ -32,7 +32,7 @@
 
 #include <cstdint>
 
-enum class StatusCode : uint32_t { ok, shutdown, error, };
+enum class StatusCode : uint32_t { OK, SHUTDOWN, ERROR, };
 
 enum class MessageType:uint32_t { COMMAND_MESSAGE, ERROR_MESSAGE, MANAGEMENT_MESSAGE, };
 
