@@ -78,8 +78,8 @@ void Supervisor::manageErrorFromSupervised(Command command, const RawData &param
 			postSupervisor(MessageType::ERROR_MESSAGE, command, self->getName());
 			break;
 		default:
-			/* should escalate to supervisor */
-			throw std::runtime_error("unexpected case.");
+			/* should log the problem */
+			break;
 	}
 }
 

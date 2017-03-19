@@ -115,7 +115,8 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command comman
 			return status;
 		}
 		default:
-			THROW(std::runtime_error, "unsupported message type.");
+			/* should log the problem */
+			break;
 	}
 }
 
@@ -130,7 +131,8 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 			stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
 			return StatusCode::SHUTDOWN;
 		default:
-			THROW(std::runtime_error, "unsupported management message command.");
+			/* should log the problem */
+			break;
 	}
 }
 
