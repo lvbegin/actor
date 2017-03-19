@@ -116,7 +116,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command comman
 		}
 		default:
 			/* should log the problem */
-			break;
+			return StatusCode::ERROR;
 	}
 }
 
@@ -132,7 +132,7 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 			return StatusCode::SHUTDOWN;
 		default:
 			/* should log the problem */
-			break;
+			return StatusCode::ERROR;
 	}
 }
 
