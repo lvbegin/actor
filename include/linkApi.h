@@ -48,7 +48,7 @@ public:
 	bool hasName(const std::string &n) const { return 0 == name.compare(n); }
 
 	static std::function<bool(const ActorLink &l)> nameComparator(const std::string &name) {
-		return [&name](const ActorLink &l) { return 0 == l->getName().compare(name); };
+		return [&name](const ActorLink &l) { return l->hasName(name); };
 	}
 
 protected:
