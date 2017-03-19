@@ -67,7 +67,8 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 					}
 					break;
 				default:
-					THROW(std::runtime_error, "unknown case.");
+					//should log the problem
+					break;
 			}
 		}
 		catch (const std::exception &e) { }
@@ -77,7 +78,6 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 std::string ActorRegistry::addReference(const std::string &host, uint16_t port) {
 	const auto connection = ClientSocket::openHostConnection(host, port);
 	connection.writeInt(RegistryCommand::REGISTER_REGISTRY).writeInt<uint32_t>(this->port).writeString(name);
-	//should read status...and react in consequence: what if failure returned?
 	const auto otherName = connection.readString();
 	registryAddresses.insert(otherName, ClientSocket::toNetAddr(host, port));
 	return otherName;
@@ -102,7 +102,7 @@ ActorLink ActorRegistry::getLocalActor(const std::string &name) const { return a
 ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
 	ActorLink actor;
 	registryAddresses.for_each([&actor, &name](const std::pair<const std::string, const struct NetAddr> &c) {
-		auto connection =	ClientSocket::openHostConnection(c.second);
+		auto connection = ClientSocket::openHostConnection(c.second);
 		connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
 		if (ActorSearchResult::ACTOR_FOUND == connection.readInt<ActorSearchResult>())
 			actor.reset(new ProxyClient(name, std::move(connection)));
