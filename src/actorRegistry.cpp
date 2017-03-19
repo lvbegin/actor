@@ -62,7 +62,7 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 						auto actor = getLocalActor(connection.readString());
 						connection.writeInt(ActorSearchResult::ACTOR_FOUND);
 						proxies.createNewProxy(std::move(actor), std::move(connection), findActorCallback);
-					} catch (std::out_of_range &e) {
+					} catch (const std::out_of_range &e) {
 						connection.writeInt(ActorSearchResult::ACTOR_NOT_FOUND);
 					}
 					break;
@@ -70,7 +70,7 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 					THROW(std::runtime_error, "unknown case.");
 			}
 		}
-		catch (std::exception &e) { }
+		catch (const std::exception &e) { }
 	}
 }
 
@@ -92,7 +92,7 @@ void ActorRegistry::unregisterActor(const std::string &name) { actors.erase(Link
 ActorLink  ActorRegistry::getActor(const std::string &name) const {
 	try {
 		return getLocalActor(name);
-	} catch (std::out_of_range &e) {
+	} catch (const std::out_of_range &e) {
 		return getRemoteActor(name);
 	}
 }

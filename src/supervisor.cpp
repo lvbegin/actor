@@ -100,7 +100,7 @@ void Supervisor::doRegistrationOperation(Supervisor &monitored, std::function<vo
 	monitored.supervisorRef = std::weak_ptr<MessageQueue>(this->self);
 	try {
 		op();
-	} catch (std::exception &e) {
+	} catch (const std::exception &e) {
 		monitored.supervisorRef = std::move(tmp);
 		throw e;
 	}

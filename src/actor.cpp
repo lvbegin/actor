@@ -139,10 +139,10 @@ StatusCode Actor::executeActorBody(ActorBody body, Command command, const RawDat
 		return StatusCode::shutdown;
 	try {
 		return body(command, params, sender);
-	} catch (ActorException &e) {
+	} catch (const ActorException &e) {
 		supervisor.sendErrorToSupervisor(e.getErrorCode());
 		return StatusCode::error;
-	} catch (std::exception &e) {
+	} catch (const std::exception &e) {
 		supervisor.sendErrorToSupervisor(EXCEPTION_THROWN_ERROR);
 		return StatusCode::error;
 	}

@@ -56,7 +56,7 @@ void ActorController::sendMessage(const LinkRef &link, Command command) { link->
 void ActorController::doOperationOneActor(const std::string &name, LinkRefOperation op) const {
 	try {
 		op(actors.find_if(LinkApi::nameComparator(name)));
-	} catch (std::out_of_range &) { }
+	} catch (const std::out_of_range &) { }
 }
 
 void ActorController::doOperationAllActors(LinkRefOperation op) const { actors.for_each([&op](auto &e) { op(e);} ); }

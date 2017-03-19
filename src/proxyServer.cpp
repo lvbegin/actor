@@ -48,8 +48,8 @@ void ProxyServer::startThread(ActorLink actor, Connection connection, std::funct
 		postType type;
 		try {
 			type = connection.readInt<postType>();
-		} catch (ConnectionTimeout &e) { continue ; }
-		  catch (std::runtime_error &e) {  return; }
+		} catch (const ConnectionTimeout &) { continue ; }
+		  catch (const std::runtime_error &) {  return; }
 		if (postType::NewMessage != type)
 			continue;
 		const auto name = connection.readString();
