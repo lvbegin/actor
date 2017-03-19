@@ -488,11 +488,11 @@ static int supervisorForwardErrorRestartTest() {
 	return (exceptionThrown && !actorRestarted1 && actorRestarted2 && actorRestarted3) ? 0 : 1;
 }
 
-/* To improve when there will be some hook for stopActor. */
 static int supervisorForwardErrorStopTest() {
 	static const int STOP_COMMAND = 0x99;
 	static const int OK_ANSWER = 0x99;
 	static bool exceptionThrown = false;
+	static bool stopped = false;
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
 	Actor rootSupervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::ok; },
 			SupervisorStrategy([](void) { return SupervisorAction::STOP_ONE; }));
@@ -505,12 +505,15 @@ static int supervisorForwardErrorStopTest() {
 		}
 		link->post(OK_ANSWER);
 		 return StatusCode::ok;
-	 });
+	 },
+		[](const ActorContext &) {},
+		[](const ActorContext &) { stopped = true; },
+		[](const ActorContext &) {});
 	rootSupervisor.registerActor(supervisor);
 	supervisor.registerActor(supervised);
 	supervised.post(STOP_COMMAND, link);
 
-	for (int i = 0; i < 5 && !exceptionThrown; i++) sleep(1);
+	for (int i = 0; i < 5 && !exceptionThrown && !stopped; i++) sleep(1);
 	return exceptionThrown ? 0 : 1;
 }
 
@@ -623,7 +626,6 @@ static int restartAllActorBySupervisorTest() {
 
 	return (supervisorRestarted || !supervised1Restarted || !supervised2Restarted) ? 1 : 0;
 }
-
 
 static int stoppingSupervisorStopsSupervisedTest() {
 	static const int STOP_COMMAND = 0x99;
