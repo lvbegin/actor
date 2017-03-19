@@ -45,6 +45,7 @@ Connection::~Connection() { closeConnection(); }
 void Connection::closeConnection(void) {
 	if (-1 != fd)
 		close(fd);
+	fd = -1;
 }
 
 
@@ -76,10 +77,10 @@ std::string Connection::readString(void) const { return readRawData().toString()
 const Connection &Connection::writeBytes(const void *buffer, size_t count) const {
 	if (-1 == fd)
 		THROW(std::runtime_error, "invalid writeByte");
-	auto ptr = static_cast<const char *>(buffer);
+	const auto ptr = static_cast<const char *>(buffer);
 	for (size_t nbTotalWritten = 0; nbTotalWritten < count; ) {
 		const auto nbWritten = write(fd, ptr + nbTotalWritten, count - nbTotalWritten);
-		if (-1 == nbWritten && !(EINTR == errno))
+		if (-1 == nbWritten && EINTR != errno)
 			THROW(std::runtime_error, "send bytes failed");
 		nbTotalWritten += nbWritten;
 	}
