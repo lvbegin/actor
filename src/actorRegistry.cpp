@@ -62,7 +62,7 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 						auto actor = getLocalActor(connection.readString());
 						connection.writeInt(ActorSearchResult::ACTOR_FOUND);
 						proxies.createNewProxy(std::move(actor), std::move(connection), findActorCallback);
-					} catch (std::out_of_range e) {
+					} catch (std::out_of_range &e) {
 						connection.writeInt(ActorSearchResult::ACTOR_NOT_FOUND);
 					}
 					break;
