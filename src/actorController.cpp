@@ -30,8 +30,6 @@
 #include <actorController.h>
 #include <exception.h>
 
-#include <algorithm>
-
 ActorController::ActorController() = default;
 ActorController::~ActorController() = default;
 

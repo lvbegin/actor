@@ -58,8 +58,8 @@ void Actor::executorStopCb(void) {
 }
 
 void Actor::post(Command command, ActorLink sender) const {
-	static const RawData emptyData;
-	executorQueue->post(command, emptyData, std::move(sender));
+	static const RawData EMPTY_DATA;
+	executorQueue->post(command, EMPTY_DATA, std::move(sender));
 }
 
 void Actor::post(Command command, const RawData &params, ActorLink sender) const { executorQueue->post(command, params, std::move(sender)); }
