@@ -624,7 +624,7 @@ static int restartAllActorBySupervisorTest() {
 	return (supervisorRestarted || !supervised1Restarted || !supervised2Restarted) ? 1 : 0;
 }
 
-#if 0
+
 static int stoppingSupervisorStopsSupervisedTest() {
 	static const int STOP_COMMAND = 0x99;
 	static bool supervisorStopped = false;
@@ -643,25 +643,6 @@ static int stoppingSupervisorStopsSupervisedTest() {
 	for (int i = 0; i < 5 && !(supervisedStopped && supervisorStopped); i++) sleep(1);
 	return (supervisorStopped && supervisedStopped) ? 0 : 1;
 }
-#else
-static int stoppingSupervisorStopsSupervisedTest() {
-	static bool supervisorStopped = false;
-	static bool supervisedStopped = false;
-	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::shutdown; },
-	 [](const ActorContext&) { },
-	 [](const ActorContext&c) { c.stopActors(); supervisorStopped = true; },
-	 [](const ActorContext&) { });
-	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) { return StatusCode::ok; },
-	 [](const ActorContext&) { },
-	 [](const ActorContext&) { supervisedStopped = true; },
-	 [](const ActorContext&) { });
-	supervisor.registerActor(supervised);
-	supervisor.post(CommandValue::SHUTDOWN); // ==> should be another command that implies a shutdown ...
-
-	for (int i = 0; i < 5 && !(supervisedStopped && supervisorStopped); i++) sleep(1);
-	return (supervisorStopped && supervisedStopped) ? 0 : 1;
-}
-#endif
 
 static int executorTest() {
 	MessageQueue messageQueue;
