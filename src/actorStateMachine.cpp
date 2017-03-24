@@ -45,7 +45,7 @@ void ActorStateMachine::moveTo(State newState) {
 			stateChanged.notify_one();
 			break;
 		case State::RESTARTING:
-			if (State::STOPPED == state || State::RESTARTING == state || State::INITIAL == state)
+			if (State::RUNNING != state)
 				THROW(std::runtime_error, "actor cannot move to restarting state.");
 			state = newState;
 			break;
