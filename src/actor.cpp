@@ -45,22 +45,27 @@ Actor::Actor(std::string name, ActorBody body, AtStartHook atStart, LifeCycleHoo
 						atStart(atStart), atStop(atStop), atRestart(atRestart), body(body), supervisor(std::move(restartStrategy), executorQueue),
 						executor(new Executor([this](auto type, auto command, auto &params, auto &sender)
 								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue,
-								[this]() {
-									if (StatusCode::ERROR == this->atStart(this->supervisor))
-										this->stateMachine.moveTo(ActorStateMachine::State::STOPPED);
-									else
-										this->stateMachine.moveTo(ActorStateMachine::State::RUNNING);
-								}, [this]() { executorStopCb(); } ))
-						{
-							this->stateMachine.waitStarted();
-							if (this->stateMachine.isIn(ActorStateMachine::State::STOPPED))
-								throw ActorStartFailure();
-						}
+								[this]() { executorStartCb(); }, [this]() { executorStopCb(); } ))
+						{ checkActorInitialization(); }
 
 Actor::~Actor() {
 	stateMachine.moveTo(ActorStateMachine::State::STOPPED);
 	supervisor.notifySupervisor(CommandValue::UNREGISTER_ACTOR);
 	executorQueue->post(CommandValue::SHUTDOWN);
+}
+
+void Actor::checkActorInitialization(void) {
+	this->stateMachine.waitStarted();
+	if (this->stateMachine.isIn(ActorStateMachine::State::STOPPED))
+		throw ActorStartFailure();
+
+}
+
+void Actor::executorStartCb(void) {
+	if (StatusCode::ERROR == this->atStart(this->supervisor))
+		this->stateMachine.moveTo(ActorStateMachine::State::STOPPED);
+	else
+		this->stateMachine.moveTo(ActorStateMachine::State::RUNNING);
 }
 
 void Actor::executorStopCb(void) {

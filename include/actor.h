@@ -88,6 +88,8 @@ private:
 	StatusCode executeActorManagement(Command command, const RawData &params);
 	StatusCode doRestart(void);
 	StatusCode restartSateMachine(void);
+	void checkActorInitialization(void);
+	void executorStartCb(void);
 	void executorStopCb(void);
 	void executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e);
 };
