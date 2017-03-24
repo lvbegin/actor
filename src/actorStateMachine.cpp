@@ -31,28 +31,26 @@
 #include <actorStateMachine.h>
 #include <exception.h>
 
-ActorStateMachine::ActorStateMachine() : state(ActorState::RUNNING) { }
+ActorStateMachine::ActorStateMachine() : state(State::INITIAL) { }
 ActorStateMachine::~ActorStateMachine() = default;
 
-void ActorStateMachine::moveTo(ActorState newState) {
+void ActorStateMachine::moveTo(State newState) {
 	std::unique_lock<std::mutex> l(mutex);
 
 	switch (newState) {
-		case ActorState::RUNNING:
-			if (ActorState::STOPPED == state || ActorState::RUNNING == state)
+		case State::RUNNING:
+			if (State::STOPPED == state || State::RUNNING == state)
 				THROW(std::runtime_error, "actor cannot move to running state.");
 			state = newState;
 			stateChanged.notify_one();
 			break;
-		case ActorState::RESTARTING:
-			if (ActorState::STOPPED == state || ActorState::RESTARTING == state)
+		case State::RESTARTING:
+			if (State::STOPPED == state || State::RESTARTING == state || State::INITIAL == state)
 				THROW(std::runtime_error, "actor cannot move to restarting state.");
 			state = newState;
 			break;
-		case ActorState::STOPPED:
-			if (ActorState::STOPPED == state)
-				break;
-			stateChanged.wait(l, [this]() { return ActorState::RUNNING == state; });
+		case State::STOPPED:
+			stateChanged.wait(l, [this]() { return State::RESTARTING != state; });
 			state = newState;
 			break;
 	default:
@@ -60,8 +58,14 @@ void ActorStateMachine::moveTo(ActorState newState) {
 	}
 }
 
-bool ActorStateMachine::isIn(ActorState state) const {
+bool ActorStateMachine::isIn(State state) const {
 	std::unique_lock<std::mutex> l(mutex);
 
 	return (this->state == state);
+}
+
+void ActorStateMachine::waitStarted() {
+	std::unique_lock<std::mutex> l(mutex);
+
+	stateChanged.wait(l, [this]() { return State::INITIAL != state; });
 }

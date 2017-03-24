@@ -44,11 +44,19 @@
 using ActorBody = std::function<StatusCode(Command, const RawData &, const ActorLink &)>;
 
 using LifeCycleHook = std::function<void(const ActorContext &)>;
+using AtStartHook = std::function<StatusCode(const ActorContext &)>;
+
+
+class ActorStartFailure : public std::runtime_error {
+public:
+	ActorStartFailure() : std::runtime_error("actor failed to start.") { }
+	~ActorStartFailure() = default;
+};
 
 class Actor {
 public:
 	Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
-	Actor(std::string name, ActorBody body, LifeCycleHook atStart, LifeCycleHook atStop, LifeCycleHook atRestart, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
+	Actor(std::string name, ActorBody body, AtStartHook atStart, LifeCycleHook atStop, LifeCycleHook atRestart, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
 	~Actor();
 
 	Actor(const Actor &a) = delete;
@@ -63,10 +71,11 @@ public:
 	void unregisterActor(Actor &monitored);
 
 	static void notifyError(int e);
+
 private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
 	const LinkRef executorQueue;
-	const LifeCycleHook atStart;
+	const AtStartHook atStart;
 	const LifeCycleHook atStop;
 	const LifeCycleHook atRestart;
 	const ActorBody body;

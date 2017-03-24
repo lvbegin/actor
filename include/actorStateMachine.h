@@ -35,15 +35,16 @@
 
 class ActorStateMachine {
 public:
-	enum class ActorState { RUNNING, RESTARTING, STOPPED, };
+	enum class State { INITIAL, RUNNING, RESTARTING, STOPPED, };
 	ActorStateMachine();
 	~ActorStateMachine();
-	void moveTo(ActorState newState);
-	bool isIn(ActorState state) const;
+	void moveTo(State newState);
+	bool isIn(State state) const;
+	void waitStarted();
 private:
 	mutable std::mutex mutex;
 	std::condition_variable stateChanged;
-	ActorState state;
+	State state;
 };
 
 #endif

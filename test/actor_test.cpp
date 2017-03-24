@@ -439,7 +439,7 @@ static int supervisorStopActorTest() {
 		link->post(OK_ANSWER);
 		 return StatusCode::OK;
 	 },
-	 [](const ActorContext&) {},
+	 [](const ActorContext&) {return StatusCode::OK; },
 	 [](const ActorContext&) { actorStopped = true; },
 	 [](const ActorContext&) {});
 	supervisor.registerActor(supervised);
@@ -459,12 +459,12 @@ static int supervisorForwardErrorRestartTest() {
 	static bool actorRestarted3 = false;
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
 	Actor rootSupervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
-			[](const ActorContext &c) { },
+			[](const ActorContext &c) { return StatusCode::OK; },
 			[](const ActorContext &c) { },
 			[](const ActorContext &c) { actorRestarted1 = true; c.restartActors(); },
 			SupervisorStrategy([](void) { return SupervisorAction::RESTART_ONE; }));
 	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
-			[](const ActorContext &c) { },
+			[](const ActorContext &c) { return StatusCode::OK; },
 			[](const ActorContext &c) { },
 			[](const ActorContext &c) { actorRestarted2 = true; c.restartActors(); },
 			SupervisorStrategy([](void) { return SupervisorAction::ESCALATE; }));
@@ -476,7 +476,7 @@ static int supervisorForwardErrorRestartTest() {
 		link->post(OK_ANSWER);
 		 return StatusCode::OK;
 	 },
-	 [](const ActorContext &c) { },
+	 [](const ActorContext &c) { return StatusCode::OK; },
 	 [](const ActorContext &c) { },
 	 [](const ActorContext &){ actorRestarted3 = true; });
 	rootSupervisor.registerActor(supervisor);
@@ -506,7 +506,7 @@ static int supervisorForwardErrorStopTest() {
 		link->post(OK_ANSWER);
 		 return StatusCode::OK;
 	 },
-		[](const ActorContext &) {},
+		[](const ActorContext &) { return StatusCode::OK; },
 		[](const ActorContext &) { stopped = true; },
 		[](const ActorContext &) {});
 	rootSupervisor.registerActor(supervisor);
@@ -524,7 +524,7 @@ static int actorNotifiesErrorToSupervisorTest() {
 	bool supervised2Restarted = false;
 	Actor supervisor("supervisor",
 			[](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
-			[](const ActorContext &c) { },
+			[](const ActorContext &c) { return StatusCode::OK; },
 			[](const ActorContext &c) { },
 			[&supervisorRestarted](const ActorContext &c) { supervisorRestarted = true; } );
 	Actor supervised1("supervised1",
@@ -532,12 +532,12 @@ static int actorNotifiesErrorToSupervisorTest() {
 				Actor::notifyError(0x69);
 				return StatusCode::OK;
 	 	 	 },
-			 [](const ActorContext &c) { },
+			 [](const ActorContext &c) { return StatusCode::OK; },
 			 [](const ActorContext &c) { },
 			 [&supervised1Restarted](const ActorContext &) { supervised1Restarted++; } );
 	Actor supervised2("supervised2",
 			[](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
-			[](const ActorContext &c) { },
+			[](const ActorContext &c) { return StatusCode::OK; },
 			[](const ActorContext &c) { },
 			[&supervised2Restarted](const ActorContext &) { supervised2Restarted = true; });
 
@@ -560,7 +560,7 @@ static int actorDoesNothingIfNoSupervisorTest() {
 		Actor::notifyError(0x69);
 		return StatusCode::OK;
 	 },
-	[](const ActorContext &c) { },
+	[](const ActorContext &c) { return StatusCode::OK; },
 	[](const ActorContext &c) { },
 	[&supervisorRestarted](const ActorContext &){ supervisorRestarted = true; });
 
@@ -579,7 +579,7 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 		throw std::runtime_error("some error");
 		return StatusCode::OK;
 	 },
-	[](const ActorContext &c) { },
+	[](const ActorContext &c) { return StatusCode::OK; },
 	[](const ActorContext &c) { },
 	[&supervisorRestarted](const ActorContext &){ supervisorRestarted = true; });
 	supervised->post(SOME_COMMAND);
@@ -596,7 +596,7 @@ static int restartAllActorBySupervisorTest() {
 	bool supervised2Restarted = false;
 	Actor supervisor("supervisor",
 			[](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
-			[](const ActorContext &c) { },
+			[](const ActorContext &c) { return StatusCode::OK; },
 			[](const ActorContext &c) { },
 			[&supervisorRestarted](const ActorContext &) { supervisorRestarted = true; },
 			[](void) { return SupervisorAction::RESTART_ALL; });
@@ -605,12 +605,12 @@ static int restartAllActorBySupervisorTest() {
 				Actor::notifyError(0x69);
 				return StatusCode::OK;
 	 	 	},
-			[](const ActorContext &c) { },
+			[](const ActorContext &c) { return StatusCode::OK; },
 			[](const ActorContext &c) { },
 			[&supervised1Restarted](const ActorContext &) { supervised1Restarted = true; });
 	Actor supervised2("supervised2",
 			[](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
-			[](const ActorContext &c) { },
+			[](const ActorContext &c) { return StatusCode::OK; },
 			[](const ActorContext &c) { },
 			[&supervised2Restarted](const ActorContext &) { supervised2Restarted = true; });
 
@@ -632,11 +632,11 @@ static int stoppingSupervisorStopsSupervisedTest() {
 	static bool supervisorStopped = false;
 	static bool supervisedStopped = false;
 	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::SHUTDOWN; },
-	 [](const ActorContext&) { },
+	 [](const ActorContext&) { return StatusCode::OK; },
 	 [](const ActorContext&c) { c.stopActors(); supervisorStopped = true; },
 	 [](const ActorContext&) { });
 	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) { return StatusCode::OK; },
-	 [](const ActorContext&) { },
+	 [](const ActorContext&) { return StatusCode::OK; },
 	 [](const ActorContext&) { supervisedStopped = true; },
 	 [](const ActorContext&) { });
 	supervisor.registerActor(supervised);

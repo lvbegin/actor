@@ -32,28 +32,39 @@
 #include <commandValue.h>
 #include <exception.h>
 
-static const LifeCycleHook DEFAULT_START_HOOK = [](const ActorContext&) { };
+static const AtStartHook DEFAULT_START_HOOK = [](const ActorContext&) { return StatusCode::OK; };
 static const LifeCycleHook DEFAULT_STOP_HOOK = [](const ActorContext&c) { c.stopActors(); };
 static const LifeCycleHook DEFAULT_RESTART_HOOK = [](const ActorContext&c) { c.restartActors(); };
+
 
 Actor::Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy) :
 		Actor(std::move(name), std::move(body), DEFAULT_START_HOOK, DEFAULT_STOP_HOOK, DEFAULT_RESTART_HOOK, std::move(restartStrategy)) { }
 
-Actor::Actor(std::string name, ActorBody body, LifeCycleHook atStart, LifeCycleHook atStop, LifeCycleHook atRestart, SupervisorStrategy restartStrategy) :
+Actor::Actor(std::string name, ActorBody body, AtStartHook atStart, LifeCycleHook atStop, LifeCycleHook atRestart, SupervisorStrategy restartStrategy) :
 						executorQueue(new MessageQueue(std::move(name))),
 						atStart(atStart), atStop(atStop), atRestart(atRestart), body(body), supervisor(std::move(restartStrategy), executorQueue),
 						executor(new Executor([this](auto type, auto command, auto &params, auto &sender)
 								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue,
-								[this]() { this->atStart(this->supervisor); }, [this]() { executorStopCb(); } )) { }
+								[this]() {
+									if (StatusCode::ERROR == this->atStart(this->supervisor))
+										this->stateMachine.moveTo(ActorStateMachine::State::STOPPED);
+									else
+										this->stateMachine.moveTo(ActorStateMachine::State::RUNNING);
+								}, [this]() { executorStopCb(); } ))
+						{
+							this->stateMachine.waitStarted();
+							if (this->stateMachine.isIn(ActorStateMachine::State::STOPPED))
+								throw ActorStartFailure();
+						}
 
 Actor::~Actor() {
-	stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
+	stateMachine.moveTo(ActorStateMachine::State::STOPPED);
 	supervisor.notifySupervisor(CommandValue::UNREGISTER_ACTOR);
 	executorQueue->post(CommandValue::SHUTDOWN);
 }
 
 void Actor::executorStopCb(void) {
-	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED))
+	if (stateMachine.isIn(ActorStateMachine::State::STOPPED))
 		atStop(supervisor);
 }
 
@@ -65,9 +76,9 @@ void Actor::post(Command command, ActorLink sender) const {
 void Actor::post(Command command, const RawData &params, ActorLink sender) const { executorQueue->post(command, params, std::move(sender)); }
 
 StatusCode Actor::restartSateMachine(void) {
-	stateMachine.moveTo(ActorStateMachine::ActorState::RESTARTING);
+	stateMachine.moveTo(ActorStateMachine::State::RESTARTING);
 	const auto rc = doRestart();
-	stateMachine.moveTo(ActorStateMachine::ActorState::RUNNING);
+	stateMachine.moveTo(ActorStateMachine::State::RUNNING);
 	return rc;
 }
 
@@ -100,7 +111,7 @@ void Actor::unregisterActor(Actor &monitored) { supervisor.unregisterMonitored(m
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
 StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command command, const RawData &params, const ActorLink &sender) {
-	if (stateMachine.isIn(ActorStateMachine::ActorState::STOPPED))
+	if (stateMachine.isIn(ActorStateMachine::State::STOPPED))
 		return StatusCode::SHUTDOWN;
 
 	switch (type) {
@@ -111,7 +122,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command comman
 		case MessageType::COMMAND_MESSAGE: {
 			const auto status = executeActorBody(body, command, params, sender);
 			if (StatusCode::SHUTDOWN == status)
-				stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
+				stateMachine.moveTo(ActorStateMachine::State::STOPPED);
 			return status;
 		}
 		default:
@@ -128,7 +139,7 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 			supervisor.removeActor(params.toString());
 			return StatusCode::OK;
 		case CommandValue::SHUTDOWN:
-			stateMachine.moveTo(ActorStateMachine::ActorState::STOPPED);
+			stateMachine.moveTo(ActorStateMachine::State::STOPPED);
 			return StatusCode::SHUTDOWN;
 		default:
 			/* should log the problem */
