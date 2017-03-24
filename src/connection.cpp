@@ -31,8 +31,6 @@
 #include <descriptorWait.h>
 #include <exception.h>
 
-#include <stdexcept>
-
 Connection::Connection() : fd(-1) { }
 
 Connection::Connection(int fd) : fd(fd) {
