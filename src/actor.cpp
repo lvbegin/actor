@@ -35,15 +35,10 @@ static const AtStartHook DEFAULT_START_HOOK = [](const ActorContext&) { return S
 static const LifeCycleHook DEFAULT_STOP_HOOK = [](const ActorContext&c) { c.stopActors(); };
 static const LifeCycleHook DEFAULT_RESTART_HOOK = [](const ActorContext&c) { c.restartActors(); };
 
-class ActorException : public std::runtime_error {
-public:
-	ActorException(int code, const std::string& what_arg) : std::runtime_error(what_arg), code(code) { }
-	~ActorException() = default;
+Actor::ActorException::ActorException(int code, const std::string& what_arg) : std::runtime_error(what_arg), code(code) { }
+Actor::ActorException::~ActorException() = default;
 
-	int getErrorCode() const { return code; };
-private:
-	const int code;
-};
+int Actor::ActorException::getErrorCode() const { return code; }
 
 Actor::Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy) :
 		Actor(std::move(name), std::move(body), DEFAULT_START_HOOK, DEFAULT_STOP_HOOK, DEFAULT_RESTART_HOOK, std::move(restartStrategy)) { }

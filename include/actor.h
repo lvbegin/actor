@@ -92,6 +92,17 @@ private:
 	void executorStartCb(void);
 	void executorStopCb(void);
 	void executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e);
+
+	class ActorException : public std::runtime_error {
+	public:
+		ActorException(int code, const std::string& what_arg);
+		~ActorException();
+
+		int getErrorCode() const;
+	private:
+		const int code;
+	};
+
 };
 
 #endif
