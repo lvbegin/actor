@@ -660,6 +660,19 @@ static int serializationTest() {
 	return (EXPECTED_VALUE == s.toId()) ? 0 : 1;
 }
 
+static int startActorFailureTest() {
+	bool exceptionThrown = false;
+	try {
+		auto supervisor = std::make_unique<Actor>("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
+	 	[](const ActorContext& ) { return StatusCode::ERROR; },
+	 	[](const ActorContext& ) { },
+	 	[](const ActorContext& ) { });
+	} catch (ActorStartFailure &) {
+		exceptionThrown = true;
+	}
+	return exceptionThrown ? 0 : 1;
+}
+
 struct _test{
 	const char *name;
 	int (*test)(void);
@@ -688,7 +701,6 @@ int _runTest(const _test *suite, size_t nbTests) {
 
 int main() {
 	static const _test suite[] = {
-#if 1
 			TEST(basicActorTest),
 			TEST(basicActorWithParamsTest),
 			TEST(proxyTest),
@@ -714,12 +726,10 @@ int main() {
 			TEST(actorDoesNothingIfNoSupervisorTest),
 			TEST(actorDoesNothingIfNoSupervisorAndExceptionThrownTest),
 			TEST(restartAllActorBySupervisorTest),
-#endif
 			TEST(stoppingSupervisorStopsSupervisedTest),
-#if 1
 			TEST(executorTest),
 			TEST(serializationTest),
-#endif
+			TEST(startActorFailureTest),
 	};
 
 	const auto nbFailure = runTest(suite);

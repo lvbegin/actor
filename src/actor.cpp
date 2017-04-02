@@ -48,7 +48,7 @@ Actor::Actor(std::string name, ActorBody body, AtStartHook atStart, LifeCycleHoo
 						atStart(atStart), atStop(atStop), atRestart(atRestart), body(body), supervisor(std::move(restartStrategy), executorQueue),
 						executor(new Executor([this](auto type, auto command, auto &params, auto &sender)
 								{ return this->actorExecutor(this->body, type, command, params, sender); }, *executorQueue,
-								[this]() { executorStartCb(); }, [this]() { executorStopCb(); } ))
+								[this]() { return executorStartCb(); }, [this]() { executorStopCb(); } ))
 						{ checkActorInitialization(); }
 
 Actor::~Actor() {
@@ -61,14 +61,15 @@ void Actor::checkActorInitialization(void) {
 	this->stateMachine.waitStarted();
 	if (this->stateMachine.isIn(ActorStateMachine::State::STOPPED))
 		throw ActorStartFailure();
-
 }
 
-void Actor::executorStartCb(void) {
-	if (StatusCode::ERROR == this->atStart(this->supervisor))
+StatusCode Actor::executorStartCb(void) {
+	const auto rc = this->atStart(this->supervisor);
+	if (StatusCode::ERROR == rc)
 		this->stateMachine.moveTo(ActorStateMachine::State::STOPPED);
 	else
 		this->stateMachine.moveTo(ActorStateMachine::State::RUNNING);
+	return rc;
 }
 
 void Actor::executorStopCb(void) {
@@ -97,17 +98,18 @@ StatusCode Actor::doRestart(void) {
 			[this](auto type, auto command, auto &params, auto &sender) {
 				return this->actorExecutor(body, type, command, params, sender);
 			}, *executorQueue,
-			[this, &status, & e]() { executorRestartCb(status, e); },
+			[this, &status, & e]() { return executorRestartCb(status, e);  },
 			[this]() { executorStopCb(); } );
 	e.set_value(newExecutor);
 	return status.get_future().get();
 }
 
-void Actor::executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e) {
+StatusCode Actor::executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e) {
 	std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
 	std::swap(executor, ref);
 	status.set_value(StatusCode::OK);
-	atRestart(supervisor);
+	atRestart(supervisor); //should return a status...
+	return StatusCode::OK;
 }
 
 ActorLink Actor::getActorLinkRef() const { return executorQueue; }

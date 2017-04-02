@@ -89,9 +89,9 @@ private:
 	StatusCode doRestart(void);
 	StatusCode restartSateMachine(void);
 	void checkActorInitialization(void);
-	void executorStartCb(void);
+	StatusCode executorStartCb(void);
 	void executorStopCb(void);
-	void executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e);
+	StatusCode executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e);
 
 	class ActorException : public std::runtime_error {
 	public:

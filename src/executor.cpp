@@ -31,13 +31,19 @@
 #include <exception.h>
 #include <commandValue.h>
 
-Executor::Executor(ExecutorBody body, MessageQueue &queue, ExecutorHook atStart, ExecutorHook atStop) : messageQueue(queue),
-					thread([this, body, atStart, atStop]() { atStart();  executeBody(body); atStop(); }) { }
+Executor::Executor(ExecutorBody body, MessageQueue &queue, ExecutorAtStart atStart, ExecutorHook atStop) : messageQueue(queue),
+					thread([this, body, atStart, atStop]() { run(body, atStart, atStop); }) { }
 
 Executor::~Executor() { thread.join(); };
 
-void Executor::executeBody(ExecutorBody body) const {
+void Executor::run(ExecutorBody body, ExecutorAtStart atStart, ExecutorHook atStop) const {
+	if (StatusCode::OK != atStart())
+		return;
+	executeBody(body);
+	atStop();
+}
 
+void Executor::executeBody(ExecutorBody body) const {
 	while (true) {
 		const auto message(messageQueue.get());
 		if (StatusCode::SHUTDOWN == body(message.type, message.code, message.params, message.sender))

@@ -52,6 +52,7 @@ void ActorStateMachine::moveTo(State newState) {
 		case State::STOPPED:
 			stateChanged.wait(l, [this]() { return State::RESTARTING != state; });
 			state = newState;
+			stateChanged.notify_one();
 			break;
 	default:
 		THROW(std::runtime_error, "unknown new Actor State.");

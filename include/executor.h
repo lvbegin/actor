@@ -36,10 +36,12 @@
 
 using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const ActorLink &sender)>;
 using ExecutorHook = std::function<void(void)>;
+using ExecutorAtStart = std::function<StatusCode(void)>;
 
 class Executor {
 public:
-	Executor(ExecutorBody body, MessageQueue &queue, ExecutorHook atStart = [](void) { }, ExecutorHook atStop = [](void) { });
+	Executor(ExecutorBody body, MessageQueue &queue, ExecutorAtStart atStart = [](void) { return StatusCode::OK; },
+													ExecutorHook atStop = [](void) { });
 	~Executor();
 
 	Executor() = delete;
@@ -51,6 +53,7 @@ private:
 	MessageQueue &messageQueue;
 	std::thread thread;
 
+	void run(ExecutorBody body, ExecutorAtStart atStart, ExecutorHook atStop) const;
 	void executeBody(ExecutorBody body) const;
 };
 
