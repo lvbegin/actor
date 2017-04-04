@@ -33,7 +33,7 @@
 
 static const AtStartHook DEFAULT_START_HOOK = [](const ActorContext&) { return StatusCode::OK; };
 static const LifeCycleHook DEFAULT_STOP_HOOK = [](const ActorContext&c) { c.stopActors(); };
-static const LifeCycleHook DEFAULT_RESTART_HOOK = [](const ActorContext&c) { c.restartActors(); };
+static const AtRestartHook DEFAULT_RESTART_HOOK = [](const ActorContext&c) { c.restartActors(); return StatusCode::OK; };
 
 Actor::ActorException::ActorException(int code, const std::string& what_arg) : std::runtime_error(what_arg), code(code) { }
 Actor::ActorException::~ActorException() = default;
@@ -43,7 +43,7 @@ int Actor::ActorException::getErrorCode() const { return code; }
 Actor::Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy) :
 		Actor(std::move(name), std::move(body), DEFAULT_START_HOOK, DEFAULT_STOP_HOOK, DEFAULT_RESTART_HOOK, std::move(restartStrategy)) { }
 
-Actor::Actor(std::string name, ActorBody body, AtStartHook atStart, LifeCycleHook atStop, LifeCycleHook atRestart, SupervisorStrategy restartStrategy) :
+Actor::Actor(std::string name, ActorBody body, AtStartHook atStart, LifeCycleHook atStop, AtRestartHook atRestart, SupervisorStrategy restartStrategy) :
 						executorQueue(new MessageQueue(std::move(name))),
 						atStart(atStart), atStop(atStop), atRestart(atRestart), body(body), supervisor(std::move(restartStrategy), executorQueue),
 						executor(new Executor([this](auto type, auto command, auto &params, auto &sender)
@@ -88,7 +88,9 @@ StatusCode Actor::restartSateMachine(void) {
 	stateMachine.moveTo(ActorStateMachine::State::RESTARTING);
 	const auto rc = doRestart();
 	stateMachine.moveTo(ActorStateMachine::State::RUNNING);
-	return rc;
+	if (StatusCode::OK != rc)
+		stateMachine.moveTo(ActorStateMachine::State::STOPPED); //should be an error state
+	return StatusCode::OK;
 }
 
 StatusCode Actor::doRestart(void) {
@@ -107,9 +109,9 @@ StatusCode Actor::doRestart(void) {
 StatusCode Actor::executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e) {
 	std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
 	std::swap(executor, ref);
-	status.set_value(StatusCode::OK);
-	atRestart(supervisor); //should return a status...
-	return StatusCode::OK;
+	const auto rc = atRestart(supervisor);
+	status.set_value(rc);
+	return  rc;
 }
 
 ActorLink Actor::getActorLinkRef() const { return executorQueue; }
@@ -123,7 +125,6 @@ void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command command, const RawData &params, const ActorLink &sender) {
 	if (stateMachine.isIn(ActorStateMachine::State::STOPPED))
 		return StatusCode::SHUTDOWN;
-
 	switch (type) {
 		case MessageType::ERROR_MESSAGE:
 			return (supervisor.manageErrorFromSupervised(command, params), StatusCode::OK);

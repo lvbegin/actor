@@ -37,7 +37,8 @@ Executor::Executor(ExecutorBody body, MessageQueue &queue, ExecutorAtStart atSta
 Executor::~Executor() { thread.join(); };
 
 void Executor::run(ExecutorBody body, ExecutorAtStart atStart, ExecutorHook atStop) const {
-	if (StatusCode::OK != atStart())
+	const auto rc = atStart();
+	if (StatusCode::OK != rc)
 		return;
 	executeBody(body);
 	atStop();
