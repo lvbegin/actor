@@ -673,7 +673,7 @@ static int startActorFailureTest() {
 	return exceptionThrown ? 0 : 1;
 }
 
-static int restartActorFailureTest() { //the test should be improved to check that the actor stopped without any problem.
+static int restartActorFailureTest() {
 	static int actorRestarted = 0;
 	static bool actorStoppedProperly = false;
 	{
@@ -688,7 +688,6 @@ static int restartActorFailureTest() { //the test should be improved to check th
 		for (int i = 0; i < 5 && 0 == actorRestarted; i++) sleep(1);
 
 	}
-	std::cout << actorRestarted << " " << actorStoppedProperly << std::endl;
 	return (1 == actorRestarted && actorStoppedProperly) ? 0 : 1;
 
 }
