@@ -73,7 +73,8 @@ StatusCode Actor::executorStartCb(void) {
 }
 
 void Actor::executorStopCb(void) {
-	if (stateMachine.isIn(ActorStateMachine::State::STOPPED))
+	if (stateMachine.isIn(ActorStateMachine::State::STOPPED) ||
+			stateMachine.isIn(ActorStateMachine::State::ERROR))
 		atStop(supervisor);
 }
 
@@ -87,9 +88,11 @@ void Actor::post(Command command, const RawData &params, ActorLink sender) const
 StatusCode Actor::restartSateMachine(void) {
 	stateMachine.moveTo(ActorStateMachine::State::RESTARTING);
 	const auto rc = doRestart();
-	stateMachine.moveTo(ActorStateMachine::State::RUNNING);
-	if (StatusCode::OK != rc)
-		stateMachine.moveTo(ActorStateMachine::State::STOPPED); //should be an error state
+
+	if (StatusCode::OK == rc)
+		stateMachine.moveTo(ActorStateMachine::State::RUNNING);
+	else
+		stateMachine.moveTo(ActorStateMachine::State::ERROR);
 	return StatusCode::OK;
 }
 

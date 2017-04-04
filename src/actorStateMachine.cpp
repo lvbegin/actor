@@ -54,6 +54,10 @@ void ActorStateMachine::moveTo(State newState) {
 			state = newState;
 			stateChanged.notify_one();
 			break;
+		case State::ERROR:
+			state = newState;
+			stateChanged.notify_one();
+			break;
 	default:
 		THROW(std::runtime_error, "unknown new Actor State.");
 	}

@@ -35,7 +35,7 @@
 
 class ActorStateMachine {
 public:
-	enum class State { INITIAL, RUNNING, RESTARTING, STOPPED, };
+	enum class State { INITIAL, RUNNING, RESTARTING, STOPPED, ERROR, };
 	ActorStateMachine();
 	~ActorStateMachine();
 	void moveTo(State newState);
