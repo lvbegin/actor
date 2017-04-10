@@ -32,7 +32,7 @@
 #include <exception.h>
 
 static const AtStartHook DEFAULT_START_HOOK = [](const ActorContext&) { return StatusCode::OK; };
-static const LifeCycleHook DEFAULT_STOP_HOOK = [](const ActorContext&c) { c.stopActors(); };
+static const AtStopHook DEFAULT_STOP_HOOK = [](const ActorContext&c) { c.stopActors(); };
 static const AtRestartHook DEFAULT_RESTART_HOOK = [](const ActorContext&c) { c.restartActors(); return StatusCode::OK; };
 
 Actor::ActorException::ActorException(int code, const std::string& what_arg) : std::runtime_error(what_arg), code(code) { }
@@ -43,7 +43,7 @@ int Actor::ActorException::getErrorCode() const { return code; }
 Actor::Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy) :
 		Actor(std::move(name), std::move(body), DEFAULT_START_HOOK, DEFAULT_STOP_HOOK, DEFAULT_RESTART_HOOK, std::move(restartStrategy)) { }
 
-Actor::Actor(std::string name, ActorBody body, AtStartHook atStart, LifeCycleHook atStop, AtRestartHook atRestart, SupervisorStrategy restartStrategy) :
+Actor::Actor(std::string name, ActorBody body, AtStartHook atStart, AtStopHook atStop, AtRestartHook atRestart, SupervisorStrategy restartStrategy) :
 						executorQueue(new MessageQueue(std::move(name))),
 						atStart(atStart), atStop(atStop), atRestart(atRestart), body(body), supervisor(std::move(restartStrategy), executorQueue),
 						executor(new Executor([this](auto type, auto command, auto &params, auto &sender)

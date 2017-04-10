@@ -43,7 +43,7 @@
 
 using ActorBody = std::function<StatusCode(Command, const RawData &, const ActorLink &)>;
 
-using LifeCycleHook = std::function<void(const ActorContext &)>;
+using AtStopHook = std::function<void(const ActorContext &)>;
 using AtStartHook = std::function<StatusCode(const ActorContext &)>;
 using AtRestartHook = std::function<StatusCode(const ActorContext &)>;
 
@@ -57,7 +57,7 @@ public:
 class Actor {
 public:
 	Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
-	Actor(std::string name, ActorBody body, AtStartHook atStart, LifeCycleHook atStop, AtRestartHook atRestart, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
+	Actor(std::string name, ActorBody body, AtStartHook atStart, AtStopHook atStop, AtRestartHook atRestart, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
 	~Actor();
 
 	Actor(const Actor &a) = delete;
@@ -77,7 +77,7 @@ private:
 	static const int EXCEPTION_THROWN_ERROR = 0x00;
 	const LinkRef executorQueue;
 	const AtStartHook atStart;
-	const LifeCycleHook atStop;
+	const AtStopHook atStop;
 	const AtRestartHook atRestart;
 	const ActorBody body;
 	Supervisor supervisor;

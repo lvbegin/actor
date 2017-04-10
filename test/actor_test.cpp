@@ -679,10 +679,10 @@ static int restartActorFailureTest() {
 	{
 		Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
 				SupervisorStrategy([](void) { return SupervisorAction::RESTART_ONE; }));
-		Actor supervised("supervised", [](int i, const RawData &, const ActorLink &) { std::cout << "get message at cb level : " << i << std::endl; /* return StatusCode::ERROR;*/ throw std::runtime_error("error"); return StatusCode::OK; },
+		Actor supervised("supervised", [](int i, const RawData &, const ActorLink &) {  /* return StatusCode::ERROR;*/ throw std::runtime_error("error"); return StatusCode::OK; },
 				[](const ActorContext& ) { return StatusCode::OK; },
 				[](const ActorContext& ) { actorStoppedProperly = true; },
-				[](const ActorContext& ) { std::cout << "restarting at cb" << std::endl; actorRestarted++; return StatusCode::ERROR; });
+				[](const ActorContext& ) { actorRestarted++; return StatusCode::ERROR; });
 		supervisor.registerActor(supervised);
 		supervised.post(0x33);
 		for (int i = 0; i < 5 && 0 == actorRestarted; i++) sleep(1);
