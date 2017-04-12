@@ -74,7 +74,7 @@ public:
 	static void notifyError(int e);
 
 private:
-	static const int EXCEPTION_THROWN_ERROR = 0x00;
+	static const int ACTOR_BODY_FAILED = 0x00;
 	const LinkRef executorQueue;
 	const AtStartHook atStart;
 	const AtStopHook atStop;

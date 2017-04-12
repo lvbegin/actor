@@ -166,14 +166,14 @@ StatusCode Actor::executeActorBody(ActorBody body, Command command, const RawDat
 		return StatusCode::SHUTDOWN;
 	try {
 		const auto rc = body(command, params, sender);
-		if (StatusCode::OK != rc)
-			supervisor.sendErrorToSupervisor(static_cast<Command>(rc));
+		if (StatusCode::ERROR == rc)
+			supervisor.sendErrorToSupervisor(ACTOR_BODY_FAILED);
 		return rc;
 	} catch (const ActorException &e) {
 		supervisor.sendErrorToSupervisor(e.getErrorCode());
 		return StatusCode::ERROR;
 	} catch (const std::exception &e) {
-		supervisor.sendErrorToSupervisor(EXCEPTION_THROWN_ERROR);
+		supervisor.sendErrorToSupervisor(ACTOR_BODY_FAILED);
 		return StatusCode::ERROR;
 	}
 }
