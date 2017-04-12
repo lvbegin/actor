@@ -400,11 +400,12 @@ static int unregisterToSupervisorWhenActorDestroyedTest() {
 	return 0;
 }
 
-static int supervisorRestartsActorTest() {
+static int supervisorRestartsActorAfterExceptionTest() {
 	static const int RESTART_COMMAND = 0x99;
 	static const int OTHER_COMMAND = 0xaa;
 	static const int OK_ANSWER = 0x99;
 	static bool exceptionThrown = false;
+	static bool restarted = false;
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
 	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::OK; });
 	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
@@ -414,13 +415,42 @@ static int supervisorRestartsActorTest() {
 		}
 		link->post(OK_ANSWER);
 		 return StatusCode::OK;
-	 });
+	 },
+	 [](const ActorContext &) {return StatusCode::OK; },
+	 [](const ActorContext &) { },
+	 [](const ActorContext &) { restarted = true; return StatusCode::OK; });
 	supervisor.registerActor(supervised);
 	supervised.post(RESTART_COMMAND, link);
+	for(int i = 0; i < 5 && !restarted; i++) sleep(1);
 	supervised.post(OTHER_COMMAND, link);
 	if (OK_ANSWER != link->get().code)
 		return 1;
-	return (exceptionThrown) ? 0 : 1;
+	return (exceptionThrown && restarted) ? 0 : 1;
+}
+
+static int supervisorRestartsActorAfterReturningErrorTest() {
+	static const int RESTART_COMMAND = 0x99;
+	static const int OTHER_COMMAND = 0xaa;
+	static const int OK_ANSWER = 0x99;
+	static bool restarted = false;
+	const auto link = std::make_shared<MessageQueue>("queue for reply");
+	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::OK; });
+	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
+		if (i == RESTART_COMMAND)
+			return StatusCode::ERROR;
+		link->post(OK_ANSWER);
+		 return StatusCode::OK;
+	 },
+	 [](const ActorContext &) {return StatusCode::OK; },
+	 [](const ActorContext &) { },
+	 [](const ActorContext &) { restarted = true; return StatusCode::OK; });
+	supervisor.registerActor(supervised);
+	supervised.post(RESTART_COMMAND, link);
+	for(int i = 0; i < 5 && !restarted; i++) sleep(1);
+	supervised.post(OTHER_COMMAND, link);
+	if (OK_ANSWER != link->get().code)
+		return 1;
+	return (restarted) ? 0 : 1;
 }
 
 static int supervisorStopActorTest() {
@@ -720,6 +750,7 @@ int _runTest(const _test *suite, size_t nbTests) {
 
 int main() {
 	static const _test suite[] = {
+#if 1
 			TEST(basicActorTest),
 			TEST(basicActorWithParamsTest),
 			TEST(proxyTest),
@@ -737,7 +768,10 @@ int main() {
 			TEST(findUnknownActorInMultipleRegistryTest),
 			TEST(initSupervisionTest),
 			TEST(unregisterToSupervisorWhenActorDestroyedTest),
-			TEST(supervisorRestartsActorTest),
+			TEST(supervisorRestartsActorAfterExceptionTest),
+#endif
+			TEST(supervisorRestartsActorAfterReturningErrorTest),
+#if 1
 			TEST(supervisorStopActorTest),
 			TEST(supervisorForwardErrorRestartTest),
 			TEST(supervisorForwardErrorStopTest),
@@ -750,6 +784,7 @@ int main() {
 			TEST(serializationTest),
 			TEST(startActorFailureTest),
 			TEST(restartActorFailureTest),
+#endif
 	};
 
 	const auto nbFailure = runTest(suite);

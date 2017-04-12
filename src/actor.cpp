@@ -165,7 +165,10 @@ StatusCode Actor::executeActorBody(ActorBody body, Command command, const RawDat
 	if ( CommandValue::SHUTDOWN == command )
 		return StatusCode::SHUTDOWN;
 	try {
-		return body(command, params, sender);
+		const auto rc = body(command, params, sender);
+		if (StatusCode::OK != rc)
+			supervisor.sendErrorToSupervisor(static_cast<Command>(rc));
+		return rc;
 	} catch (const ActorException &e) {
 		supervisor.sendErrorToSupervisor(e.getErrorCode());
 		return StatusCode::ERROR;
