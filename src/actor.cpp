@@ -57,7 +57,7 @@ Actor::~Actor() {
 	executorQueue->post(CommandValue::SHUTDOWN);
 }
 
-void Actor::checkActorInitialization(void) {
+void Actor::checkActorInitialization(void) const {
 	this->stateMachine.waitStarted();
 	if (this->stateMachine.isIn(ActorStateMachine::State::STOPPED))
 		throw ActorStartFailure();

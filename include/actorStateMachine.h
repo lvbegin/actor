@@ -40,10 +40,10 @@ public:
 	~ActorStateMachine();
 	void moveTo(State newState);
 	bool isIn(State state) const;
-	void waitStarted();
+	void waitStarted() const;
 private:
 	mutable std::mutex mutex;
-	std::condition_variable stateChanged;
+	mutable std::condition_variable stateChanged;
 	State state;
 };
 

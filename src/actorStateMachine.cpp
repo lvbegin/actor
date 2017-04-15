@@ -69,7 +69,7 @@ bool ActorStateMachine::isIn(State state) const {
 	return (this->state == state);
 }
 
-void ActorStateMachine::waitStarted() {
+void ActorStateMachine::waitStarted() const {
 	std::unique_lock<std::mutex> l(mutex);
 
 	stateChanged.wait(l, [this]() { return State::INITIAL != state; });
