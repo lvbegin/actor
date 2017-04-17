@@ -96,12 +96,12 @@ private:
 
 	class ActorException : public std::runtime_error {
 	public:
-		ActorException(int code, const std::string& what_arg);
+		ActorException(ErrorCode error, const std::string& what_arg);
 		~ActorException();
 
 		int getErrorCode() const;
 	private:
-		const int code;
+		const ErrorCode error;
 	};
 
 };

@@ -32,13 +32,13 @@
 #include <exception.h>
 
 static const AtStartHook DEFAULT_START_HOOK = [](const ActorContext&) { return StatusCode::OK; };
-static const AtStopHook DEFAULT_STOP_HOOK = [](const ActorContext&c) { c.stopActors(); };
-static const AtRestartHook DEFAULT_RESTART_HOOK = [](const ActorContext&c) { c.restartActors(); return StatusCode::OK; };
+static const AtStopHook DEFAULT_STOP_HOOK = [](const ActorContext& c) { c.stopActors(); };
+static const AtRestartHook DEFAULT_RESTART_HOOK = [](const ActorContext& c) { c.restartActors(); return StatusCode::OK; };
 
-Actor::ActorException::ActorException(int code, const std::string& what_arg) : std::runtime_error(what_arg), code(code) { }
+Actor::ActorException::ActorException(ErrorCode error, const std::string& what_arg) : std::runtime_error(what_arg), error(error) { }
 Actor::ActorException::~ActorException() = default;
 
-int Actor::ActorException::getErrorCode() const { return code; }
+int Actor::ActorException::getErrorCode() const { return error; }
 
 Actor::Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy) :
 		Actor(std::move(name), std::move(body), DEFAULT_START_HOOK, DEFAULT_STOP_HOOK, DEFAULT_RESTART_HOOK, std::move(restartStrategy)) { }
@@ -87,9 +87,8 @@ void Actor::post(Command command, const RawData &params, ActorLink sender) const
 
 StatusCode Actor::restartSateMachine(void) {
 	stateMachine.moveTo(ActorStateMachine::State::RESTARTING);
-	const auto rc = doRestart();
 
-	if (StatusCode::OK == rc)
+	if (StatusCode::OK == doRestart())
 		stateMachine.moveTo(ActorStateMachine::State::RUNNING);
 	else
 		stateMachine.moveTo(ActorStateMachine::State::ERROR);
