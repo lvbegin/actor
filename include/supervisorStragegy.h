@@ -34,8 +34,10 @@
 
 enum class SupervisorAction { RESTART_ONE, RESTART_ALL, STOP_ONE, ESCALATE, };
 
-using  SupervisorStrategy = std::function<SupervisorAction(void)>;
+typedef uint32_t ErrorCode;
 
-static const SupervisorStrategy DEFAULT_SUPERVISOR_STRATEGY = [](void) { return SupervisorAction::RESTART_ONE; };
+using  SupervisorStrategy = std::function<SupervisorAction(ErrorCode error)>;
+
+static const SupervisorStrategy DEFAULT_SUPERVISOR_STRATEGY = [](ErrorCode) { return SupervisorAction::RESTART_ONE; };
 
 #endif

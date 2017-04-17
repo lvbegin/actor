@@ -44,7 +44,7 @@ public:
 
 	void notifySupervisor(Command command) const;
 	void sendErrorToSupervisor(Command command) const;
-	void manageErrorFromSupervised(Command command, const RawData &params) const;
+	void manageErrorFromSupervised(ErrorCode error, const RawData &params) const;
 	void removeActor(const std::string &name);
 	void restartActors() const;
 	void stopActors() const;

@@ -60,10 +60,10 @@ void Supervisor::doOperation(std::function<void(void)> op) const {
 	op();
 }
 
-void Supervisor::manageErrorFromSupervised(Command command, const RawData &params) const {
+void Supervisor::manageErrorFromSupervised(ErrorCode error, const RawData &params) const {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
-	switch (restartStrategy())
+	switch (restartStrategy(error))
 	{
 		case SupervisorAction::RESTART_ONE:
 			supervisedRefs.restartOne(params.toString());
@@ -75,7 +75,7 @@ void Supervisor::manageErrorFromSupervised(Command command, const RawData &param
 			supervisedRefs.restartAll();
 			break;
 		case SupervisorAction::ESCALATE:
-			postSupervisor(MessageType::ERROR_MESSAGE, command, self->getName());
+			postSupervisor(MessageType::ERROR_MESSAGE, error, self->getName());
 			break;
 		default:
 			/* should log the problem */
