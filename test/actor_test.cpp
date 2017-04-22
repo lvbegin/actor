@@ -676,6 +676,45 @@ static int stoppingSupervisorStopsSupervisedTest() {
 	return (supervisorStopped && supervisedStopped) ? 0 : 1;
 }
 
+static int supervisorHasDifferentStrategyDependingOnErrorTest() {
+	static const int first_error = 0x11;
+	static const int second_error = 0x22;
+	static const auto strategy = [](ErrorCode error) {
+		if (first_error == error)
+			return SupervisorAction::RESTART_ONE;
+		else
+			return SupervisorAction::STOP_ONE;
+	};
+	bool supervisorRestarted = false;
+	bool supervisedRestarted = false;
+	bool supervisedStopped = false;
+	Actor supervisor("supervisor",
+			[](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
+			[](const ActorContext &c) { return StatusCode::OK; },
+			[](const ActorContext &c) { },
+			[&supervisorRestarted](const ActorContext &c) { supervisorRestarted = true; return StatusCode::OK; },
+			strategy);
+	Actor supervised("supervised",
+			[](int code, const RawData &, const ActorLink &) {
+		Actor::notifyError(code);
+		return StatusCode::OK;
+	},
+	[](const ActorContext &c) { return StatusCode::OK; },
+	[&supervisedStopped](const ActorContext &c) { supervisedStopped = true; },
+	[&supervisedRestarted](const ActorContext &) { supervisedRestarted++; return StatusCode::OK; } );
+
+	supervisor.registerActor(supervised);
+
+	supervised.post(first_error);
+	for (int i = 0; i < 5 && !supervisedRestarted; i++)
+		sleep(1);
+	supervised.post(second_error);
+	for (int i = 0; i < 5 && !supervisedStopped; i++)
+		sleep(1);
+
+	return (supervisorRestarted ||  !supervisedRestarted || !supervisedStopped) ? 1 : 0;
+}
+
 static int executorTest() {
 	MessageQueue messageQueue;
 	Executor executor([](MessageType, int, const RawData &, const ActorLink &) { return StatusCode::SHUTDOWN; }, messageQueue);
@@ -750,7 +789,6 @@ int _runTest(const _test *suite, size_t nbTests) {
 
 int main() {
 	static const _test suite[] = {
-#if 1
 			TEST(basicActorTest),
 			TEST(basicActorWithParamsTest),
 			TEST(proxyTest),
@@ -769,9 +807,7 @@ int main() {
 			TEST(initSupervisionTest),
 			TEST(unregisterToSupervisorWhenActorDestroyedTest),
 			TEST(supervisorRestartsActorAfterExceptionTest),
-#endif
 			TEST(supervisorRestartsActorAfterReturningErrorTest),
-#if 1
 			TEST(supervisorStopActorTest),
 			TEST(supervisorForwardErrorRestartTest),
 			TEST(supervisorForwardErrorStopTest),
@@ -780,11 +816,11 @@ int main() {
 			TEST(actorDoesNothingIfNoSupervisorAndExceptionThrownTest),
 			TEST(restartAllActorBySupervisorTest),
 			TEST(stoppingSupervisorStopsSupervisedTest),
+			TEST(supervisorHasDifferentStrategyDependingOnErrorTest),
 			TEST(executorTest),
 			TEST(serializationTest),
 			TEST(startActorFailureTest),
 			TEST(restartActorFailureTest),
-#endif
 	};
 
 	const auto nbFailure = runTest(suite);
