@@ -76,7 +76,6 @@ public:
 private:
 	static const int ACTOR_BODY_FAILED = 0x00;
 	const LinkRef executorQueue;
-	const AtStartHook atStart;
 	const AtStopHook atStop;
 	const AtRestartHook atRestart;
 	const ActorBody body;
@@ -90,7 +89,7 @@ private:
 	StatusCode doRestart(void);
 	StatusCode restartSateMachine(void);
 	void checkActorInitialization(void) const;
-	StatusCode executorStartCb(void);
+	StatusCode executorStartCb(AtStartHook atStart);
 	void executorStopCb(void);
 	StatusCode executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e);
 

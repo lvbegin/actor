@@ -31,6 +31,7 @@
 #include <actorStateMachine.h>
 #include <exception.h>
 
+
 ActorStateMachine::ActorStateMachine() : state(State::INITIAL) { }
 ActorStateMachine::~ActorStateMachine() = default;
 
@@ -69,8 +70,9 @@ bool ActorStateMachine::isIn(State state) const {
 	return (this->state == state);
 }
 
-void ActorStateMachine::waitStarted() const {
+ActorStateMachine::State ActorStateMachine::waitStarted() const {
 	std::unique_lock<std::mutex> l(mutex);
 
 	stateChanged.wait(l, [this]() { return State::INITIAL != state; });
+	return state;
 }
