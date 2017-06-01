@@ -31,6 +31,8 @@
 #include <commandValue.h>
 #include <exception.h>
 
+#include <iostream>
+
 static const AtStartHook DEFAULT_START_HOOK = [](const ActorContext&) { return StatusCode::OK; };
 static const AtStopHook DEFAULT_STOP_HOOK = [](const ActorContext& c) { c.stopActors(); };
 static const AtRestartHook DEFAULT_RESTART_HOOK = [](const ActorContext& c) { c.restartActors(); return StatusCode::OK; };
@@ -138,7 +140,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command comman
 			return status;
 		}
 		default:
-			/* should log the problem */
+			std::cerr << "Unknown Message type in " << __PRETTY_FUNCTION__ << std::endl;
 			return StatusCode::ERROR;
 	}
 }
@@ -154,7 +156,7 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 			stateMachine.moveTo(ActorStateMachine::State::STOPPED);
 			return StatusCode::SHUTDOWN;
 		default:
-			/* should log the problem */
+			std::cerr << "Unknown Command in " << __PRETTY_FUNCTION__ << std::endl;
 			return StatusCode::ERROR;
 	}
 }

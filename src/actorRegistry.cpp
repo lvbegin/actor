@@ -31,6 +31,8 @@
 #include <clientSocket.h>
 #include <proxyClient.h>
 
+#include <iostream>
+
 static void threadBody(uint16_t port, std::function<void(const ServerSocket &s)> body);
 
 ActorRegistry::ActorRegistry(std::string name, uint16_t port) : name(std::move(name)), port(port),
@@ -67,7 +69,7 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 					}
 					break;
 				default:
-					//should log the problem
+					std::cerr << "Unknown Registry command in " << __PRETTY_FUNCTION__ << std::endl;
 					break;
 			}
 		}

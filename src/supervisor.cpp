@@ -30,6 +30,8 @@
 #include <supervisor.h>
 #include <uniqueId.h>
 
+#include <iostream>
+
 Supervisor::Supervisor(SupervisorStrategy strategy, LinkRef self) :
 					restartStrategy(std::move(strategy)), self(std::move(self)) { }
 Supervisor::~Supervisor() = default;
@@ -78,7 +80,7 @@ void Supervisor::manageErrorFromSupervised(ErrorCode error, const RawData &param
 			postSupervisor(MessageType::ERROR_MESSAGE, error, self->getName());
 			break;
 		default:
-			/* should log the problem */
+			std::cerr << "Unknown supervisor action in " << __PRETTY_FUNCTION__ << std::endl;
 			break;
 	}
 }
