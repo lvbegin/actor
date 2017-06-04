@@ -47,6 +47,10 @@ using AtStopHook = std::function<void(const ActorContext &)>;
 using AtStartHook = std::function<StatusCode(const ActorContext &)>;
 using AtRestartHook = std::function<StatusCode(const ActorContext &)>;
 
+extern const AtStartHook DEFAULT_START_HOOK;
+extern const AtStopHook DEFAULT_STOP_HOOK;
+extern const AtRestartHook DEFAULT_RESTART_HOOK;
+
 
 class ActorStartFailure : public std::runtime_error {
 public:
@@ -54,10 +58,18 @@ public:
 	~ActorStartFailure() = default;
 };
 
+struct ActorHooks {
+	AtStartHook atStart;
+	AtStopHook atStop;
+	AtRestartHook atRestart;
+	ActorHooks(AtStartHook atStart, AtStopHook atStop, AtRestartHook atRestart) :
+									atStart(atStart), atStop(atStop), atRestart(atRestart) { }
+};
+
 class Actor {
 public:
 	Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
-	Actor(std::string name, ActorBody body, AtStartHook atStart, AtStopHook atStop, AtRestartHook atRestart, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
+	Actor(std::string name, ActorBody body, ActorHooks hooks, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
 	~Actor();
 
 	Actor(const Actor &a) = delete;
@@ -76,8 +88,7 @@ public:
 private:
 	static const int ACTOR_BODY_FAILED = 0x00;
 	const LinkRef executorQueue;
-	const AtStopHook atStop;
-	const AtRestartHook atRestart;
+	const ActorHooks hooks;
 	const ActorBody body;
 	Supervisor supervisor;
 	ActorStateMachine stateMachine;
@@ -92,7 +103,9 @@ private:
 	StatusCode executorStartCb(AtStartHook atStart);
 	void executorStopCb(void);
 	StatusCode executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e);
-
+	std::unique_ptr<Executor> createAtStartExecutor();
+	std::unique_ptr<Executor> createAtRestartExecutor(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &p);
+	std::unique_ptr<Executor> createExecutor(ExecutorAtStart atStartCb);
 	class ActorException : public std::runtime_error {
 	public:
 		ActorException(ErrorCode error, const std::string& what_arg);
