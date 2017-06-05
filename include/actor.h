@@ -97,14 +97,13 @@ private:
 	StatusCode actorExecutor(ActorBody body, MessageType type, Command command, const RawData &params, const ActorLink &sender);
 	StatusCode executeActorBody(ActorBody body, Command command, const RawData &params, const ActorLink &sender);
 	StatusCode executeActorManagement(Command command, const RawData &params);
-	StatusCode doRestart(void);
+	StatusCode restartExecutor(void);
 	StatusCode restartSateMachine(void);
 	void checkActorInitialization(void) const;
 	StatusCode executorStartCb(AtStartHook atStart);
 	void executorStopCb(void);
 	StatusCode executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e);
 	std::unique_ptr<Executor> createAtStartExecutor();
-	std::unique_ptr<Executor> createAtRestartExecutor(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &p);
 	std::unique_ptr<Executor> createExecutor(ExecutorAtStart atStartCb);
 	class ActorException : public std::runtime_error {
 	public:

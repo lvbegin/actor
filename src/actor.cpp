@@ -73,18 +73,18 @@ void Actor::post(Command command, const RawData &params, ActorLink sender) const
 StatusCode Actor::restartSateMachine(void) {
 	stateMachine.moveTo(ActorStateMachine::State::RESTARTING);
 
-	if (StatusCode::OK == doRestart())
+	if (StatusCode::OK == restartExecutor())
 		stateMachine.moveTo(ActorStateMachine::State::RUNNING);
 	else
 		stateMachine.moveTo(ActorStateMachine::State::ERROR);
 	return StatusCode::OK;
 }
 
-StatusCode Actor::doRestart(void) {
+StatusCode Actor::restartExecutor(void) {
 	std::promise<StatusCode> status;
 	std::promise<std::unique_ptr<Executor> &> e;
-	std::unique_ptr<Executor> newExecutor = createAtRestartExecutor(status, e);
-	//e.set_value(newExecutor);
+	auto newExecutor = createExecutor([this, &status, & e]() { return executorRestartCb(status, e); });
+	e.set_value(newExecutor);
 	return status.get_future().get();
 }
 
@@ -151,12 +151,6 @@ StatusCode Actor::executeActorBody(ActorBody body, Command command, const RawDat
 
 std::unique_ptr<Executor> Actor::createAtStartExecutor() {
 	return createExecutor([this]() { return executorStartCb(hooks.atStart); });
-}
-
-std::unique_ptr<Executor> Actor::createAtRestartExecutor(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &p) {
-	auto newExecutor = createExecutor([this, &status, & p]() { return executorRestartCb(status, p); });
-	p.set_value(newExecutor);
-	return newExecutor;
 }
 
 std::unique_ptr<Executor> Actor::createExecutor(ExecutorAtStart atStartCb) {
