@@ -45,13 +45,11 @@ ProxyServer::~ProxyServer() {
 
 void ProxyServer::startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor) {
 	while (true) {
-		postType type;
 		try {
-			type = connection.readInt<postType>();
+			if (postType::NewMessage != connection.readInt<postType>())
+				continue;
 		} catch (const ConnectionTimeout &) { continue ; }
 		  catch (const std::runtime_error &) {  return; }
-		if (postType::NewMessage != type)
-			continue;
 		const auto name = connection.readString();
 		const auto sender = (name.size() > 0) ? findActor(name) : ActorLink();
 		const auto command = connection.readInt<uint32_t>();
