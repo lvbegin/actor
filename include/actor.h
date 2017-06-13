@@ -34,7 +34,6 @@
 #include <executor.h>
 #include <actorStateMachine.h>
 #include <supervisor.h>
-#include <supervisorStragegy.h>
 
 #include <functional>
 #include <memory>
@@ -68,8 +67,8 @@ struct ActorHooks {
 
 class Actor {
 public:
-	Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
-	Actor(std::string name, ActorBody body, ActorHooks hooks, SupervisorStrategy restartStrategy = DEFAULT_SUPERVISOR_STRATEGY);
+	Actor(std::string name, ActorBody body, ActionStrategy restartStrategy = [](ErrorCode) -> const ErrorStrategy &{ return RestartActor::create(); });
+	Actor(std::string name, ActorBody body, ActorHooks hooks, ActionStrategy restartStrategy = [](ErrorCode) -> const ErrorStrategy &{ return RestartActor::create(); });
 	~Actor();
 
 	Actor(const Actor &a) = delete;

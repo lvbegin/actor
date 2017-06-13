@@ -458,7 +458,7 @@ static int supervisorStopActorTest() {
 	static bool actorStopped = false;
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
 	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
-			[](ErrorCode) { return SupervisorAction::STOP_ONE; });
+			[](ErrorCode) -> const ErrorStrategy &{ return StopActor::create(); });
 	static const ActorHooks hooks(DEFAULT_START_HOOK, [](const ActorContext&) { actorStopped = true; },
 			 						DEFAULT_RESTART_HOOK);
 	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
@@ -489,12 +489,12 @@ static int supervisorForwardErrorRestartTest() {
 			[](const ActorContext &c) { actorRestarted1 = true; c.restartActors(); return StatusCode::OK; });
 	Actor rootSupervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
 			rootHook,
-			[](ErrorCode) { return SupervisorAction::RESTART_ONE; });
+			[](ErrorCode) -> const ErrorStrategy & { return RestartActor::create(); });
 	static const ActorHooks supervisorHook(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
 			[](const ActorContext &c) { actorRestarted2 = true; c.restartActors(); return StatusCode::OK; });
 	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
 			supervisorHook,
-			[](ErrorCode) { return SupervisorAction::ESCALATE; });
+			[](ErrorCode) -> const ErrorStrategy & { return EscalateError::create(); });
 	static const ActorHooks supervisedHooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
 	 [](const ActorContext &){ actorRestarted3 = true; return StatusCode::OK; });
 	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
@@ -522,9 +522,9 @@ static int supervisorForwardErrorStopTest() {
 	static bool stopped = false;
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
 	Actor rootSupervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
-			[](ErrorCode) { return SupervisorAction::STOP_ONE; });
+			[](ErrorCode) -> const ErrorStrategy &{ return StopActor::create(); });
 	Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
-			[](ErrorCode) { return SupervisorAction::ESCALATE; });
+			[](ErrorCode) -> const ErrorStrategy &{ return EscalateError::create(); });
 	static const ActorHooks hooks(DEFAULT_START_HOOK, [](const ActorContext &) { stopped = true; },
 								DEFAULT_RESTART_HOOK);
 	Actor supervised("supervised", [](int i, const RawData &, const ActorLink &link) {
@@ -620,7 +620,7 @@ static int restartAllActorBySupervisorTest() {
 	Actor supervisor("supervisor",
 			[](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
 			hooks,
-			[](ErrorCode) { return SupervisorAction::RESTART_ALL; });
+			[](ErrorCode) -> const ErrorStrategy &{ return RestartAllActor::create(); });
 	static const ActorHooks supervised1Hook(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
 			[&supervised1Restarted](const ActorContext &) { supervised1Restarted = true; return StatusCode::OK; });
 	Actor supervised1("supervised1",
@@ -669,11 +669,11 @@ static int stoppingSupervisorStopsSupervisedTest() {
 static int supervisorHasDifferentStrategyDependingOnErrorTest() {
 	static const int first_error = 0x11;
 	static const int second_error = 0x22;
-	static const auto strategy = [](ErrorCode error) {
+	static const auto strategy = [](ErrorCode error) -> const ErrorStrategy &{
 		if (first_error == error)
-			return SupervisorAction::RESTART_ONE;
+			return RestartActor::create();
 		else
-			return SupervisorAction::STOP_ONE;
+			return StopActor::create();
 	};
 	bool supervisorRestarted = false;
 	bool supervisedRestarted = false;
@@ -739,7 +739,7 @@ static int restartActorFailureTest() {
 			[](const ActorContext& ) { actorRestarted++; return StatusCode::ERROR; });
 	{
 		Actor supervisor("supervisor", [](int i, const RawData &, const ActorLink &) { return StatusCode::OK; },
-				[](ErrorCode) { return SupervisorAction::RESTART_ONE; });
+				[](ErrorCode) -> const ErrorStrategy &{ return RestartActor::create(); });
 		Actor supervised("supervised", [](int i, const RawData &, const ActorLink &) {  /* return StatusCode::ERROR;*/ throw std::runtime_error("error"); return StatusCode::OK; },
 				hooks);
 		supervisor.registerActor(supervised);
