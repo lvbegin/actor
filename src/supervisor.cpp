@@ -32,8 +32,9 @@
 
 #include <iostream>
 
-Supervisor::Supervisor(SupervisorStrategy strategy, LinkRef self) :
+Supervisor::Supervisor(ActionStrategy strategy, LinkRef self) :
 					restartStrategy(std::move(strategy)), self(std::move(self)) { }
+
 Supervisor::~Supervisor() = default;
 
 void Supervisor::notifySupervisor(Command command) const{ sendToSupervisor(MessageType::COMMAND_MESSAGE, command); }
@@ -62,27 +63,15 @@ void Supervisor::doOperation(std::function<void(void)> op) const {
 	op();
 }
 
+const RestartActor RestartActor::singletonElement;
+const StopActor StopActor::singletonElement;
+const RestartAllActor RestartAllActor::singletonElement;
+const EscalateError EscalateError::singletonElement;
+
 void Supervisor::manageErrorFromSupervised(ErrorCode error, const RawData &params) const {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
-	switch (restartStrategy(error))
-	{
-		case SupervisorAction::RESTART_ONE:
-			supervisedRefs.restartOne(params.toString());
-			break;
-		case SupervisorAction::STOP_ONE:
-			supervisedRefs.stopOne(params.toString());
-			break;
-		case SupervisorAction::RESTART_ALL:
-			supervisedRefs.restartAll();
-			break;
-		case SupervisorAction::ESCALATE:
-			postSupervisor(MessageType::ERROR_MESSAGE, error, self->getName());
-			break;
-		default:
-			std::cerr << "Unknown supervisor action in " << __PRETTY_FUNCTION__ << std::endl;
-			break;
-	}
+	restartStrategy(error).executeAction(supervisedRefs, supervisorRef, error, params, self->getName());
 }
 
 void Supervisor::registerMonitored(Supervisor &monitored) {

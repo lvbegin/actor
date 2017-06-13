@@ -44,11 +44,11 @@ Actor::ActorException::~ActorException() = default;
 
 int Actor::ActorException::getErrorCode() const { return error; }
 
-Actor::Actor(std::string name, ActorBody body, SupervisorStrategy restartStrategy) :
-		Actor(std::move(name), std::move(body), DEFAULT_HOOKS, std::move(restartStrategy)) { }
-Actor::Actor(std::string name, ActorBody body, ActorHooks hooks, SupervisorStrategy restartStrategy) :
+Actor::Actor(std::string name, ActorBody body, ActionStrategy restartStrategy) :
+		Actor(std::move(name), std::move(body), DEFAULT_HOOKS, restartStrategy) { }
+Actor::Actor(std::string name, ActorBody body, ActorHooks hooks, ActionStrategy restartStrategy) :
 								executorQueue(new MessageQueue(std::move(name))), hooks(hooks),
-								body(body), supervisor(std::move(restartStrategy), executorQueue),
+								body(body), supervisor(restartStrategy, executorQueue),
 								executor(createAtStartExecutor())
 								{ checkActorInitialization(); }
 

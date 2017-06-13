@@ -34,12 +34,14 @@
 #include <messageQueue.h>
 #include <commandValue.h>
 #include <uniqueId.h>
-#include <supervisorStragegy.h>
 #include <actorContext.h>
+#include <errorStrategy.h>
+
+using  ActionStrategy = std::function<const ErrorStrategy &(ErrorCode error)>;
 
 class Supervisor : public ActorContext {
 public:
-	Supervisor(SupervisorStrategy strategy, LinkRef self);
+	Supervisor(ActionStrategy strategy, LinkRef self);
 	~Supervisor();
 
 	void notifySupervisor(Command command) const;
@@ -54,7 +56,7 @@ public:
 
 private:
 	mutable std::mutex monitorMutex;
-	const SupervisorStrategy restartStrategy;
+	const ActionStrategy restartStrategy;
 	const LinkRef self;
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;
