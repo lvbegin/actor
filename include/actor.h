@@ -34,6 +34,7 @@
 #include <executor.h>
 #include <actorStateMachine.h>
 #include <supervisor.h>
+#include <actorCommand.h>
 
 #include <functional>
 #include <memory>
@@ -67,8 +68,9 @@ struct ActorHooks {
 
 class Actor {
 public:
-	Actor(std::string name, ActorBody body, ActionStrategy restartStrategy = [](ErrorCode) -> const ErrorStrategy &{ return RestartActor::create(); });
-	Actor(std::string name, ActorBody body, ActorHooks hooks, ActionStrategy restartStrategy = [](ErrorCode) -> const ErrorStrategy &{ return RestartActor::create(); });
+	Actor(std::string name, ActorCommand commands, ActionStrategy restartStrategy = [](ErrorCode) { return RestartActor::create(); });
+	Actor(std::string name, ActorCommand commands, ActorHooks hooks, ActionStrategy restartStrategy = [](ErrorCode) { return RestartActor::create(); });
+
 	~Actor();
 
 	Actor(const Actor &a) = delete;
@@ -88,13 +90,13 @@ private:
 	static const int ACTOR_BODY_FAILED = 0x00;
 	const LinkRef executorQueue;
 	const ActorHooks hooks;
-	const ActorBody body;
+	const ActorCommand commands;
 	Supervisor supervisor;
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
 
-	StatusCode actorExecutor(ActorBody body, MessageType type, Command command, const RawData &params, const ActorLink &sender);
-	StatusCode executeActorBody(ActorBody body, Command command, const RawData &params, const ActorLink &sender);
+	StatusCode actorExecutor(MessageType type, Command command, const RawData &params, const ActorLink &sender);
+	StatusCode executeActorBody(Command command, const RawData &params, const ActorLink &sender);
 	StatusCode executeActorManagement(Command command, const RawData &params);
 	StatusCode restartExecutor(void);
 	StatusCode restartSateMachine(void);

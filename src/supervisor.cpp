@@ -63,15 +63,10 @@ void Supervisor::doOperation(std::function<void(void)> op) const {
 	op();
 }
 
-const RestartActor RestartActor::singletonElement;
-const StopActor StopActor::singletonElement;
-const RestartAllActor RestartAllActor::singletonElement;
-const EscalateError EscalateError::singletonElement;
-
 void Supervisor::manageErrorFromSupervised(ErrorCode error, const RawData &params) const {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
-	restartStrategy(error).executeAction(supervisedRefs, supervisorRef, error, params, self->getName());
+	restartStrategy(error)->executeAction(supervisedRefs, supervisorRef, error, params, self);
 }
 
 void Supervisor::registerMonitored(Supervisor &monitored) {

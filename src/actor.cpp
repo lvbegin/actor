@@ -30,6 +30,7 @@
 #include <actor.h>
 #include <commandValue.h>
 #include <exception.h>
+#include <actorCommand.h>
 
 #include <iostream>
 
@@ -44,13 +45,15 @@ Actor::ActorException::~ActorException() = default;
 
 int Actor::ActorException::getErrorCode() const { return error; }
 
-Actor::Actor(std::string name, ActorBody body, ActionStrategy restartStrategy) :
-		Actor(std::move(name), std::move(body), DEFAULT_HOOKS, restartStrategy) { }
-Actor::Actor(std::string name, ActorBody body, ActorHooks hooks, ActionStrategy restartStrategy) :
-								executorQueue(new MessageQueue(std::move(name))), hooks(hooks),
-								body(body), supervisor(restartStrategy, executorQueue),
-								executor(createAtStartExecutor())
-								{ checkActorInitialization(); }
+Actor::Actor(std::string name, ActorCommand commands, ActionStrategy restartStrategy) :
+				Actor(std::move(name), commands, DEFAULT_HOOKS, restartStrategy) { }
+
+Actor::Actor(std::string name, ActorCommand commands, ActorHooks hooks, ActionStrategy restartStrategy) :
+										executorQueue(new MessageQueue(std::move(name))), hooks(hooks),
+										commands(commands),
+										supervisor(restartStrategy, executorQueue),
+										executor(createAtStartExecutor())
+										{ checkActorInitialization(); }
 
 Actor::~Actor() {
 	stateMachine.moveTo(ActorStateMachine::State::STOPPED);
@@ -72,12 +75,9 @@ void Actor::post(Command command, const RawData &params, ActorLink sender) const
 
 StatusCode Actor::restartSateMachine(void) {
 	stateMachine.moveTo(ActorStateMachine::State::RESTARTING);
-
-	if (StatusCode::OK == restartExecutor())
-		stateMachine.moveTo(ActorStateMachine::State::RUNNING);
-	else
-		stateMachine.moveTo(ActorStateMachine::State::ERROR);
-	return StatusCode::OK;
+    const auto nextState = (StatusCode::OK == restartExecutor()) ? ActorStateMachine::State::RUNNING :
+    															ActorStateMachine::State::ERROR;
+	return (stateMachine.moveTo(nextState), StatusCode::OK);
 }
 
 StatusCode Actor::restartExecutor(void) {
@@ -96,7 +96,7 @@ void Actor::unregisterActor(Actor &monitored) { supervisor.unregisterMonitored(m
 
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
-StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command command, const RawData &params, const ActorLink &sender) {
+StatusCode Actor::actorExecutor(MessageType type, Command command, const RawData &params, const ActorLink &sender) {
 	if (stateMachine.isIn(ActorStateMachine::State::STOPPED))
 		return StatusCode::SHUTDOWN;
 	switch (type) {
@@ -105,7 +105,7 @@ StatusCode Actor::actorExecutor(ActorBody body, MessageType type, Command comman
 		case MessageType::MANAGEMENT_MESSAGE:
 			return executeActorManagement(command, params);
 		case MessageType::COMMAND_MESSAGE: {
-			const auto status = executeActorBody(body, command, params, sender);
+			const auto status = executeActorBody(command, params, sender);
 			if (StatusCode::SHUTDOWN == status)
 				stateMachine.moveTo(ActorStateMachine::State::STOPPED);
 			return status;
@@ -132,11 +132,12 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 	}
 }
 
-StatusCode Actor::executeActorBody(ActorBody body, Command command, const RawData &params, const ActorLink &sender) {
+StatusCode Actor::executeActorBody(Command command, const RawData &params, const ActorLink &sender) {
 	if ( CommandValue::SHUTDOWN == command )
 		return StatusCode::SHUTDOWN;
 	try {
-		const auto rc = body(command, params, sender);
+		const auto rc = commands.execute(command, params, sender);
+//		const auto rc = body(command, params, sender);
 		if (StatusCode::ERROR == rc)
 			supervisor.sendErrorToSupervisor(ACTOR_BODY_FAILED);
 		return rc;
@@ -155,17 +156,15 @@ std::unique_ptr<Executor> Actor::createAtStartExecutor() {
 
 std::unique_ptr<Executor> Actor::createExecutor(ExecutorAtStart atStartCb) {
 return std::make_unique<Executor>( [this](auto type, auto command, auto &params, auto &sender)
-		{ return this->actorExecutor(body, type, command, params, sender); }, *executorQueue,
+		{ return this->actorExecutor(type, command, params, sender); }, *executorQueue,
 			atStartCb, [this]() { executorStopCb(); } );
 }
 
 StatusCode Actor::executorStartCb(AtStartHook atStart) {
 	const auto rc = atStart(this->supervisor);
-	if (StatusCode::ERROR == rc)
-		this->stateMachine.moveTo(ActorStateMachine::State::STOPPED);
-	else
-		this->stateMachine.moveTo(ActorStateMachine::State::RUNNING);
-	return rc;
+	const auto nextState = (StatusCode::ERROR == rc) ? ActorStateMachine::State::STOPPED :
+													ActorStateMachine::State::RUNNING;
+	return (this->stateMachine.moveTo(nextState), rc);
 }
 
 void Actor::executorStopCb(void) {
