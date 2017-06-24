@@ -27,44 +27,9 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SUPERVISOR_H__
-#define SUPERVISOR_H__
-
-#include <actorController.h>
-#include <messageQueue.h>
-#include <commandValue.h>
-#include <uniqueId.h>
-#include <actorContext.h>
 #include <errorStrategy.h>
 
-using  ActionStrategy = std::function<const ErrorStrategy *(ErrorCode error)>;
-
-class Supervisor : public ActorContext {
-public:
-	Supervisor(ActionStrategy strategy, LinkRef self);
-	~Supervisor();
-
-	void notifySupervisor(Command command) const;
-	void sendErrorToSupervisor(Command command) const;
-	void manageErrorFromSupervised(ErrorCode error, const RawData &params) const;
-	void restartActors() const;
-	void stopActors() const;
-
-	void removeActor(const std::string &name);
-	void registerMonitored(Supervisor &monitored);
-	void unregisterMonitored(Supervisor &monitored);
-
-private:
-	mutable std::mutex monitorMutex;
-	const ActionStrategy restartStrategy;
-	const LinkRef self;
-	ActorController supervisedRefs;
-	std::weak_ptr<MessageQueue> supervisorRef;
-
-	void postSupervisor(MessageType type, Command command, const RawData &data) const;
-	void sendToSupervisor(MessageType type, uint32_t code) const;
-	void doOperation(std::function<void(void)> op) const;
-	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
-};
-
-#endif
+const RestartActor RestartActor::singletonElement;
+const StopActor StopActor::singletonElement;
+const RestartAllActor RestartAllActor::singletonElement;
+const EscalateError EscalateError::singletonElement;

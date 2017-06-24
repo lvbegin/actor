@@ -27,44 +27,44 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SUPERVISOR_H__
-#define SUPERVISOR_H__
+#ifndef ACTOR_COMMAND_H__
+#define ACTOR_COMMAND_H__
 
-#include <actorController.h>
-#include <messageQueue.h>
-#include <commandValue.h>
-#include <uniqueId.h>
-#include <actorContext.h>
-#include <errorStrategy.h>
+#include <map>
+#include <functional>
 
-using  ActionStrategy = std::function<const ErrorStrategy *(ErrorCode error)>;
+#include <rawData.h>
+#include <linkApi.h>
 
-class Supervisor : public ActorContext {
+using CommandFunction = std::function<StatusCode(const RawData &, const ActorLink &)>;
+
+typedef struct {
+	int commandCode;
+	CommandFunction command;
+} commandMap;
+
+class ActorCommand {
 public:
-	Supervisor(ActionStrategy strategy, LinkRef self);
-	~Supervisor();
+	ActorCommand() : commands(ActorCommand::buildMap(nullptr, 0)) { }
+	ActorCommand(const commandMap map[], size_t size) : commands(ActorCommand::buildMap(map, size)) { }
+	~ActorCommand() = default;
 
-	void notifySupervisor(Command command) const;
-	void sendErrorToSupervisor(Command command) const;
-	void manageErrorFromSupervised(ErrorCode error, const RawData &params) const;
-	void restartActors() const;
-	void stopActors() const;
-
-	void removeActor(const std::string &name);
-	void registerMonitored(Supervisor &monitored);
-	void unregisterMonitored(Supervisor &monitored);
-
+	StatusCode execute(int commandCode, const RawData &data, const ActorLink &actorLink) const {
+		return commands.at(commandCode)(data, actorLink);
+	}
 private:
-	mutable std::mutex monitorMutex;
-	const ActionStrategy restartStrategy;
-	const LinkRef self;
-	ActorController supervisedRefs;
-	std::weak_ptr<MessageQueue> supervisorRef;
+	const std::map<Command, CommandFunction> commands;
 
-	void postSupervisor(MessageType type, Command command, const RawData &data) const;
-	void sendToSupervisor(MessageType type, uint32_t code) const;
-	void doOperation(std::function<void(void)> op) const;
-	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
+	static std::map<Command, CommandFunction> buildMap(const commandMap array[], size_t size) {
+		std::map<Command, CommandFunction> map;
+		for (size_t i = 0; i < size; i ++) {
+			if (0 == array[i].commandCode)
+				THROW(std::runtime_error, "cannot overload the SHUTDOWN command.");
+			map[array[i].commandCode] = array[i].command;
+		}
+		map[0] = [](const RawData &, const ActorLink &) { return StatusCode::SHUTDOWN; };
+		return map;
+	}
 };
 
 #endif
