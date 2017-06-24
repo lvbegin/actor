@@ -39,7 +39,7 @@
 using CommandFunction = std::function<StatusCode(const RawData &, const ActorLink &)>;
 
 typedef struct {
-	int commandCode;
+	Command commandCode;
 	CommandFunction command;
 } commandMap;
 
@@ -49,7 +49,7 @@ public:
 	ActorCommand(const commandMap map[], size_t size) : commands(ActorCommand::buildMap(map, size)) { }
 	~ActorCommand() = default;
 
-	StatusCode execute(int commandCode, const RawData &data, const ActorLink &actorLink) const {
+	StatusCode execute(Command commandCode, const RawData &data, const ActorLink &actorLink) const {
 		return commands.at(commandCode)(data, actorLink);
 	}
 private:
