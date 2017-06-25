@@ -51,7 +51,15 @@ public:
 	~ActorCommand() = default;
 
 	StatusCode execute(Command commandCode, const RawData &data, const ActorLink &actorLink) const {
-		return commands.at(commandCode)(data, actorLink);
+		CommandFunction f;
+		try {
+			f = commands.at(commandCode);
+		} catch (std::out_of_range &e) {
+			if (nullptr != actorLink)
+				actorLink->post(CommandValue::UNKNOWN_COMMAND);
+			return StatusCode::OK;
+		}
+		return f(data, actorLink);
 	}
 private:
 	const std::map<Command, CommandFunction> commands;
