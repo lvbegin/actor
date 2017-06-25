@@ -35,6 +35,7 @@
 class CommandValue {
 public:
 	CommandValue() = delete;
+	static const uint32_t COMMAND_FLAG = 0x80000000;
 	static const uint32_t SHUTDOWN = 0;
 	static const uint32_t RESTART = 1;
 	static const uint32_t UNREGISTER_ACTOR = 2;
