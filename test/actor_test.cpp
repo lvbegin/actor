@@ -95,6 +95,23 @@ static int actorSendMessageAndReceiveAnAnswerTest(void) {
 	return (OK_ANSWER == queue->get().code) ? 0 : 1;
 }
 
+static int actorSendUnknownCommandAndReceiveErrorCodeTest(void) {
+	static const std::string paramValue("Hello World");
+
+	const Actor a("actor name", ActorCommand());
+	auto queue = std::make_shared<MessageQueue>();
+	a.post(1, paramValue, queue);
+	return (CommandValue::UNKNOWN_COMMAND == queue->get().code) ? 0 : 1;
+}
+
+static int actorSendUnknownCommandCodeTest(void) {
+	static const std::string paramValue("Hello World");
+
+	const Actor a("actor name", ActorCommand());
+	a.post(1, paramValue);
+	return 0;
+}
+
 static void executeSeverProxy(uint16_t port, int *nbMessages) {
 	static const uint32_t CODE = 0x33;
 	static const commandMap commands[] = {
@@ -782,6 +799,8 @@ int main() {
 			TEST(basicActorWithParamsTest),
 			TEST(proxyTest),
 			TEST(actorSendMessageAndReceiveAnAnswerTest),
+			TEST(actorSendUnknownCommandAndReceiveErrorCodeTest),
+			TEST(actorSendUnknownCommandCodeTest),
 			TEST(registryConnectTest),
 			TEST(registryAddActorTest),
 			TEST(registryAddActorAndRemoveTest),
