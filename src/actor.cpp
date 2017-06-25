@@ -133,11 +133,8 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 }
 
 StatusCode Actor::executeActorBody(Command command, const RawData &params, const ActorLink &sender) {
-	if ( CommandValue::SHUTDOWN == command )
-		return StatusCode::SHUTDOWN;
 	try {
 		const auto rc = commands.execute(command, params, sender);
-//		const auto rc = body(command, params, sender);
 		if (StatusCode::ERROR == rc)
 			supervisor.sendErrorToSupervisor(ACTOR_BODY_FAILED);
 		return rc;
