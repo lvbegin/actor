@@ -35,6 +35,7 @@
 
 #include <rawData.h>
 #include <linkApi.h>
+#include <commandValue.h>
 
 using CommandFunction = std::function<StatusCode(const RawData &, const ActorLink &)>;
 
@@ -58,13 +59,14 @@ private:
 	static std::map<Command, CommandFunction> buildMap(const commandMap array[], size_t size) {
 		std::map<Command, CommandFunction> map;
 		for (size_t i = 0; i < size; i ++) {
-			if (0 == array[i].commandCode)
+			if (CommandValue::SHUTDOWN == array[i].commandCode)
 				THROW(std::runtime_error, "cannot overload the SHUTDOWN command.");
 			map[array[i].commandCode] = array[i].command;
 		}
-		map[0] = [](const RawData &, const ActorLink &) { return StatusCode::SHUTDOWN; };
+		map[static_cast<Command>(CommandValue::SHUTDOWN)] = shutdownCase;
 		return map;
 	}
+	static StatusCode shutdownCase(const RawData &, const ActorLink &) { return StatusCode::SHUTDOWN; };
 };
 
 #endif
