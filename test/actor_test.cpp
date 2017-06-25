@@ -39,10 +39,26 @@
 #include <iostream>
 #include <unistd.h>
 
+static int actorCommandHasReservedCodeTest(void) {
+	static const uint32_t wrongCommand = 0xaa;
+	static const commandMap commands[] = {
+			{wrongCommand, [](const RawData &, const ActorLink &link) { return StatusCode::OK;}},
+	};
+
+	try {
+		ActorCommand c(commands, 1);
+		return 1;
+	} catch (std::runtime_error &){
+		return 0;
+	} catch (std::exception &){
+		return 1;
+	}
+
+}
 
 static int basicActorTest(void) {
 	static const int ANSWER = 0x22;
-	static const uint32_t command = 0xaa;
+	static const uint32_t command = 0xaa | CommandValue::COMMAND_FLAG;
 	static const commandMap commands[] = {
 			{command, [](const RawData &, const ActorLink &link) { return (link->post(ANSWER), StatusCode::OK);}},
 	};
@@ -54,7 +70,7 @@ static int basicActorTest(void) {
 
 static int basicActorWithParamsTest(void) {
 	static const std::string paramValue("Hello World");
-	static const uint32_t command = 1;
+	static const uint32_t command = 1 | CommandValue::COMMAND_FLAG;
 	static const int OK_ANSWER = 0x22;
 	static const int NOK_ANSWER = 0x88;
 	static const commandMap commands[] = {
@@ -78,7 +94,7 @@ static int actorSendMessageAndReceiveAnAnswerTest(void) {
 	static const std::string paramValue("Hello World");
 	static const uint32_t OK_ANSWER = 0x00;
 	static const uint32_t NOK_ANSWER = 0x01;
-	static const uint32_t command = 1;
+	static const uint32_t command = 1 | CommandValue::COMMAND_FLAG;
 	static const commandMap commands[] = {
 			{command, [](const RawData &params, const ActorLink &link) {
 				if (0 == paramValue.compare(params.toString()))
@@ -91,7 +107,7 @@ static int actorSendMessageAndReceiveAnAnswerTest(void) {
 
 	const Actor a("actor name", ActorCommand(commands, 1));
 	auto queue = std::make_shared<MessageQueue>();
-	a.post(1, paramValue, queue);
+	a.post(command, paramValue, queue);
 	return (OK_ANSWER == queue->get().code) ? 0 : 1;
 }
 
@@ -113,7 +129,7 @@ static int actorSendUnknownCommandCodeTest(void) {
 }
 
 static void executeSeverProxy(uint16_t port, int *nbMessages) {
-	static const uint32_t CODE = 0x33;
+	static const uint32_t CODE = 0x33 | CommandValue::COMMAND_FLAG;
 	static const commandMap commands[] = {
 			{CODE, [nbMessages](const RawData &, const ActorLink &) { return ((*nbMessages)++, StatusCode::OK); }},
 	};
@@ -139,7 +155,7 @@ static void waitMessageProcessed(int &nbMessages) {
 }
 static int proxyTest(void) {
 	static const uint16_t PORT = 4011;
-	static const uint32_t CODE = 0x33;
+	static const uint32_t CODE = 0x33 | CommandValue::COMMAND_FLAG;
 	int nbMessages { 0 };
 	std::thread t(executeSeverProxy, PORT, &nbMessages);
 	ProxyClient client("client name", openOneConnection(PORT));
@@ -160,7 +176,7 @@ static int registryConnectTest(void) {
 static int registryAddActorTest(void) {
 	static const uint16_t PORT = 4001;
 	static const std::string ACTOR_NAME("my actor");
-	static const uint32_t command = 1;
+	static const uint32_t command = 1 | CommandValue::COMMAND_FLAG;
 	static const commandMap commands[] = {
 			{command, [](const RawData &, const ActorLink &) { return StatusCode::OK;}},
 	};
@@ -225,7 +241,7 @@ static int registryAddReferenceOverrideExistingOneTest(void) {
 }
 
 static int registeryAddActorFindItBackAndSendMessageTest() {
-	static const int COMMAND = 0x11;
+	static const Command COMMAND = 0x11 | CommandValue::COMMAND_FLAG;
 	static const int OK_ANSWER = 0x33;
 	static const std::string ACTOR_NAME("my actor");
 	static const uint16_t PORT = 4001;
@@ -259,7 +275,7 @@ static int registeryFindUnknownActorTest() {
 }
 
 static int findActorFromOtherRegistryAndSendMessageTest() {
-	static const uint32_t DUMMY_COMMAND = 0x33;
+	static const Command DUMMY_COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
 	static const std::string NAME1("name1");
 	static const std::string NAME2("name2");
 	static const std::string ACTOR_NAME("my actor");
@@ -304,7 +320,7 @@ static int findActorFromOtherRegistryAndSendMessageTest() {
 }
 
 static int findActorFromOtherRegistryAndSendWithSenderForwardToAnotherActorMessageTest() {
-	static const uint32_t DUMMY_COMMAND = 0x33;
+	static const Command DUMMY_COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
 	static const std::string NAME1("name1");
 	static const std::string NAME2("name2");
 	static const std::string NAME3("name3");
@@ -315,7 +331,7 @@ static int findActorFromOtherRegistryAndSendWithSenderForwardToAnotherActorMessa
 	static const uint16_t PORT3 = 4003;
 	static const int OK_ANSWER = 0x99;
 	static const int NOK_ANSWER = 0x11;
-	static const int INTERMEDIATE_COMMAND = 0x44;
+	static const Command INTERMEDIATE_COMMAND = 0x44 | CommandValue::COMMAND_FLAG;
 	ActorRegistry registry1(NAME1, PORT1);
 	ActorRegistry registry2(NAME2, PORT2);
 	ActorRegistry registry3(NAME3, PORT3);
@@ -370,7 +386,7 @@ static int findActorFromOtherRegistryAndSendWithSenderForwardToAnotherActorMessa
 }
 
 static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
-	static const uint32_t DUMMY_COMMAND = 0x33;
+	static const Command DUMMY_COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
 	static const std::string PARAM_VALUE("Hello World");
 	static const std::string NAME1("name1");
 	static const std::string NAME2("name2");
@@ -448,8 +464,8 @@ static int unregisterToSupervisorWhenActorDestroyedTest() {
 }
 
 static int supervisorRestartsActorAfterExceptionTest() {
-	static const int RESTART_COMMAND = 0x99;
-	static const int OTHER_COMMAND = 0xaa;
+	static const Command RESTART_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
+	static const Command OTHER_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	static const int OK_ANSWER = 0x99;
 	static bool exceptionThrown = false;
 	static bool restarted = false;
@@ -473,8 +489,8 @@ static int supervisorRestartsActorAfterExceptionTest() {
 
 //LOLO
 static int supervisorRestartsActorAfterReturningErrorTest() {
-	static const int RESTART_COMMAND = 0x99;
-	static const int OTHER_COMMAND = 0xaa;
+	static const Command RESTART_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
+	static const Command OTHER_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	static const int OK_ANSWER = 0x99;
 	static bool restarted = false;
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
@@ -496,7 +512,7 @@ static int supervisorRestartsActorAfterReturningErrorTest() {
 }
 
 static int supervisorStopActorTest() {
-	static const int STOP_COMMAND = 0x99;
+	static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static bool exceptionThrown = false;
 	static bool actorStopped = false;
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
@@ -507,7 +523,7 @@ static int supervisorStopActorTest() {
 		{STOP_COMMAND, [](const RawData &, const ActorLink &link) -> StatusCode { exceptionThrown = true; throw std::runtime_error("some error"); }},
 	};
 
-	Actor supervised("supervised", ActorCommand(commands, 2), hooks);
+	Actor supervised("supervised", ActorCommand(commands, 1), hooks);
 	supervisor.registerActor(supervised);
 	supervised.post(STOP_COMMAND, link);
 
@@ -517,7 +533,7 @@ static int supervisorStopActorTest() {
 }
 
 static int supervisorForwardErrorRestartTest() {
-	static const int STOP_COMMAND = 0x99;
+	static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static bool exceptionThrown = false;
 	static bool actorRestarted1 = false;
 	static bool actorRestarted2 = false;
@@ -547,7 +563,7 @@ static int supervisorForwardErrorRestartTest() {
 }
 
 static int supervisorForwardErrorStopTest() {
-	static const int STOP_COMMAND = 0x99;
+	static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static bool exceptionThrown = false;
 	static bool stopped = false;
 	const auto link = std::make_shared<MessageQueue>("queue for reply");
@@ -567,7 +583,7 @@ static int supervisorForwardErrorStopTest() {
 }
 
 static int actorNotifiesErrorToSupervisorTest() {
-	static const int SOME_COMMAND = 0xaa;
+	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	bool supervisorRestarted = false;
 	int supervised1Restarted = 0;
 	bool supervised2Restarted = false;
@@ -598,7 +614,7 @@ static int actorNotifiesErrorToSupervisorTest() {
 
 static int actorDoesNothingIfNoSupervisorTest() {
 	bool supervisorRestarted = false;
-	static const int SOME_COMMAND = 0xaa;
+	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	static const ActorHooks hooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
 			[&supervisorRestarted](const ActorContext &){ supervisorRestarted = true; return StatusCode::OK; });
 	static const commandMap commands[] = {
@@ -615,7 +631,7 @@ static int actorDoesNothingIfNoSupervisorTest() {
 }
 
 static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
-	static const int SOME_COMMAND = 0xaa;
+	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	static bool supervisorRestarted = false;
 	static const ActorHooks hooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
 			[](const ActorContext &){ supervisorRestarted = true; return StatusCode::OK; });
@@ -632,7 +648,7 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 }
 
 static int restartAllActorBySupervisorTest() {
-	static const int SOME_COMMAND = 0xaa;
+	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	bool supervisorRestarted = false;
 	bool supervised1Restarted = false;
 	bool supervised2Restarted = false;
@@ -663,7 +679,7 @@ static int restartAllActorBySupervisorTest() {
 }
 
 static int stoppingSupervisorStopsSupervisedTest() {
-	static const int STOP_COMMAND = 0x99;
+	static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static bool supervisorStopped = false;
 	static bool supervisedStopped = false;
 	static const ActorHooks supersivorHooks(DEFAULT_START_HOOK,
@@ -683,8 +699,8 @@ static int stoppingSupervisorStopsSupervisedTest() {
 }
 
 static int supervisorHasDifferentStrategyDependingOnErrorTest() {
-	static const int first_error = 0x11;
-	static const int second_error = 0x22;
+	static const Command first_error = 0x11 | CommandValue::COMMAND_FLAG;
+	static const Command second_error = 0x22 | CommandValue::COMMAND_FLAG;
 	static const auto strategy = [](ErrorCode error) {
 		if (first_error == error)
 			return RestartActor::create();
@@ -745,7 +761,7 @@ static int startActorFailureTest() {
 }
 
 static int restartActorFailureTest() {
-	static const Command COMMAND = 0x33;
+	static const Command COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
 	static int actorRestarted = 0;
 	static bool actorStoppedProperly = false;
 	static const ActorHooks hooks(DEFAULT_START_HOOK,
@@ -795,6 +811,7 @@ int _runTest(const _test *suite, size_t nbTests) {
 
 int main() {
 	static const _test suite[] = {
+			TEST(actorCommandHasReservedCodeTest),
 			TEST(basicActorTest),
 			TEST(basicActorWithParamsTest),
 			TEST(proxyTest),

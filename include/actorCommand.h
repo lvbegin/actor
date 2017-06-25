@@ -67,8 +67,8 @@ private:
 	static std::map<Command, CommandFunction> buildMap(const commandMap array[], size_t size) {
 		std::map<Command, CommandFunction> map;
 		for (size_t i = 0; i < size; i ++) {
-			if (CommandValue::SHUTDOWN == array[i].commandCode)
-				THROW(std::runtime_error, "cannot overload the SHUTDOWN command.");
+			if (0 == (array[i].commandCode & CommandValue::COMMAND_FLAG))
+				THROW(std::runtime_error, "command reserved for internal use.");
 			map[array[i].commandCode] = array[i].command;
 		}
 		map[static_cast<Command>(CommandValue::SHUTDOWN)] = shutdownCase;
