@@ -67,7 +67,7 @@ private:
 	static std::map<Command, CommandFunction> buildMap(const commandMap array[], size_t size) {
 		std::map<Command, CommandFunction> map;
 		for (size_t i = 0; i < size; i ++) {
-			if (0 == (array[i].commandCode & CommandValue::COMMAND_FLAG))
+			if (CommandValue::isInternalCommand(array[i].commandCode))
 				THROW(std::runtime_error, "command reserved for internal use.");
 			map[array[i].commandCode] = array[i].command;
 		}
