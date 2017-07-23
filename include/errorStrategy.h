@@ -42,7 +42,7 @@ public:
 									ErrorCode error, const RawData &params, const LinkRef &actor) const = 0;
 protected:
 		ErrorStrategy() = default;
-		~ErrorStrategy() = default;
+		virtual ~ErrorStrategy() = default;
 };
 
 class RestartActor : public ErrorStrategy {
@@ -84,7 +84,7 @@ private:
 class EscalateError : public ErrorStrategy {
 public:
 	static const ErrorStrategy *create() { return &singletonElement; }
-	virtual ~EscalateError() = default;
+	virtual~EscalateError() = default;
 	void executeAction(const ActorController &supervisedRefs, const std::weak_ptr<MessageQueue> &supervisorRef,
 			ErrorCode error, const RawData &params, const LinkRef &actor)  const {
 		const auto ref = supervisorRef.lock();
