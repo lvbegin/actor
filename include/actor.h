@@ -41,8 +41,6 @@
 #include <mutex>
 #include <future>
 
-using ActorBody = std::function<StatusCode(Command, const RawData &, const ActorLink &)>;
-
 using AtStopHook = std::function<void(const ActorContext &)>;
 using AtStartHook = std::function<StatusCode(const ActorContext &)>;
 using AtRestartHook = std::function<StatusCode(const ActorContext &)>;
