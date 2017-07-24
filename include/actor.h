@@ -34,12 +34,13 @@
 #include <executor.h>
 #include <actorStateMachine.h>
 #include <supervisor.h>
-#include <actorCommand.h>
+#include <commandExecutor.h>
 
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <future>
+
 
 using AtStopHook = std::function<void(const ActorContext &)>;
 using AtStartHook = std::function<StatusCode(const ActorContext &)>;
@@ -66,8 +67,8 @@ struct ActorHooks {
 
 class Actor {
 public:
-	Actor(std::string name, ActorCommand commands, ActionStrategy restartStrategy = [](ErrorCode) { return RestartActor::create(); });
-	Actor(std::string name, ActorCommand commands, ActorHooks hooks, ActionStrategy restartStrategy = [](ErrorCode) { return RestartActor::create(); });
+	Actor(std::string name, CommandExecutor commandExecutor, ActionStrategy restartStrategy = [](ErrorCode) { return RestartActor::create(); });
+	Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, ActionStrategy restartStrategy = [](ErrorCode) { return RestartActor::create(); });
 
 	~Actor();
 
@@ -88,7 +89,7 @@ private:
 	static const int ACTOR_BODY_FAILED = 0x00;
 	const LinkRef executorQueue;
 	const ActorHooks hooks;
-	const ActorCommand commands;
+	const CommandExecutor commandExecutor;
 	Supervisor supervisor;
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
@@ -104,6 +105,7 @@ private:
 	StatusCode executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e);
 	std::unique_ptr<Executor> createAtStartExecutor();
 	std::unique_ptr<Executor> createExecutor(ExecutorAtStart atStartCb);
+
 	class ActorException : public std::runtime_error {
 	public:
 		ActorException(ErrorCode error, const std::string& what_arg);

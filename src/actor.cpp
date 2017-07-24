@@ -30,7 +30,6 @@
 #include <actor.h>
 #include <commandValue.h>
 #include <exception.h>
-#include <actorCommand.h>
 
 #include <iostream>
 
@@ -45,12 +44,12 @@ Actor::ActorException::~ActorException() = default;
 
 int Actor::ActorException::getErrorCode() const { return error; }
 
-Actor::Actor(std::string name, ActorCommand commands, ActionStrategy restartStrategy) :
-				Actor(std::move(name), commands, DEFAULT_HOOKS, restartStrategy) { }
+Actor::Actor(std::string name, CommandExecutor commandExecutor, ActionStrategy restartStrategy) :
+				Actor(std::move(name), commandExecutor, DEFAULT_HOOKS, restartStrategy) { }
 
-Actor::Actor(std::string name, ActorCommand commands, ActorHooks hooks, ActionStrategy restartStrategy) :
+Actor::Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, ActionStrategy restartStrategy) :
 										executorQueue(new MessageQueue(std::move(name))), hooks(hooks),
-										commands(commands),
+										commandExecutor(commandExecutor),
 										supervisor(restartStrategy, executorQueue),
 										executor(createAtStartExecutor())
 										{ checkActorInitialization(); }
@@ -134,7 +133,7 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 
 StatusCode Actor::executeActorBody(Command command, const RawData &params, const ActorLink &sender) {
 	try {
-		const auto rc = commands.execute(command, params, sender);
+		const auto rc = commandExecutor.execute(command, params, sender);
 		if (StatusCode::ERROR == rc)
 			supervisor.sendErrorToSupervisor(ACTOR_BODY_FAILED);
 		return rc;
