@@ -783,6 +783,57 @@ static int restartActorFailureTest() {
 
 }
 
+static int preAndPostActionCalledTest() {
+	static const Command COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
+	static bool preCalled = false;
+	static bool postCalled = false;
+	static const commandMap commands[] = {
+			{ COMMAND, [](const RawData &, const ActorLink &) { return StatusCode::OK; }},
+	};
+
+
+	auto preCommand = [](Command, const RawData &, const ActorLink &) { preCalled = true; return StatusCode::OK; };
+	auto postCommand = [](Command, const RawData &, const ActorLink &) { postCalled = true; };
+	Actor actor("actor", CommandExecutor(preCommand, postCommand, commands, 1));
+	actor.post(COMMAND);
+	for (int i = 0; i < 5 && ! (preCalled && postCalled); i++) sleep(1);
+	return (preCalled && postCalled) ? 0 : 1;
+}
+
+static int preActionFailsTest() {
+	static const Command COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
+	static bool commandExecuted = false;
+	static bool preCalled = false;
+	static bool postCalled = false;
+	static const commandMap commands[] = {
+			{ COMMAND, [](const RawData &, const ActorLink &) { commandExecuted = true; return StatusCode::OK; }},
+	};
+
+	auto preCommand = [](Command, const RawData &, const ActorLink &) { preCalled = true; return StatusCode::ERROR; };
+	auto postCommand = [](Command, const RawData &, const ActorLink &) { postCalled = true; };
+	Actor actor("actor", CommandExecutor(preCommand, postCommand, commands, 1));
+	actor.post(COMMAND);
+	for (int i = 0; i < 5 && ! preCalled; i++) sleep(1);
+	return (preCalled && !postCalled && !commandExecuted) ? 0 : 1;
+}
+
+static int commandFailsAndPostActionCalledTest() {
+	static const Command COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
+	static bool preCalled = false;
+	static bool postCalled = false;
+	static const commandMap commands[] = {
+			{ COMMAND, [](const RawData &, const ActorLink &) { return StatusCode::ERROR; }},
+	};
+
+
+	auto preCommand = [](Command, const RawData &, const ActorLink &) { preCalled = true; return StatusCode::OK; };
+	auto postCommand = [](Command, const RawData &, const ActorLink &) { postCalled = true; };
+	Actor actor("actor", CommandExecutor(preCommand, postCommand, commands, 1));
+	actor.post(COMMAND);
+	for (int i = 0; i < 5 && ! (preCalled && postCalled); i++) sleep(1);
+	return (preCalled && postCalled) ? 0 : 1;
+}
+
 struct _test{
 	const char *name;
 	int (*test)(void);
@@ -846,6 +897,9 @@ int main() {
 			TEST(serializationTest),
 			TEST(startActorFailureTest),
 			TEST(restartActorFailureTest),
+			TEST(preAndPostActionCalledTest),
+			TEST(preActionFailsTest),
+			TEST(commandFailsAndPostActionCalledTest),
 	};
 
 	const auto nbFailure = runTest(suite);
