@@ -29,19 +29,23 @@
 
 #include <commandExecutor.h>
 
-const PreCommandHook DEFAULT_PRECOMMAND_HOOK = [](Command, const RawData &, const ActorLink &) { return StatusCode::OK; };
-const PostCommandHook DEFAULT_POSTCOMMAND_HOOK = [](Command, const RawData &, const ActorLink &) { };
+const PreCommandHook DEFAULT_PRECOMMAND_HOOK = [](ActorContext &, Command, const RawData &, const ActorLink &) {
+	return StatusCode::OK;
+};
 
-CommandExecutor::CommandExecutor(const commandMap map[], size_t size) :
-	CommandExecutor(DEFAULT_PRECOMMAND_HOOK, DEFAULT_POSTCOMMAND_HOOK, map, size) { }
-CommandExecutor::CommandExecutor(PreCommandHook preCommand, PostCommandHook postCommand, const commandMap map[], size_t size) :
-	preCommand(preCommand), postCommand(postCommand), actorCommand(ActorCommand(map, size)) { }
+const PostCommandHook DEFAULT_POSTCOMMAND_HOOK = [](ActorContext &, Command, const RawData &, const ActorLink &) { };
+
+CommandExecutor::CommandExecutor(const commandMap map[]) :
+	CommandExecutor(DEFAULT_PRECOMMAND_HOOK, DEFAULT_POSTCOMMAND_HOOK, map) { }
+CommandExecutor::CommandExecutor(PreCommandHook preCommand, PostCommandHook postCommand, const commandMap map[]) :
+	preCommand(preCommand), postCommand(postCommand), actorCommand(ActorCommand(map)) { }
 CommandExecutor::~CommandExecutor() = default;
 
-StatusCode CommandExecutor::execute(Command commandCode, const RawData &data, const ActorLink &actorLink) const {
-	auto rc = preCommand(commandCode, data, actorLink);
+StatusCode CommandExecutor::execute(ActorContext &context, Command commandCode, const RawData &data,
+										const ActorLink &actorLink) const {
+	auto rc = preCommand(context, commandCode, data, actorLink);
 	if (StatusCode::OK != rc)
 		return rc;
-	rc  = actorCommand.execute(commandCode, data, actorLink);
-	return (postCommand(commandCode, data, actorLink), rc);
+	rc  = actorCommand.execute(context, commandCode, data, actorLink);
+	return (postCommand(context, commandCode, data, actorLink), rc);
 }

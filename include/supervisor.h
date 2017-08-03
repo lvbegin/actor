@@ -33,13 +33,11 @@
 #include <actorController.h>
 #include <messageQueue.h>
 #include <commandValue.h>
-#include <uniqueId.h>
-#include <actorContext.h>
 #include <errorStrategy.h>
 
 using  ActionStrategy = std::function<const ErrorStrategy *(ErrorCode error)>;
 
-class Supervisor : public ActorContext {
+class Supervisor {
 public:
 	Supervisor(ActionStrategy strategy, LinkRef self);
 	~Supervisor();

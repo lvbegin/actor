@@ -34,8 +34,9 @@
 #include <iostream>
 
 const AtStartHook DEFAULT_START_HOOK = [](const ActorContext&) { return StatusCode::OK; };
-const AtStopHook DEFAULT_STOP_HOOK = [](const ActorContext& c) { c.stopActors(); };
-const AtRestartHook DEFAULT_RESTART_HOOK = [](const ActorContext& c) { c.restartActors(); return StatusCode::OK; };
+const AtStopHook DEFAULT_STOP_HOOK = [](const ActorContext& c) { c.getConstSupervisor().stopActors(); };
+const AtRestartHook DEFAULT_RESTART_HOOK = [](const ActorContext& c) { c.getConstSupervisor().restartActors(); return StatusCode::OK; };
+const ActionStrategy DEFAULT_RESTART_STRATEGY = [](ErrorCode) { return RestartActor::create(); };
 
 static const ActorHooks DEFAULT_HOOKS = ActorHooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK, DEFAULT_RESTART_HOOK);
 
@@ -45,18 +46,24 @@ Actor::ActorException::~ActorException() = default;
 int Actor::ActorException::getErrorCode() const { return error; }
 
 Actor::Actor(std::string name, CommandExecutor commandExecutor, ActionStrategy restartStrategy) :
-				Actor(std::move(name), commandExecutor, DEFAULT_HOOKS, restartStrategy) { }
+				Actor(std::move(name), commandExecutor, DEFAULT_HOOKS, std::make_unique<NoState>(),restartStrategy) { }
 
 Actor::Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, ActionStrategy restartStrategy) :
-										executorQueue(new MessageQueue(std::move(name))), hooks(hooks),
-										commandExecutor(commandExecutor),
-										supervisor(restartStrategy, executorQueue),
-										executor(createAtStartExecutor())
-										{ checkActorInitialization(); }
+		Actor(std::move(name), commandExecutor, hooks, std::make_unique<NoState>(),restartStrategy) { }
+
+Actor::Actor(std::string name, CommandExecutor commandExecutor, std::unique_ptr<State> state, ActionStrategy restartStrategy) :
+						Actor(std::move(name), commandExecutor, DEFAULT_HOOKS, std::move(state), restartStrategy) { }
+
+Actor::Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, std::unique_ptr<State> state, ActionStrategy restartStrategy) :
+												executorQueue(std::make_shared<MessageQueue>(std::move(name))), hooks(hooks),
+												commandExecutor(commandExecutor),
+												context(restartStrategy, executorQueue,	std::move(state)),
+												executor(createAtStartExecutor())
+												{ checkActorInitialization(); }
 
 Actor::~Actor() {
 	stateMachine.moveTo(ActorStateMachine::State::STOPPED);
-	supervisor.notifySupervisor(CommandValue::UNREGISTER_ACTOR);
+	context.getConstSupervisor().notifySupervisor(CommandValue::UNREGISTER_ACTOR);
 	executorQueue->post(CommandValue::SHUTDOWN);
 }
 
@@ -89,9 +96,9 @@ StatusCode Actor::restartExecutor(void) {
 
 ActorLink Actor::getActorLinkRef() const { return executorQueue; }
 
-void Actor::registerActor(Actor &monitored) { supervisor.registerMonitored(monitored.supervisor); }
+void Actor::registerActor(Actor &monitored) { context.getSupervisor().registerMonitored(monitored.context.getSupervisor()); }
 
-void Actor::unregisterActor(Actor &monitored) { supervisor.unregisterMonitored(monitored.supervisor); }
+void Actor::unregisterActor(Actor &monitored) { context.getSupervisor().unregisterMonitored(monitored.context.getSupervisor()); }
 
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
@@ -100,7 +107,7 @@ StatusCode Actor::actorExecutor(MessageType type, Command command, const RawData
 		return StatusCode::SHUTDOWN;
 	switch (type) {
 		case MessageType::ERROR_MESSAGE:
-			return (supervisor.manageErrorFromSupervised(command, params), StatusCode::OK);
+			return (context.getConstSupervisor().manageErrorFromSupervised(command, params), StatusCode::OK);
 		case MessageType::MANAGEMENT_MESSAGE:
 			return executeActorManagement(command, params);
 		case MessageType::COMMAND_MESSAGE: {
@@ -120,7 +127,7 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 		case CommandValue::RESTART:
 			return (StatusCode::OK == restartSateMachine()) ? StatusCode::SHUTDOWN : StatusCode::ERROR;
 		case CommandValue::UNREGISTER_ACTOR:
-			supervisor.removeActor(params.toString());
+			context.getSupervisor().removeActor(params.toString());
 			return StatusCode::OK;
 		case CommandValue::SHUTDOWN:
 			stateMachine.moveTo(ActorStateMachine::State::STOPPED);
@@ -133,15 +140,15 @@ StatusCode Actor::executeActorManagement(Command command, const RawData &params)
 
 StatusCode Actor::executeActorBody(Command command, const RawData &params, const ActorLink &sender) {
 	try {
-		const auto rc = commandExecutor.execute(command, params, sender);
+		const auto rc = commandExecutor.execute(context, command, params, sender);
 		if (StatusCode::ERROR == rc)
-			supervisor.sendErrorToSupervisor(ACTOR_BODY_FAILED);
+			context.getConstSupervisor().sendErrorToSupervisor(ACTOR_BODY_FAILED);
 		return rc;
 	} catch (const ActorException &e) {
-		supervisor.sendErrorToSupervisor(e.getErrorCode());
+		context.getConstSupervisor().sendErrorToSupervisor(e.getErrorCode());
 		return StatusCode::ERROR;
 	} catch (const std::exception &e) {
-		supervisor.sendErrorToSupervisor(ACTOR_BODY_FAILED);
+		context.getConstSupervisor().sendErrorToSupervisor(ACTOR_BODY_FAILED);
 		return StatusCode::ERROR;
 	}
 }
@@ -157,22 +164,28 @@ return std::make_unique<Executor>( [this](auto type, auto command, auto &params,
 }
 
 StatusCode Actor::executorStartCb(AtStartHook atStart) {
-	const auto rc = atStart(this->supervisor);
+	initContextState();
+	const auto rc = atStart(context);
 	const auto nextState = (StatusCode::ERROR == rc) ? ActorStateMachine::State::STOPPED :
 													ActorStateMachine::State::RUNNING;
-	return (this->stateMachine.moveTo(nextState), rc);
+	return (stateMachine.moveTo(nextState), rc);
 }
 
 void Actor::executorStopCb(void) {
 	if (stateMachine.isIn(ActorStateMachine::State::STOPPED) ||
 			stateMachine.isIn(ActorStateMachine::State::ERROR))
-		hooks.atStop(supervisor);
+		hooks.atStop(context);
 }
 
 StatusCode Actor::executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e) {
 	std::unique_ptr<Executor> ref(std::move(e.get_future().get()));
 	std::swap(executor, ref);
-	const auto rc = hooks.atRestart(supervisor);
+	initContextState();
+	const auto rc = hooks.atRestart(context);
 	status.set_value(rc);
 	return  rc;
+}
+
+void Actor::initContextState() {
+	context.getState().init(getActorLinkRef()->getName());
 }

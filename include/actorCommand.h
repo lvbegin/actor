@@ -36,8 +36,9 @@
 #include <rawData.h>
 #include <linkApi.h>
 #include <commandValue.h>
+#include <actorContext.h>
 
-using CommandFunction = std::function<StatusCode(const RawData &, const ActorLink &)>;
+using CommandFunction = std::function<StatusCode(ActorContext &, const RawData &, const ActorLink &)>;
 
 typedef struct {
 	Command commandCode;
@@ -46,11 +47,11 @@ typedef struct {
 
 class ActorCommand {
 public:
-	ActorCommand() : commands(ActorCommand::buildMap(nullptr, 0)) { }
-	ActorCommand(const commandMap map[], size_t size) : commands(ActorCommand::buildMap(map, size)) { }
+	ActorCommand() : commands(ActorCommand::buildMap(nullptr)) { }
+	ActorCommand(const commandMap map[]) : commands(ActorCommand::buildMap(map)) { }
 	~ActorCommand() = default;
 
-	StatusCode execute(Command commandCode, const RawData &data, const ActorLink &actorLink) const {
+	StatusCode execute(ActorContext &context, Command commandCode, const RawData &data, const ActorLink &actorLink) const {
 		CommandFunction f;
 		try {
 			f = commands.at(commandCode);
@@ -59,22 +60,26 @@ public:
 				actorLink->post(CommandValue::UNKNOWN_COMMAND);
 			return StatusCode::OK;
 		}
-		return f(data, actorLink);
+		return f(context, data, actorLink);
 	}
 private:
 	const std::map<Command, CommandFunction> commands;
 
-	static std::map<Command, CommandFunction> buildMap(const commandMap array[], size_t size) {
+	static std::map<Command, CommandFunction> buildMap(const commandMap array[]) {
 		std::map<Command, CommandFunction> map;
-		for (size_t i = 0; i < size; i ++) {
-			if (CommandValue::isInternalCommand(array[i].commandCode))
+		if (nullptr == array)
+			return map;
+		for (const commandMap * ptr = array; !(0 == ptr->commandCode && nullptr == ptr->command) ; ptr ++) {
+			if (0 == ptr->commandCode && nullptr == ptr->command)
+				break;
+			if (CommandValue::isInternalCommand(ptr->commandCode))
 				THROW(std::runtime_error, "command reserved for internal use.");
-			map[array[i].commandCode] = array[i].command;
+			map[ptr->commandCode] = ptr->command;
 		}
 		map[static_cast<Command>(CommandValue::SHUTDOWN)] = shutdownCase;
 		return map;
 	}
-	static StatusCode shutdownCase(const RawData &, const ActorLink &) { return StatusCode::SHUTDOWN; };
+	static StatusCode shutdownCase(ActorContext &, const RawData &, const ActorLink &) { return StatusCode::SHUTDOWN; };
 };
 
 #endif
