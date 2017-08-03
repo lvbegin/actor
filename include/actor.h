@@ -33,7 +33,7 @@
 #include <actorController.h>
 #include <executor.h>
 #include <actorStateMachine.h>
-#include <supervisor.h>
+#include <actorContext.h>
 #include <commandExecutor.h>
 
 #include <functional>
@@ -49,6 +49,7 @@ using AtRestartHook = std::function<StatusCode(const ActorContext &)>;
 extern const AtStartHook DEFAULT_START_HOOK;
 extern const AtStopHook DEFAULT_STOP_HOOK;
 extern const AtRestartHook DEFAULT_RESTART_HOOK;
+extern const ActionStrategy DEFAULT_RESTART_STRATEGY;
 
 
 class ActorStartFailure : public std::runtime_error {
@@ -67,8 +68,11 @@ struct ActorHooks {
 
 class Actor {
 public:
-	Actor(std::string name, CommandExecutor commandExecutor, ActionStrategy restartStrategy = [](ErrorCode) { return RestartActor::create(); });
-	Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, ActionStrategy restartStrategy = [](ErrorCode) { return RestartActor::create(); });
+	Actor(std::string name, CommandExecutor commandExecutor, ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
+	Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
+
+	Actor(std::string name, CommandExecutor commandExecutor, std::unique_ptr<State> state, ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
+	Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, std::unique_ptr<State> state, ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
 
 	~Actor();
 
@@ -90,7 +94,7 @@ private:
 	const LinkRef executorQueue;
 	const ActorHooks hooks;
 	const CommandExecutor commandExecutor;
-	Supervisor supervisor;
+	ActorContext context;
 	ActorStateMachine stateMachine;
 	std::unique_ptr<Executor> executor;
 
@@ -105,6 +109,7 @@ private:
 	StatusCode executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e);
 	std::unique_ptr<Executor> createAtStartExecutor();
 	std::unique_ptr<Executor> createExecutor(ExecutorAtStart atStartCb);
+	void initContextState();
 
 	class ActorException : public std::runtime_error {
 	public:

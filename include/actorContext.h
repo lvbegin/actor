@@ -31,16 +31,21 @@
 #define ACTOR_CONTEXT_H__
 
 #include <linkApi.h>
+#include <state.h>
+#include <supervisor.h>
 
 class ActorContext {
 public:
-	virtual void restartActors() const = 0;
-	virtual void stopActors() const = 0;
-	virtual void notifySupervisor(Command command) const = 0;
-	virtual void sendErrorToSupervisor(Command command) const = 0;
-protected:
-	ActorContext() = default;
-	virtual ~ActorContext() = default;
+	ActorContext(ActionStrategy strategy, LinkRef self, std::unique_ptr<State> state) : state(std::move(state)), supervisor(strategy, self) { }
+	ActorContext() = delete;
+	~ActorContext() = default;
+
+	Supervisor &getSupervisor() { return supervisor; }
+	const Supervisor &getConstSupervisor() const { return supervisor; }
+	State &getState() { return *state; }
+private:
+	std::unique_ptr<State> state;
+	Supervisor supervisor;
 };
 
 #endif
