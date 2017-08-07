@@ -46,7 +46,8 @@ class CommandExecutor {
 	CommandExecutor(PreCommandHook preCommand, PostCommandHook postCommand, const commandMap map[] = nullptr);
 	~CommandExecutor();
 
-	StatusCode execute(ActorContext &context, Command commandCode, const RawData &data, const ActorLink &actorLink) const;
+	StatusCode execute(ActorContext &context, Command commandCode, const RawData &data,
+						const ActorLink &actorLink) const;
 
 	private:
 		PreCommandHook preCommand;

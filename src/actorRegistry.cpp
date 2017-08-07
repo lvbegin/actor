@@ -55,7 +55,8 @@ void ActorRegistry::registryBody(const ServerSocket &s) {
 			Connection connection = s.acceptOneConnection(2, &client_addr);
 			switch (connection.readInt<RegistryCommand>()) {
 				case RegistryCommand::REGISTER_REGISTRY:
-					reinterpret_cast<sockaddr_in *>(&client_addr.ai_addr)->sin_port = htons(connection.readInt<uint32_t>());
+					reinterpret_cast<sockaddr_in *>(&client_addr.ai_addr)->sin_port =
+																			htons(connection.readInt<uint32_t>());
 					registryAddresses.insert(connection.readString(), client_addr);
 					connection.writeString(this->name);
 					break;
@@ -99,7 +100,9 @@ ActorLink  ActorRegistry::getActor(const std::string &name) const {
 	}
 }
 
-ActorLink ActorRegistry::getLocalActor(const std::string &name) const { return actors.find_if(LinkApi::nameComparator(name)); }
+ActorLink ActorRegistry::getLocalActor(const std::string &name) const {
+	return actors.find_if(LinkApi::nameComparator(name));
+}
 
 ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
 	ActorLink actor;

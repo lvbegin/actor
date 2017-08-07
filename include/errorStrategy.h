@@ -38,8 +38,9 @@ typedef uint32_t ErrorCode;
 
 class ErrorStrategy {
 public:
-		virtual void executeAction(const ActorController &supervisedRefs, const std::weak_ptr<MessageQueue> &supervisorRef,
-									ErrorCode error, const RawData &params, const LinkRef &actor) const = 0;
+		virtual void executeAction(const ActorController &supervisedRefs,
+				const std::weak_ptr<MessageQueue> &supervisorRef, ErrorCode error, const RawData &params,
+				const LinkRef &actor) const = 0;
 protected:
 		ErrorStrategy() = default;
 		virtual ~ErrorStrategy() = default;
@@ -50,7 +51,9 @@ public:
 	static const ErrorStrategy *create() { return &singletonElement; }
 	virtual ~RestartActor() = default;
 	void executeAction(const ActorController &supervisedRefs, const std::weak_ptr<MessageQueue> &supervisorRef,
-			ErrorCode error, const RawData &params, const LinkRef &actor)  const { supervisedRefs.restartOne(params.toString()); }
+			ErrorCode error, const RawData &params, const LinkRef &actor)  const {
+		supervisedRefs.restartOne(params.toString());
+	}
 private:
 	RestartActor() = default;
 	static const RestartActor singletonElement;
@@ -62,7 +65,9 @@ public:
 	static const ErrorStrategy *create() { return &singletonElement; }
 	virtual ~StopActor() = default;
 	void executeAction(const ActorController &supervisedRefs, const std::weak_ptr<MessageQueue> &supervisorRef,
-			ErrorCode error, const RawData &params, const LinkRef &actor)  const { supervisedRefs.stopOne(params.toString()); }
+			ErrorCode error, const RawData &params, const LinkRef &actor)  const {
+		supervisedRefs.stopOne(params.toString());
+	}
 private:
 	StopActor() = default;
 	static const StopActor singletonElement;

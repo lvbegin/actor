@@ -51,7 +51,8 @@ public:
 	ActorCommand(const commandMap map[]) : commands(ActorCommand::buildMap(map)) { }
 	~ActorCommand() = default;
 
-	StatusCode execute(ActorContext &context, Command commandCode, const RawData &data, const ActorLink &actorLink) const {
+	StatusCode execute(ActorContext &context, Command commandCode, const RawData &data,
+						const ActorLink &actorLink) const {
 		CommandFunction f;
 		try {
 			f = commands.at(commandCode);
