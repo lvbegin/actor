@@ -34,16 +34,20 @@
 #include <tuple>
 
 ProxyContainer::ProxyContainer() :
-	executor([this](MessageType, Command command, const RawData &id, const ActorLink &) { return executeCommand(command, id); },
-			executorQueue) { }
+	executor(
+	[this](MessageType, Command command, const RawData &id, const ActorLink &) { return executeCommand(command, id); },
+	executorQueue) { }
 
 ProxyContainer::~ProxyContainer() { executorQueue.post(CommandValue::SHUTDOWN); }
 
 void ProxyContainer::createNewProxy(ActorLink actor, Connection connection, FindActor findActor) {
 	static const uint32_t USELESS_CODE = 0;
 	const auto id = UniqueId::newId();
-	const auto terminate = [this, id]() { this->executorQueue.post(MessageType::MANAGEMENT_MESSAGE, USELESS_CODE, id); };
-	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id), std::forward_as_tuple(std::move(actor), std::move(connection), terminate, std::move(findActor)));
+	const auto terminate = [this, id]() {
+			this->executorQueue.post(MessageType::MANAGEMENT_MESSAGE, USELESS_CODE, id);
+		};
+	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id),
+					std::forward_as_tuple(std::move(actor), std::move(connection), terminate, std::move(findActor)));
 }
 
 StatusCode ProxyContainer::executeCommand(Command command, const RawData &id) {

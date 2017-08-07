@@ -56,7 +56,9 @@ Connection &Connection::operator=(Connection &&connection) {
 	return *this;
 }
 
-const Connection &Connection::writeRawData(const RawData &data) const { return writeInt(data.size()).writeBytes(data.data(), data.size()); }
+const Connection &Connection::writeRawData(const RawData &data) const {
+	return writeInt(data.size()).writeBytes(data.data(), data.size());
+}
 
 RawData Connection::readRawData(void) const {
 	RawData data(readInt<size_t>());

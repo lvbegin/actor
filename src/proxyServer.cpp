@@ -34,8 +34,9 @@
 
 #include <arpa/inet.h>
 
-ProxyServer::ProxyServer(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor) :
-	t([actor, connection {std::move(connection)}, notifyTerminate, findActor]() mutable
+ProxyServer::ProxyServer(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate,
+						FindActor findActor) :
+					t([actor, connection {std::move(connection)}, notifyTerminate, findActor]() mutable
 						{ startThread(std::move(actor), std::move(connection), notifyTerminate, findActor); }) { }
 
 ProxyServer::~ProxyServer() {
@@ -43,7 +44,8 @@ ProxyServer::~ProxyServer() {
 		t.join();
 };
 
-void ProxyServer::startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor) {
+void ProxyServer::startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate,
+								FindActor findActor) {
 	while (true) {
 		try {
 			if (postType::NewMessage != connection.readInt<postType>())

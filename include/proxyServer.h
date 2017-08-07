@@ -47,7 +47,8 @@ public:
 private:
 	std::thread t;
 
-	static void startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor);
+	static void startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate,
+							FindActor findActor);
 };
 
 #endif

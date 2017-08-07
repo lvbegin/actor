@@ -69,10 +69,13 @@ struct ActorHooks {
 class Actor {
 public:
 	Actor(std::string name, CommandExecutor commandExecutor, ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
-	Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
+	Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks,
+			ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
 
-	Actor(std::string name, CommandExecutor commandExecutor, std::unique_ptr<State> state, ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
-	Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, std::unique_ptr<State> state, ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
+	Actor(std::string name, CommandExecutor commandExecutor, std::unique_ptr<State> state,
+			ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
+	Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, std::unique_ptr<State> state,
+			ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
 
 	~Actor();
 

@@ -49,7 +49,9 @@ void ActorController::restart(const LinkRef &link) { sendMessage(link, CommandVa
 
 void ActorController::stop(const LinkRef &link) { sendMessage(link, CommandValue::SHUTDOWN); }
 
-void ActorController::sendMessage(const LinkRef &link, Command command) { link->post(MessageType::MANAGEMENT_MESSAGE, command); }
+void ActorController::sendMessage(const LinkRef &link, Command command) {
+	link->post(MessageType::MANAGEMENT_MESSAGE, command);
+}
 
 void ActorController::doOperationOneActor(const std::string &name, LinkRefOperation op) const {
 	try {
