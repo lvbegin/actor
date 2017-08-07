@@ -68,6 +68,8 @@ private:
 
 	static std::map<Command, CommandFunction> buildMap(const commandMap array[]) {
 		std::map<Command, CommandFunction> map;
+
+		map[static_cast<Command>(CommandValue::SHUTDOWN)] = shutdownCase;
 		if (nullptr == array)
 			return map;
 		for (const commandMap * ptr = array; !(0 == ptr->commandCode && nullptr == ptr->command) ; ptr ++) {
@@ -77,7 +79,6 @@ private:
 				THROW(std::runtime_error, "command reserved for internal use.");
 			map[ptr->commandCode] = ptr->command;
 		}
-		map[static_cast<Command>(CommandValue::SHUTDOWN)] = shutdownCase;
 		return map;
 	}
 	static StatusCode shutdownCase(ActorContext &, const RawData &, const ActorLink &) { return StatusCode::SHUTDOWN; };
