@@ -46,6 +46,12 @@ StatusCode CommandExecutor::execute(ActorContext &context, Command commandCode, 
 	auto rc = preCommand(context, commandCode, data, actorLink);
 	if (StatusCode::OK != rc)
 		return rc;
-	rc  = actorCommand.execute(context, commandCode, data, actorLink);
+	try {
+		rc  = actorCommand.execute(context, commandCode, data, actorLink);
+	} catch (std::exception &e) {
+		postCommand(context, commandCode, data, actorLink);
+		throw ;
+	}
+
 	return (postCommand(context, commandCode, data, actorLink), rc);
 }
