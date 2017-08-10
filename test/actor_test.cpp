@@ -860,6 +860,25 @@ static int commandFailsAndPostActionCalledTest() {
 	return (preCalled && postCalled) ? 0 : 1;
 }
 
+static int commandFailsWithExceptionAndPostActionCalledTest() {
+	static const Command COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
+	static bool preCalled = false;
+	static bool postCalled = false;
+	static const commandMap commands[] = {
+			{ COMMAND, [](ActorContext &, const RawData &, const ActorLink &) {
+								throw std::runtime_error("some problem"); return StatusCode::OK; }},
+			{ 0, NULL},
+	};
+
+
+	auto preCommand = [](ActorContext &, Command, const RawData &, const ActorLink &) { preCalled = true; return StatusCode::OK; };
+	auto postCommand = [](ActorContext &, Command, const RawData &, const ActorLink &) { postCalled = true; };
+	Actor actor("actor", CommandExecutor(preCommand, postCommand, commands));
+	actor.post(COMMAND);
+	for (int i = 0; i < 5 && ! (preCalled && postCalled); i++) sleep(1);
+	return (preCalled && postCalled) ? 0 : 1;
+}
+
 class DummyState : public State {
 public:
 	DummyState() : initCalled(0) {}
@@ -960,6 +979,7 @@ int main() {
 			TEST(preAndPostActionCalledTest),
 			TEST(preActionFailsTest),
 			TEST(commandFailsAndPostActionCalledTest),
+			TEST(commandFailsWithExceptionAndPostActionCalledTest),
 			TEST(initStateDoneAtStart),
 			TEST(initStateDoneAtRestart),
 	};
