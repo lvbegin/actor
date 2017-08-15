@@ -114,7 +114,10 @@ void Actor::unregisterActor(Actor &monitored) {
 void Actor::notifyError(int e) { throw ActorException(e, "error in actor"); }
 
 StatusCode Actor::actorExecutor(MessageType type, Command command, const RawData &params, const ActorLink &sender) {
-	if (stateMachine.isIn(ActorStateMachine::State::STOPPED))
+	static const ActorStateMachine::State stoppedValue[] = { ActorStateMachine::State::STOPPED };
+	static const std::vector<ActorStateMachine::State> stopped(stoppedValue, stoppedValue +
+																		sizeof(stoppedValue) / sizeof(stoppedValue[0]));
+	if (stateMachine.isIn(stopped))
 		return StatusCode::SHUTDOWN;
 	switch (type) {
 		case MessageType::ERROR_MESSAGE:
@@ -178,13 +181,15 @@ StatusCode Actor::executorStartCb(AtStartHook atStart) {
 	initContextState();
 	const auto rc = atStart(context);
 	const auto nextState = (StatusCode::ERROR == rc) ? ActorStateMachine::State::STOPPED :
-													ActorStateMachine::State::RUNNING;
+														ActorStateMachine::State::RUNNING;
 	return (stateMachine.moveTo(nextState), rc);
 }
 
 void Actor::executorStopCb(void) {
-	if (stateMachine.isIn(ActorStateMachine::State::STOPPED) ||
-			stateMachine.isIn(ActorStateMachine::State::ERROR))
+	static const ActorStateMachine::State stateValues [] = { ActorStateMachine::State::STOPPED,
+															ActorStateMachine::State::ERROR };
+	static const std::vector<ActorStateMachine::State> states(stateValues, stateValues + sizeof(stateValues) / sizeof(stateValues[0]));
+	if (stateMachine.isIn(states))
 		hooks.atStop(context);
 }
 
@@ -197,6 +202,4 @@ StatusCode Actor::executorRestartCb(std::promise<StatusCode> &status, std::promi
 	return  rc;
 }
 
-void Actor::initContextState() {
-	context.getState().init(getActorLinkRef()->getName());
-}
+void Actor::initContextState() { context.getState().init(getActorLinkRef()->getName()); }

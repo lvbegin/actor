@@ -33,6 +33,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <functional>
+#include <vector>
 
 class ActorStateMachine {
 public:
@@ -40,7 +41,7 @@ public:
 	ActorStateMachine();
 	~ActorStateMachine();
 	void moveTo(State newState);
-	bool isIn(State state) const;
+	bool isIn(const std::vector<State> &states) const;
 	State waitStarted() const;
 private:
 	mutable std::mutex mutex;
