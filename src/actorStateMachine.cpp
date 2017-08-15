@@ -31,6 +31,7 @@
 #include <actorStateMachine.h>
 #include <exception.h>
 
+#include <algorithm>
 
 ActorStateMachine::ActorStateMachine() : state(State::INITIAL) { }
 ActorStateMachine::~ActorStateMachine() = default;
@@ -64,10 +65,10 @@ void ActorStateMachine::moveTo(State newState) {
 	}
 }
 
-bool ActorStateMachine::isIn(State state) const {
+bool ActorStateMachine::isIn(const std::vector<State> &states) const {
 	std::unique_lock<std::mutex> l(mutex);
 
-	return (this->state == state);
+	return (states.end() != std::find(states.begin(), states.end(), state));
 }
 
 ActorStateMachine::State ActorStateMachine::waitStarted() const {
