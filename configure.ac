@@ -3,6 +3,7 @@
 
 AC_PREREQ([2.69])
 AC_INIT([actor], [1.0.0], [laurent.vanbegin76@gmail.com])
+AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
