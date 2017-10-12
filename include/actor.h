@@ -30,17 +30,10 @@
 #ifndef ACTOR_H__
 #define ACTOR_H__
 
-#include <actorController.h>
-#include <executor.h>
-#include <actorStateMachine.h>
 #include <actorContext.h>
 #include <commandExecutor.h>
 
 #include <functional>
-#include <memory>
-#include <mutex>
-#include <future>
-
 
 using AtStopHook = std::function<void(const ActorContext &)>;
 using AtStartHook = std::function<StatusCode(const ActorContext &)>;
@@ -65,6 +58,8 @@ struct ActorHooks {
 	ActorHooks(AtStartHook atStart, AtStopHook atStop, AtRestartHook atRestart) :
 									atStart(atStart), atStop(atStop), atRestart(atRestart) { }
 };
+
+class Executor;
 
 class Actor {
 public:
@@ -93,36 +88,9 @@ public:
 	static void notifyError(int e);
 
 private:
+	class ActorImpl;
+	ActorImpl *pImpl;
 	static const int ACTOR_BODY_FAILED = 0x00;
-	const LinkRef executorQueue;
-	const ActorHooks hooks;
-	const CommandExecutor commandExecutor;
-	ActorContext context;
-	ActorStateMachine stateMachine;
-	std::unique_ptr<Executor> executor;
-
-	StatusCode actorExecutor(MessageType type, Command command, const RawData &params, const ActorLink &sender);
-	StatusCode executeActorBody(Command command, const RawData &params, const ActorLink &sender);
-	StatusCode executeActorManagement(Command command, const RawData &params);
-	StatusCode restartExecutor(void);
-	StatusCode restartSateMachine(void);
-	void checkActorInitialization(void) const;
-	StatusCode executorStartCb(AtStartHook atStart);
-	void executorStopCb(void);
-	StatusCode executorRestartCb(std::promise<StatusCode> &status, std::promise<std::unique_ptr<Executor> &> &e);
-	std::unique_ptr<Executor> createAtStartExecutor();
-	std::unique_ptr<Executor> createExecutor(ExecutorAtStart atStartCb);
-	void initContextState();
-
-	class ActorException : public std::runtime_error {
-	public:
-		ActorException(ErrorCode error, const std::string& what_arg);
-		~ActorException();
-
-		int getErrorCode() const;
-	private:
-		const ErrorCode error;
-	};
 
 };
 
