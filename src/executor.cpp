@@ -40,7 +40,7 @@ void Executor::run(ExecutorBody body, ExecutorAtStart atStart, ExecutorHook atSt
 	const auto rc = atStart();
 	if (StatusCode::OK != rc)
 		return;
-	executeBody(body);
+	executeBody(body); //manage exception.
 	atStop();
 }
 

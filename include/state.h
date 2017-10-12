@@ -11,6 +11,5 @@ class NoState : public State {
 public:
 	NoState() = default;
 	~NoState() = default;
-	void init(const std::string &name) {}
-
+	void init(const std::string &name) { }
 };
