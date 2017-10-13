@@ -30,14 +30,17 @@
 #ifndef ACTOR_H__
 #define ACTOR_H__
 
-#include <actorContext.h>
+#include <context.h>
 #include <commandExecutor.h>
+#include <errorStrategy.h>
 
 #include <functional>
 
-using AtStopHook = std::function<void(const ActorContext &)>;
-using AtStartHook = std::function<StatusCode(const ActorContext &)>;
-using AtRestartHook = std::function<StatusCode(const ActorContext &)>;
+using AtStopHook = std::function<void(const Context &)>;
+using AtStartHook = std::function<StatusCode(const Context &)>;
+using AtRestartHook = std::function<StatusCode(const Context &)>;
+
+using  ActionStrategy = std::function<const ErrorStrategy *(ErrorCode error)>; //duplicate
 
 extern const AtStartHook DEFAULT_START_HOOK;
 extern const AtStopHook DEFAULT_STOP_HOOK;

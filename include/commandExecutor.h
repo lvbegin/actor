@@ -34,8 +34,8 @@
 
 #include <functional>
 
-using PreCommandHook = std::function<StatusCode(ActorContext &, Command, const RawData &, const ActorLink &)>;
-using PostCommandHook = std::function<void(ActorContext &, Command, const RawData &, const ActorLink &)>;
+using PreCommandHook = std::function<StatusCode(Context &, Command, const RawData &, const ActorLink &)>;
+using PostCommandHook = std::function<void(Context &, Command, const RawData &, const ActorLink &)>;
 
 extern const PreCommandHook DEFAULT_PRECOMMAND_HOOK;
 extern const PostCommandHook DEFAULT_POSTCOMMAND_HOOK;
@@ -46,7 +46,7 @@ class CommandExecutor {
 	CommandExecutor(PreCommandHook preCommand, PostCommandHook postCommand, const commandMap map[] = nullptr);
 	~CommandExecutor();
 
-	StatusCode execute(ActorContext &context, Command commandCode, const RawData &data,
+	StatusCode execute(Context &context, Command commandCode, const RawData &data,
 						const ActorLink &actorLink) const;
 
 	private:
