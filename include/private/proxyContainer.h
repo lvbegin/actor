@@ -27,36 +27,25 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LINK_API_H__
-#define LINK_API_H__
+#ifndef PROXY_CONTAINER_H__
+#define PROXY_CONTAINER_H__
 
-#include <types.h>
-#include <rawData.h>
+#include <private/executor.h>
+#include <private/sharedMap.h>
+#include <private/uniqueId.h>
+#include <private/proxyServer.h>
+#include <actor/actor.h>
 
-#include <memory>
-
-class LinkApi;
-using ActorLink = std::shared_ptr<LinkApi>;
-using Command = uint32_t;
-
-class LinkApi {
+class ProxyContainer {
 public:
-	virtual void post(Command command, ActorLink sender = ActorLink()) = 0;
-	virtual void post(Command command, const RawData &data, ActorLink sender = ActorLink()) = 0;
-
-	const std::string &getName(void) const { return name; }
-	bool hasName(const std::string &n) const { return 0 == name.compare(n); }
-
-	static std::function<bool(const ActorLink &l)> nameComparator(const std::string &name) {
-		return [&name](const ActorLink &l) { return l->hasName(name); };
-	}
-
-protected:
-	LinkApi(std::string name) : name(std::move(name)) { }
-	virtual ~LinkApi() = default;
-private :
-	const std::string name;
+	ProxyContainer();
+	~ProxyContainer();
+	void createNewProxy(ActorLink actor, Connection connection, FindActor findActor);
+	StatusCode executeCommand(Command command, const RawData &id);
+private:
+	SharedMap<Id, ProxyServer> proxies;
+	MessageQueue executorQueue;
+	const Executor executor;
 };
-
 
 #endif

@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,23 +27,30 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CLIENT_SOCKET_H__
-#define CLIENT_SOCKET_H__
+#ifndef RAW_DATA_H__
+#define RAW_DATA_H__
 
-#include <connection.h>
-#include <netAddr.h>
+#include <actor/types.h>
+
+#include <vector>
 #include <string>
-#include <cstdint>
+#include <cstddef>
 
 
-class ClientSocket {
+class RawData : public std::vector<uint8_t> {
 public:
-	ClientSocket() = delete;
+	using v = std::vector<uint8_t>;
+	using v::v;
 
-	static Connection openHostConnection(const std::string &host, uint16_t port);
-	static Connection openHostConnection(const struct NetAddr &sin);
-	static struct NetAddr toNetAddr(const std::string &host, uint16_t port);
+	RawData();
+	/* add a constructor and move constructor for a vector */
+	RawData(uint32_t value);
+	RawData(void *buffer, size_t size);
+	RawData(const std::string &s);
+	~RawData();
+
+	std::string toString() const;
+	uint32_t toInt() const;
 };
-
 
 #endif

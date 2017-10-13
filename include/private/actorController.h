@@ -27,42 +27,36 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ACTOR_REGISTRY_H__
-#define ACTOR_REGISTRY_H__
+#ifndef ACTOR_CONTROLLER_H__
+#define ACTOR_CONTROLLER_H__
 
-#include <actor.h>
-#include <proxyContainer.h>
-#include <serverSocket.h>
-#include <sharedMap.h>
-#include <sharedVector.h>
+#include <private/messageQueue.h>
+#include <private/sharedVector.h>
+#include <private/commandValue.h>
+#include <actor/controllerApi.h>
 
-#include <cstdint>
-#include <thread>
+using LinkRef = std::shared_ptr<MessageQueue>;
+using LinkRefOperation = std::function<void(const LinkRef &)>;
 
-class ActorRegistry {
+class ActorController : public ControllerApi {
 public:
-	ActorRegistry(std::string name, uint16_t port);
-	~ActorRegistry();
-	std::string addReference(const std::string &host, uint16_t port);
-	void removeReference(const std::string &registryName);
-	void registerActor(ActorLink actor);
-	void unregisterActor(const std::string &name);
-	ActorLink  getActor(const std::string &name) const;
-private:
-	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY = 0, SEARCH_ACTOR = 1, };
-	enum class ActorSearchResult : uint32_t { ACTOR_NOT_FOUND = 0, ACTOR_FOUND = 1, };
-	const std::string name;
-	const uint16_t port;
-	const FindActor findActorCallback;
-	bool terminated;
-	SharedMap<const std::string, const struct NetAddr> registryAddresses;
-	SharedVector<ActorLink> actors;
-	ProxyContainer proxies;
-	std::thread t;
+	ActorController();
+	~ActorController();
 
-	void registryBody(const ServerSocket &s);
-	ActorLink getLocalActor(const std::string &name) const;
-	ActorLink getRemoteActor(const std::string &name) const;
+	void add(LinkRef actorLink);
+	void remove(const std::string &name);
+	void stopOne(const std::string &name) const override;
+	void stopAll(void) const override;
+	void restartOne(const std::string &name) const override;
+	void restartAll(void) const override;
+private:
+	SharedVector<LinkRef> actors;
+
+	void doOperationOneActor(const std::string &name, LinkRefOperation op) const;
+	void doOperationAllActors(LinkRefOperation op) const;
+	static void restart(const LinkRef &link);
+	static void stop(const LinkRef &link);
+	static void sendMessage(const LinkRef &link, Command command);
 };
 
 #endif

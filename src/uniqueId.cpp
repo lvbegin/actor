@@ -27,7 +27,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <uniqueId.h>
+#include <private/uniqueId.h>
 
 std::atomic<Id> UniqueId::id { 0 };
 

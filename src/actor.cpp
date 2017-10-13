@@ -27,13 +27,14 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <actor.h>
-#include <commandValue.h>
-#include <exception.h>
-#include <actorController.h>
-#include <executor.h>
-#include <actorStateMachine.h>
-#include <actorContext.h>
+#include <actor/actor.h>
+
+#include <private/commandValue.h>
+#include <private/exception.h>
+#include <private/actorController.h>
+#include <private/executor.h>
+#include <private/actorStateMachine.h>
+#include <private/actorContext.h>
 
 #include <mutex>
 #include <future>
@@ -58,7 +59,7 @@ public:
 	ActorImpl(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, std::unique_ptr<State> state,
 			ActionStrategy restartStrategy) :
 				executorQueue(std::make_shared<MessageQueue>(std::move(name))),
-				hooks(hooks), commandExecutor(commandExecutor),
+				hooks(hooks), commandExecutor(std::move(commandExecutor)),
 				context(restartStrategy, executorQueue,	std::move(state)),
 				executor(createAtStartExecutor())
 				{ checkActorInitialization(); }
@@ -201,18 +202,18 @@ static const ActorHooks DEFAULT_HOOKS = ActorHooks(DEFAULT_START_HOOK, DEFAULT_S
 
 
 Actor::Actor(std::string name, CommandExecutor commandExecutor, ActionStrategy restartStrategy) :
-				Actor(std::move(name), commandExecutor, DEFAULT_HOOKS, std::make_unique<NoState>(),restartStrategy) { }
+				Actor(std::move(name), std::move(commandExecutor), DEFAULT_HOOKS, std::make_unique<NoState>(),restartStrategy) { }
 
 Actor::Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, ActionStrategy restartStrategy) :
-		Actor(std::move(name), commandExecutor, hooks, std::make_unique<NoState>(),restartStrategy) { }
+		Actor(std::move(name), std::move(commandExecutor), hooks, std::make_unique<NoState>(),restartStrategy) { }
 
 Actor::Actor(std::string name, CommandExecutor commandExecutor, std::unique_ptr<State> state,
 				ActionStrategy restartStrategy) :
-						Actor(std::move(name), commandExecutor, DEFAULT_HOOKS, std::move(state), restartStrategy) { }
+						Actor(std::move(name), std::move(commandExecutor), DEFAULT_HOOKS, std::move(state), restartStrategy) { }
 
 Actor::Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, std::unique_ptr<State> state,
 				ActionStrategy restartStrategy) :
-					pImpl(new Actor::ActorImpl(name, commandExecutor, hooks, std::move(state), restartStrategy))
+					pImpl(new Actor::ActorImpl(name, std::move(commandExecutor), hooks, std::move(state), restartStrategy))
 										{ }
 
 Actor::~Actor() { delete pImpl; }

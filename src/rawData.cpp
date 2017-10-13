@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,30 +27,33 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PROXY_SERVER_H__
-#define PROXY_SERVER_H__
+#include <actor/rawData.h>
+#include <private/exception.h>
 
-#include <actor.h>
-#include <connection.h>
+#include <algorithm>
+#include <arpa/inet.h>
 
-#include <thread>
+RawData::RawData() = default;
 
-using FindActor = std::function<ActorLink(const std::string &)> ;
+RawData::RawData(uint32_t value) {
+	uint32_t independantOrderValue = htonl(value);
+	*this = RawData(&independantOrderValue, sizeof(independantOrderValue));
+}
 
-class ProxyServer {
-public:
-	ProxyServer(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor);
-	~ProxyServer();
+RawData::RawData(void *buffer, size_t size) : v(reinterpret_cast<uint8_t *>(buffer), reinterpret_cast<uint8_t *>(buffer) + size) { }
 
-	ProxyServer(const ProxyServer &p) = delete;
-	ProxyServer &operator=(const ProxyServer &p) = delete;
-	ProxyServer &operator=(ProxyServer &&p) = delete;
-	ProxyServer(ProxyServer &&p) = delete;
-private:
-	std::thread t;
+RawData::RawData(const std::string &s) : v(s.begin(), s.end()) { }
 
-	static void startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate,
-							FindActor findActor);
-};
+RawData::~RawData() = default;
 
-#endif
+std::string RawData::toString() const { return std::string(begin(), end()); }
+uint32_t RawData::toInt() const {
+	uint32_t rc;
+
+	if (sizeof(rc) != size())
+		THROW(std::runtime_error, "serialized integer does not have correct size.");
+	void * const ptr = &rc;
+	const auto first = static_cast<uint8_t *>(ptr);
+	std::for_each(first, first + sizeof(rc), [first, this](uint8_t &p) { p = (*this)[&p - first]; });
+	return ntohl(rc);
+}

@@ -27,17 +27,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TYPES_H__
-#define TYPES_H__
+#ifndef ACTOR_REGISTRY_H__
+#define ACTOR_REGISTRY_H__
+
+#include <private/proxyContainer.h>
+#include <private/serverSocket.h>
+#include <private/sharedMap.h>
+#include <private/sharedVector.h>
+#include <actor/actor.h>
 
 #include <cstdint>
+#include <thread>
 
-enum class StatusCode : uint32_t { OK, SHUTDOWN, ERROR, };
+class ActorRegistry {
+public:
+	ActorRegistry(std::string name, uint16_t port);
+	~ActorRegistry();
+	std::string addReference(const std::string &host, uint16_t port);
+	void removeReference(const std::string &registryName);
+	void registerActor(ActorLink actor);
+	void unregisterActor(const std::string &name);
+	ActorLink  getActor(const std::string &name) const;
+private:
+	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY = 0, SEARCH_ACTOR = 1, };
+	enum class ActorSearchResult : uint32_t { ACTOR_NOT_FOUND = 0, ACTOR_FOUND = 1, };
+	const std::string name;
+	const uint16_t port;
+	const FindActor findActorCallback;
+	bool terminated;
+	SharedMap<const std::string, const struct NetAddr> registryAddresses;
+	SharedVector<ActorLink> actors;
+	ProxyContainer proxies;
+	std::thread t;
 
-enum class MessageType:uint32_t { COMMAND_MESSAGE, ERROR_MESSAGE, MANAGEMENT_MESSAGE, };
-
-typedef uint32_t Id;
-
-enum class postType : uint32_t { NewMessage = 0xFFFFFFFF, } ;
+	void registryBody(const ServerSocket &s);
+	ActorLink getLocalActor(const std::string &name) const;
+	ActorLink getRemoteActor(const std::string &name) const;
+};
 
 #endif

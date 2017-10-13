@@ -1,4 +1,4 @@
-/* Copyright 2017 Laurent Van Begin
+/* Copyright 2016 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,30 +27,58 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ACTOR_CONTEXT_H__
-#define ACTOR_CONTEXT_H__
+#ifndef CONNECTION_H__
+#define CONNECTION_H__
 
-#include <linkApi.h>
-#include <supervisor.h>
-#include <context.h>
+#include <actor/rawData.h>
 
-class ActorContext : public Context {
+#include <unistd.h>
+#include <string>
+#include <vector>
+#include <stdexcept>
+#include <arpa/inet.h>
+
+
+class ConnectionTimeout : public std::runtime_error {
 public:
-	ActorContext(ActionStrategy strategy, LinkRef self, std::unique_ptr<State> state);
-	ActorContext() = delete;
-	~ActorContext();
+	ConnectionTimeout(std::string s) : std::runtime_error(s) {}
+};
 
-	void notifySupervisor(Command command) const override;
-	void sendErrorToSupervisor(Command command) const override;
-	void restartActors() const override;
-	void stopActors() const override;
-	State &getState() override;
+class Connection {
+public:
+	Connection();
+	Connection(int fd);
 
-	Supervisor &getSupervisor();
-	const Supervisor &getConstSupervisor() const;
+	~Connection();
+	Connection(const Connection &connection) = delete;
+	Connection &operator=(const Connection &connection) = delete;
+	Connection(Connection &&connection);
+	Connection &operator=(Connection &&connection);
+
+	template<typename T>
+	const Connection &writeInt(T hostValue) const {
+		const auto sentValue = htonl(static_cast<uint32_t>(hostValue));
+		return writeBytes(&sentValue, sizeof(sentValue));
+	}
+
+	template<typename T>
+	T readInt(void) const {
+		uint32_t value;
+		readBytes(&value, sizeof(value));
+		return static_cast<T>(ntohl(value));
+	}
+	const Connection &writeString(const std::string &hostValue) const;
+	std::string readString(void) const;
+	const Connection &writeRawData(const RawData &data) const;
+	RawData readRawData(void) const;
 private:
-	std::unique_ptr<State> state;
-	Supervisor supervisor;
+	int fd;
+	fd_set set;
+
+	const Connection &writeBytes(const void *buffer, size_t count) const;
+	void readBytes(void *buffer, size_t count, int timeout = 5) const;
+	void readBytesNonBlocking(void *buffer, size_t count) const;
+	void closeConnection(void);
 };
 
 #endif

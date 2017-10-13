@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,35 +27,30 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EXECUTOR_H__
-#define EXECUTOR_H__
+#ifndef ACTOR_CONTEXT_H__
+#define ACTOR_CONTEXT_H__
 
-#include <messageQueue.h>
-#include <functional>
-#include <thread>
+#include <actor/context.h>
+#include <actor/linkApi.h>
+#include <private/supervisor.h>
 
-using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const ActorLink &sender)>;
-using ExecutorHook = std::function<void(void)>;
-using ExecutorAtStart = std::function<StatusCode(void)>;
-
-class Executor {
+class ActorContext : public Context {
 public:
-	Executor(ExecutorBody body, MessageQueue &queue, ExecutorAtStart atStart = [](void) { return StatusCode::OK; },
-													ExecutorHook atStop = [](void) { });
-	~Executor();
+	ActorContext(ActionStrategy strategy, LinkRef self, std::unique_ptr<State> state);
+	ActorContext() = delete;
+	~ActorContext();
 
-	Executor() = delete;
-	Executor(const Executor &a) = delete;
-	Executor &operator=(const Executor &a) = delete;
-	Executor(Executor &&a) = delete;
-	Executor &operator=(Executor &&a) = delete;
+	void notifySupervisor(Command command) const override;
+	void sendErrorToSupervisor(Command command) const override;
+	void restartActors() const override;
+	void stopActors() const override;
+	State &getState() override;
+
+	Supervisor &getSupervisor();
+	const Supervisor &getConstSupervisor() const;
 private:
-	MessageQueue &messageQueue;
-	std::thread thread;
-
-	void run(ExecutorBody body, ExecutorAtStart atStart, ExecutorHook atStop) const;
-	void executeBody(ExecutorBody body) const;
+	std::unique_ptr<State> state;
+	Supervisor supervisor;
 };
-
 
 #endif

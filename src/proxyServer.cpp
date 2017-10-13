@@ -27,10 +27,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <proxyServer.h>
-#include <serverSocket.h>
-#include <proxyContainer.h>
-#include <commandValue.h>
+#include <private/proxyServer.h>
+#include <private/serverSocket.h>
+#include <private/proxyContainer.h>
+#include <private/commandValue.h>
 
 #include <arpa/inet.h>
 

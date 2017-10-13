@@ -27,9 +27,9 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <actorRegistry.h>
-#include <clientSocket.h>
-#include <proxyClient.h>
+#include <private/actorRegistry.h>
+#include <private/clientSocket.h>
+#include <private/proxyClient.h>
 
 #include <iostream>
 

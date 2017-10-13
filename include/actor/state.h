@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,39 +27,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MESSAGE_QUEUE_H__
-#define MESSAGE_QUEUE_H__
+#include <string>
 
-#include <sharedQueue.h>
-#include <linkApi.h>
-#include <types.h>
-
-class MessageQueue : public LinkApi {
+class State {
 public:
-	struct Message {
-		const MessageType type;
-		const Command code;
-		RawData params;
-		std::shared_ptr<LinkApi> sender;
-		Message(MessageType type, int code, RawData params, ActorLink sender);
-		~Message();
-		Message(struct Message &&m);
-		Message (const struct Message &m) = delete;
-		struct Message &operator=(const struct Message &m) = delete;
-	};
-	MessageQueue(std::string name = std::string());
-	virtual ~MessageQueue();
+	virtual ~State() = default;
 
-	void post(Command command, ActorLink sender = ActorLink());
-	void post(Command command, const RawData &params, ActorLink sender = ActorLink());
-
-	void post(MessageType type, Command command, RawData params = RawData());
-
-	Message get(void);
-private:
-	SharedQueue<Message> queue;
-
-	void putMessage(MessageType type, Command command, RawData params, ActorLink sender);
+	virtual void init(const std::string &name) = 0;
+protected:
+	State() = default;
 };
 
-#endif
+class NoState : public State {
+public:
+	NoState() = default;
+	~NoState() = default;
+	void init(const std::string &name) { }
+};

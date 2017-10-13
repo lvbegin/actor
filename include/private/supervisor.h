@@ -27,35 +27,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RAW_DATA_H__
-#define RAW_DATA_H__
+#ifndef SUPERVISOR_H__
+#define SUPERVISOR_H__
 
-#include <types.h>
-#include <exception.h>
+#include <private/actorController.h>
+#include <private/messageQueue.h>
+#include <private/commandValue.h>
+#include <actor/errorStrategy.h>
 
-#include <algorithm>
-#include <vector>
+using  ActionStrategy = std::function<const ErrorStrategy *(ErrorCode error)>;
 
-class RawData : public std::vector<uint8_t> {
+class Supervisor {
 public:
-	using v = std::vector<uint8_t>;
-	using v::v;
-	RawData() = default;
-	RawData(Id value) :  v(reinterpret_cast<uint8_t *>(&value), reinterpret_cast<uint8_t *>((&value) + 1)) { }
-	RawData(const std::string &s) : v(s.begin(), s.end()) { }
-	~RawData() = default;
+	Supervisor(ActionStrategy strategy, LinkRef self);
+	~Supervisor();
 
-	std::string toString() const { return std::string(begin(), end()); }
-	Id toId() const {
-		Id rc;
+	void notifySupervisor(Command command) const;
+	void sendErrorToSupervisor(Command command) const;
+	void manageErrorFromSupervised(ErrorCode error, const RawData &params) const;
+	void restartActors() const;
+	void stopActors() const;
 
-		if (sizeof(rc) != size())
-			THROW(std::runtime_error, "serialized integer does not have correct size.");
-		void * const ptr = &rc;
-		const auto first = static_cast<uint8_t *>(ptr);
-		std::for_each(first, first + sizeof(rc), [first, this](uint8_t &p) { p = (*this)[&p - first]; });
-		return rc;
-	}
+	void removeActor(const std::string &name);
+	void registerMonitored(Supervisor &monitored);
+	void unregisterMonitored(Supervisor &monitored);
+
+private:
+	mutable std::mutex monitorMutex;
+	const ActionStrategy restartStrategy;
+	const LinkRef self;
+	ActorController supervisedRefs;
+	std::weak_ptr<MessageQueue> supervisorRef;
+
+	void postSupervisor(MessageType type, Command command, const RawData &data) const;
+	void sendToSupervisor(MessageType type, uint32_t code) const;
+	void doOperation(std::function<void(void)> op) const;
+	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
 };
 
 #endif

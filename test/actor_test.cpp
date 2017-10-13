@@ -27,13 +27,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <proxyClient.h>
-#include <proxyServer.h>
-#include <actor.h>
-#include <actorRegistry.h>
-#include <clientSocket.h>
-#include <commandValue.h>
-#include <rawData.h>
+#include <actor/actor.h>
+#include <actor/rawData.h>
+#include <actor/commandMap.h>
+#include <private/proxyClient.h>
+#include <private/actorCommand.h>
+#include <private/proxyServer.h>
+#include <private/actorRegistry.h>
+#include <private/clientSocket.h>
+#include <private/commandValue.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -736,7 +738,7 @@ static int supervisorHasDifferentStrategyDependingOnErrorTest() {
 	Actor supervisor("supervisor", CommandExecutor(), supervisorHooks, strategy);
 	static const ActorHooks supervisedHooks(DEFAULT_START_HOOK,
 			[&supervisedStopped](const Context &) { supervisedStopped = true; },
-			[&supervisedRestarted](const Context &) { supervisedRestarted++; return StatusCode::OK; });
+			[&supervisedRestarted](const Context &) { supervisedRestarted = true; return StatusCode::OK; });
 	static const commandMap commands[] = {
 			{first_error, [](Context &, const RawData &, const ActorLink &) { return (Actor::notifyError(first_error), StatusCode::OK); }},
 			{second_error, [](Context &, const RawData &, const ActorLink &) { return (Actor::notifyError(second_error), StatusCode::OK); }},
@@ -767,7 +769,7 @@ static int serializationTest() {
 	static const uint32_t EXPECTED_VALUE = 0x11223344;
 
 	const RawData s(EXPECTED_VALUE);
-	return (EXPECTED_VALUE == s.toId()) ? 0 : 1;
+	return (EXPECTED_VALUE == toId(s)) ? 0 : 1;
 }
 
 static int startActorFailureTest() {

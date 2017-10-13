@@ -27,33 +27,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SERVER_SOCKET_H__
-#define SERVER_SOCKET_H__
+#ifndef PRIVATE_TYPES_H__
+#define PRIVATE_TYPES_H__
 
-#include <connection.h>
-#include <netAddr.h>
-#include <cstddef>
-#include <string>
+#include <actor/types.h>
+#include <actor/rawData.h>
 
-class ServerSocket {
-public:
-	ServerSocket(uint16_t port);
-	~ServerSocket();
+enum class MessageType:uint32_t { COMMAND_MESSAGE, ERROR_MESSAGE, MANAGEMENT_MESSAGE, };
 
-	ServerSocket(const ServerSocket &s) = delete;
-	ServerSocket &operator=(const ServerSocket &s) = delete;
+typedef uint32_t Id;
+static inline Id toId(const RawData &data)
+{
+	return data.toInt();
+}
 
-	ServerSocket(ServerSocket&& s);
-	ServerSocket &operator=(ServerSocket&& s);
-
-	Connection acceptOneConnection(int timeout = 2, struct NetAddr *client_addr = NULL) const;
-	static Connection getConnection(int port);
-private:
-	int acceptFd;
-	fd_set set;
-
-	static int listenOnSocket(uint16_t port);
-	void closeSocket(void);
-};
+enum class postType : uint32_t { NewMessage = 0xFFFFFFFF, } ;
 
 #endif

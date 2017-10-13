@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,36 +27,65 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <private/clientSocket.h>
+#ifndef SHARED_VECTOR_H__
+#define SHARED_VECTOR_H__
+
 #include <private/exception.h>
 
-#include <stdexcept>
+#include <vector>
+#include <mutex>
+#include <algorithm>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+template <typename T>
+using FindTest=std::function<bool(const T&)>;
 
-#include <memory.h>
+template <typename T>
+using VectorIterator= typename std::vector<T>::const_iterator;
 
+template <typename T>
+class SharedVector {
+public:
+	SharedVector() = default;
+	~SharedVector() = default;
 
-Connection ClientSocket::openHostConnection(const std::string &host, uint16_t port) {
-	return openHostConnection(toNetAddr(host, port));
-}
+	SharedVector(const SharedVector &m) = delete;
+	SharedVector &operator=(const SharedVector &m) = delete;
+	SharedVector(SharedVector &&m) = delete;
+	SharedVector &operator=(SharedVector &&m) = delete;
 
-Connection ClientSocket::openHostConnection(const struct NetAddr &sin) {
-	const auto fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (-1 == fd)
-		THROW(std::runtime_error, "socket creation failed.");
-	if (-1 == connect(fd, &sin.ai_addr, sin.ai_addrlen))
-		THROW(std::runtime_error, "cannot connect.");
-	return Connection(fd);
-}
+	void push_back(T&& value) {
+		std::unique_lock<std::mutex> l(mutex);
 
-struct NetAddr ClientSocket::toNetAddr(const std::string &host, uint16_t port) {
-	struct addrinfo *addr;
-	if (0 > getaddrinfo(host.c_str(), std::to_string(port).c_str(), NULL, &addr))
-		THROW(std::runtime_error, "cannot convert hostname.");
-	const auto rc = NetAddr(*addr->ai_addr, addr->ai_addrlen);
-	freeaddrinfo(addr);
-	return rc;
-}
+		vector.push_back(std::forward<T>(value));
+	}
+
+	void erase(FindTest<T> findTest) {
+		std::unique_lock<std::mutex> l(mutex);
+
+		vector.erase(internalFind_if(findTest));
+	}
+
+	T find_if(FindTest<T> findTest) const {
+		std::unique_lock<std::mutex> l(mutex);
+
+		return *internalFind_if(findTest);
+	}
+
+	void for_each(std::function<void(const T&)> f) const {
+		std::unique_lock<std::mutex> l(mutex);
+
+		std::for_each(vector.begin(), vector.end(), f);
+	}
+private:
+	mutable std::mutex mutex;
+	std::vector<T> vector;
+
+	VectorIterator<T> internalFind_if(FindTest<T> findTest) const {
+		const auto it = std::find_if(vector.begin(), vector.end(), findTest);
+		if (vector.end() == it)
+			THROW(std::out_of_range, "element not found in shared vector.");
+		return it;
+	}
+};
+
+#endif

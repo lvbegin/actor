@@ -30,17 +30,19 @@
 #ifndef ERROR_STRATEGY_H__
 #define ERROR_STRATEGY_H__
 
-#include <actorController.h>
-#include <messageQueue.h>
-#include <types.h>
+#include <actor/controllerApi.h>
+#include <actor/linkApi.h>
+#include <actor/types.h>
 
 typedef uint32_t ErrorCode;
 
+using NotifySupervisor = std::function<void(const std::string &actorName, ErrorCode error)>; 
+
 class ErrorStrategy {
 public:
-		virtual void executeAction(const ActorController &supervisedRefs,
-				const std::weak_ptr<MessageQueue> &supervisorRef, ErrorCode error, const RawData &params,
-				const LinkRef &actor) const = 0;
+		virtual void executeAction(const ControllerApi &supervisedRefs,
+				NotifySupervisor notifySupervisor, ErrorCode error, const RawData &params,
+				const ActorLink &actor) const = 0;
 protected:
 		ErrorStrategy() = default;
 		virtual ~ErrorStrategy() = default;
@@ -50,8 +52,9 @@ class RestartActor : public ErrorStrategy {
 public:
 	static const ErrorStrategy *create() { return &singletonElement; }
 	virtual ~RestartActor() = default;
-	void executeAction(const ActorController &supervisedRefs, const std::weak_ptr<MessageQueue> &supervisorRef,
-			ErrorCode error, const RawData &params, const LinkRef &actor)  const {
+	void executeAction(const ControllerApi &supervisedRefs, 
+		NotifySupervisor notifySupervisor,			
+		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
 		supervisedRefs.restartOne(params.toString());
 	}
 private:
@@ -64,8 +67,9 @@ class StopActor : public ErrorStrategy {
 public:
 	static const ErrorStrategy *create() { return &singletonElement; }
 	virtual ~StopActor() = default;
-	void executeAction(const ActorController &supervisedRefs, const std::weak_ptr<MessageQueue> &supervisorRef,
-			ErrorCode error, const RawData &params, const LinkRef &actor)  const {
+	void executeAction(const ControllerApi &supervisedRefs, 
+			NotifySupervisor notifySupervisor,
+			ErrorCode error, const RawData &params, const ActorLink &actor)  const {
 		supervisedRefs.stopOne(params.toString());
 	}
 private:
@@ -73,13 +77,13 @@ private:
 	static const StopActor singletonElement;
 };
 
-
 class RestartAllActor : public ErrorStrategy {
 public:
 	static const ErrorStrategy *create() { return &singletonElement; }
 	virtual ~RestartAllActor() = default;
-	void executeAction(const ActorController &supervisedRefs, const std::weak_ptr<MessageQueue> &supervisorRef,
-			ErrorCode error, const RawData &params, const LinkRef &actor)  const { supervisedRefs.restartAll(); }
+	void executeAction(const ControllerApi &supervisedRefs, 
+			NotifySupervisor notifySupervisor,
+			ErrorCode error, const RawData &params, const ActorLink &actor)  const { supervisedRefs.restartAll(); }
 private:
 	RestartAllActor() = default;
 	static const RestartAllActor singletonElement;
@@ -90,11 +94,10 @@ class EscalateError : public ErrorStrategy {
 public:
 	static const ErrorStrategy *create() { return &singletonElement; }
 	virtual~EscalateError() = default;
-	void executeAction(const ActorController &supervisedRefs, const std::weak_ptr<MessageQueue> &supervisorRef,
-			ErrorCode error, const RawData &params, const LinkRef &actor)  const {
-		const auto ref = supervisorRef.lock();
-		if (nullptr != ref.get())
-			ref->post(MessageType::ERROR_MESSAGE, error, actor->getName());
+	void executeAction(const ControllerApi &supervisedRefs, 
+			NotifySupervisor notifySupervisor,
+			ErrorCode error, const RawData &params, const ActorLink &actor)  const {
+		notifySupervisor(actor->getName(), error);
 	}
 private:
 	EscalateError() = default;

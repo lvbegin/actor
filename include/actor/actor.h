@@ -30,9 +30,9 @@
 #ifndef ACTOR_H__
 #define ACTOR_H__
 
-#include <context.h>
-#include <commandExecutor.h>
-#include <errorStrategy.h>
+#include <actor/errorStrategy.h>
+#include <actor/context.h>
+#include <actor/commandExecutor.h>
 
 #include <functional>
 

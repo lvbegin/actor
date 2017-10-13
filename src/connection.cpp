@@ -27,9 +27,9 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <connection.h>
-#include <descriptorWait.h>
-#include <exception.h>
+#include <private/connection.h>
+#include <private/descriptorWait.h>
+#include <private/exception.h>
 
 Connection::Connection() : fd(-1) { }
 

@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,35 +27,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ACTOR_CONTROLLER_H__
-#define ACTOR_CONTROLLER_H__
+#ifndef TYPES_H__
+#define TYPES_H__
 
-#include <messageQueue.h>
-#include <sharedVector.h>
-#include <commandValue.h>
+#include <cstdint>
+#include <functional>
 
-using LinkRef = std::shared_ptr<MessageQueue>;
-using LinkRefOperation = std::function<void(const LinkRef &)>;
+enum class StatusCode : uint32_t { OK, SHUTDOWN, ERROR, };
 
-class ActorController {
-public:
-	ActorController();
-	~ActorController();
+using Command = uint32_t;
 
-	void add(LinkRef actorLink);
-	void remove(const std::string &name);
-	void stopOne(const std::string &name) const;
-	void stopAll(void) const;
-	void restartOne(const std::string &name) const;
-	void restartAll(void) const;
-private:
-	SharedVector<LinkRef> actors;
-
-	void doOperationOneActor(const std::string &name, LinkRefOperation op) const;
-	void doOperationAllActors(LinkRefOperation op) const;
-	static void restart(const LinkRef &link);
-	static void stop(const LinkRef &link);
-	static void sendMessage(const LinkRef &link, Command command);
-};
 
 #endif

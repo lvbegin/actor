@@ -28,8 +28,8 @@
  */
 
 
-#include <actorStateMachine.h>
-#include <exception.h>
+#include <private/actorStateMachine.h>
+#include <private/exception.h>
 
 #include <algorithm>
 

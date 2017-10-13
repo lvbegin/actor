@@ -30,8 +30,8 @@
 #ifndef PROXY_CLIENT_H__
 #define PROXY_CLIENT_H__
 
-#include <connection.h>
-#include <linkApi.h>
+#include <private/connection.h>
+#include <actor/linkApi.h>
 
 class ProxyClient : public LinkApi {
 public:

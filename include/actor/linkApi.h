@@ -1,4 +1,4 @@
-/* Copyright 2017 Laurent Van Begin
+/* Copyright 2016 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,42 +27,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SUPERVISOR_H__
-#define SUPERVISOR_H__
+#ifndef LINK_API_H__
+#define LINK_API_H__
 
-#include <actorController.h>
-#include <messageQueue.h>
-#include <commandValue.h>
-#include <errorStrategy.h>
+#include <actor/rawData.h>
 
-using  ActionStrategy = std::function<const ErrorStrategy *(ErrorCode error)>;
+#include <memory>
 
-class Supervisor {
+class LinkApi;
+using ActorLink = std::shared_ptr<LinkApi>;
+using Command = uint32_t;
+
+class LinkApi {
 public:
-	Supervisor(ActionStrategy strategy, LinkRef self);
-	~Supervisor();
+	virtual void post(Command command, ActorLink sender = ActorLink()) = 0;
+	virtual void post(Command command, const RawData &data, ActorLink sender = ActorLink()) = 0;
 
-	void notifySupervisor(Command command) const;
-	void sendErrorToSupervisor(Command command) const;
-	void manageErrorFromSupervised(ErrorCode error, const RawData &params) const;
-	void restartActors() const;
-	void stopActors() const;
+	const std::string &getName(void) const { return name; }
+	bool hasName(const std::string &n) const { return 0 == name.compare(n); }
 
-	void removeActor(const std::string &name);
-	void registerMonitored(Supervisor &monitored);
-	void unregisterMonitored(Supervisor &monitored);
+	static std::function<bool(const ActorLink &l)> nameComparator(const std::string &name) {
+		return [&name](const ActorLink &l) { return l->hasName(name); };
+	}
 
-private:
-	mutable std::mutex monitorMutex;
-	const ActionStrategy restartStrategy;
-	const LinkRef self;
-	ActorController supervisedRefs;
-	std::weak_ptr<MessageQueue> supervisorRef;
-
-	void postSupervisor(MessageType type, Command command, const RawData &data) const;
-	void sendToSupervisor(MessageType type, uint32_t code) const;
-	void doOperation(std::function<void(void)> op) const;
-	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
+protected:
+	LinkApi(std::string name) : name(std::move(name)) { }
+	virtual ~LinkApi() = default;
+private :
+	const std::string name;
 };
+
 
 #endif

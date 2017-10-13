@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -26,55 +26,23 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef CONTEXT_H__
+#define CONTEXT_H__
 
-#ifndef SHARED_MAP_H__
-#define SHARED_MAP_H__
+#include <actor/types.h>
+#include <actor/state.h>
 
-#include <exception.h>
-
-#include <map>
-#include <mutex>
-#include <algorithm>
-
-template<typename K, typename T>
-class SharedMap {
+class Context {
 public:
-	SharedMap() = default;
-	~SharedMap() = default;
-
-	SharedMap(const SharedMap &m) = delete;
-	SharedMap &operator=(const SharedMap &m) = delete;
-	SharedMap(SharedMap &&m) = delete;
-	SharedMap &operator=(SharedMap &&m) = delete;
-
-	template <typename L, typename M>
-	void insert(L&& key, M &&value) {
-		std::unique_lock<std::mutex> l(mutex);
-
-		map.insert(std::make_pair(std::forward<L>(key), std::forward<M>(value)));
-	}
-	template <typename... Args>
-	void emplace(Args&&... args) {
-		std::unique_lock<std::mutex> l(mutex);
-
-		map.emplace(std::forward<Args>(args)...);
-	}
-	void erase(const K &key) {
-		std::unique_lock<std::mutex> l(mutex);
-
-		const auto it = map.find(key);
-		if (map.end() == it)
-			THROW(std::runtime_error, "element to erase does not exist. WTF");
-		map.erase(it);
-	}
-	void for_each(std::function<void(const std::pair<const K, const T> &)> f) const {
-		std::unique_lock<std::mutex> l(mutex);
-
-		std::for_each(map.begin(), map.end(), f);
-	}
-private:
-	mutable std::mutex mutex;
-	std::map<const K, const T> map;
+	virtual ~Context() = default;
+	virtual void notifySupervisor(Command command) const = 0;
+	virtual void sendErrorToSupervisor(Command command) const = 0;
+	virtual void restartActors() const = 0;
+	virtual void stopActors() const = 0;
+	virtual State &getState() = 0;
+protected:
+	Context() = default;
 };
+
 
 #endif

@@ -27,25 +27,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PROXY_CONTAINER_H__
-#define PROXY_CONTAINER_H__
+#ifndef MESSAGE_QUEUE_H__
+#define MESSAGE_QUEUE_H__
 
-#include <executor.h>
-#include <sharedMap.h>
-#include <actor.h>
-#include <uniqueId.h>
-#include <proxyServer.h>
+#include <private/sharedQueue.h>
+#include <private/types.h>
+#include <actor/linkApi.h>
 
-class ProxyContainer {
+class MessageQueue : public LinkApi {
 public:
-	ProxyContainer();
-	~ProxyContainer();
-	void createNewProxy(ActorLink actor, Connection connection, FindActor findActor);
-	StatusCode executeCommand(Command command, const RawData &id);
+	struct Message {
+		const MessageType type;
+		const Command code;
+		RawData params;
+		std::shared_ptr<LinkApi> sender;
+		Message(MessageType type, int code, RawData params, ActorLink sender);
+		~Message();
+		Message(struct Message &&m);
+		Message (const struct Message &m) = delete;
+		struct Message &operator=(const struct Message &m) = delete;
+	};
+	MessageQueue(std::string name = std::string());
+	virtual ~MessageQueue();
+
+	void post(Command command, ActorLink sender = ActorLink());
+	void post(Command command, const RawData &params, ActorLink sender = ActorLink());
+
+	void post(MessageType type, Command command, RawData params = RawData());
+
+	Message get(void);
 private:
-	SharedMap<Id, ProxyServer> proxies;
-	MessageQueue executorQueue;
-	const Executor executor;
+	SharedQueue<Message> queue;
+
+	void putMessage(MessageType type, Command command, RawData params, ActorLink sender);
 };
 
 #endif

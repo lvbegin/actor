@@ -30,58 +30,26 @@
 #ifndef ACTOR_COMMAND_H__
 #define ACTOR_COMMAND_H__
 
+
+#include <actor/context.h>
+#include <actor/rawData.h>
+#include <actor/commandMap.h>
+#include <actor/linkApi.h>
+
 #include <map>
 #include <functional>
 
-#include <rawData.h>
-#include <linkApi.h>
-#include <commandValue.h>
-#include <context.h>
-
-using CommandFunction = std::function<StatusCode(Context &, const RawData &, const ActorLink &)>;
-
-typedef struct {
-	Command commandCode;
-	CommandFunction command;
-} commandMap;
 
 class ActorCommand {
 public:
-	ActorCommand() : commands(ActorCommand::buildMap(nullptr)) { }
-	ActorCommand(const commandMap map[]) : commands(ActorCommand::buildMap(map)) { }
-	~ActorCommand() = default;
+	ActorCommand();
+	ActorCommand(const commandMap map[]);
+	~ActorCommand();
 
 	StatusCode execute(Context &context, Command commandCode, const RawData &data,
-						const ActorLink &actorLink) const {
-		CommandFunction f;
-		try {
-			f = commands.at(commandCode);
-		} catch (std::out_of_range &e) {
-			if (nullptr != actorLink)
-				actorLink->post(CommandValue::UNKNOWN_COMMAND);
-			return StatusCode::OK;
-		}
-		return f(context, data, actorLink);
-	}
+						const ActorLink &actorLink) const;
 private:
 	const std::map<Command, CommandFunction> commands;
-
-	static std::map<Command, CommandFunction> buildMap(const commandMap array[]) {
-		std::map<Command, CommandFunction> map;
-
-		map[static_cast<Command>(CommandValue::SHUTDOWN)] = shutdownCase;
-		if (nullptr == array)
-			return map;
-		for (const commandMap * ptr = array; !(0 == ptr->commandCode && nullptr == ptr->command) ; ptr ++) {
-			if (0 == ptr->commandCode && nullptr == ptr->command)
-				break;
-			if (CommandValue::isInternalCommand(ptr->commandCode))
-				THROW(std::runtime_error, "command reserved for internal use.");
-			map[ptr->commandCode] = ptr->command;
-		}
-		return map;
-	}
-	static StatusCode shutdownCase(Context &, const RawData &, const ActorLink &) { return StatusCode::SHUTDOWN; };
 };
 
 #endif

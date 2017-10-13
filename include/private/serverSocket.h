@@ -27,59 +27,34 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CONNECTION_H__
-#define CONNECTION_H__
+#ifndef SERVER_SOCKET_H__
+#define SERVER_SOCKET_H__
 
-#include <types.h>
-#include <rawData.h>
+#include <private/connection.h>
+#include <private/netAddr.h>
 
-#include <unistd.h>
+#include <cstddef>
 #include <string>
-#include <vector>
-#include <stdexcept>
-#include <arpa/inet.h>
 
-
-class ConnectionTimeout : public std::runtime_error {
+class ServerSocket {
 public:
-	ConnectionTimeout(std::string s) : std::runtime_error(s) {}
-};
+	ServerSocket(uint16_t port);
+	~ServerSocket();
 
-class Connection {
-public:
-	Connection();
-	Connection(int fd);
+	ServerSocket(const ServerSocket &s) = delete;
+	ServerSocket &operator=(const ServerSocket &s) = delete;
 
-	~Connection();
-	Connection(const Connection &connection) = delete;
-	Connection &operator=(const Connection &connection) = delete;
-	Connection(Connection &&connection);
-	Connection &operator=(Connection &&connection);
+	ServerSocket(ServerSocket&& s);
+	ServerSocket &operator=(ServerSocket&& s);
 
-	template<typename T>
-	const Connection &writeInt(T hostValue) const {
-		const auto sentValue = htonl(static_cast<uint32_t>(hostValue));
-		return writeBytes(&sentValue, sizeof(sentValue));
-	}
-
-	template<typename T>
-	T readInt(void) const {
-		uint32_t value;
-		readBytes(&value, sizeof(value));
-		return static_cast<T>(ntohl(value));
-	}
-	const Connection &writeString(const std::string &hostValue) const;
-	std::string readString(void) const;
-	const Connection &writeRawData(const RawData &data) const;
-	RawData readRawData(void) const;
+	Connection acceptOneConnection(int timeout = 2, struct NetAddr *client_addr = NULL) const;
+	static Connection getConnection(int port);
 private:
-	int fd;
+	int acceptFd;
 	fd_set set;
 
-	const Connection &writeBytes(const void *buffer, size_t count) const;
-	void readBytes(void *buffer, size_t count, int timeout = 5) const;
-	void readBytesNonBlocking(void *buffer, size_t count) const;
-	void closeConnection(void);
+	static int listenOnSocket(uint16_t port);
+	void closeSocket(void);
 };
 
 #endif

@@ -27,7 +27,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <actorContext.h>
+#include <private/actorContext.h>
 
 ActorContext::ActorContext(ActionStrategy strategy, LinkRef self, std::unique_ptr<State> state) :
 				state(std::move(state)), supervisor(strategy, self) { }

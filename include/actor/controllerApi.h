@@ -27,32 +27,21 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef COMMAND_EXECUTOR_H__
-#define COMMAND_EXECUTOR_H__
+#ifndef CONTROLLER_API_H__
+#define CONTROLLER_API_H__
 
-#include <actorCommand.h>
+#include <string>
 
-#include <functional>
+class ControllerApi {
+public:
+	virtual ~ControllerApi() = default;
 
-using PreCommandHook = std::function<StatusCode(Context &, Command, const RawData &, const ActorLink &)>;
-using PostCommandHook = std::function<void(Context &, Command, const RawData &, const ActorLink &)>;
-
-extern const PreCommandHook DEFAULT_PRECOMMAND_HOOK;
-extern const PostCommandHook DEFAULT_POSTCOMMAND_HOOK;
-
-class CommandExecutor {
-	public:
-	CommandExecutor(const commandMap map[] = nullptr);
-	CommandExecutor(PreCommandHook preCommand, PostCommandHook postCommand, const commandMap map[] = nullptr);
-	~CommandExecutor();
-
-	StatusCode execute(Context &context, Command commandCode, const RawData &data,
-						const ActorLink &actorLink) const;
-
-	private:
-		PreCommandHook preCommand;
-		PostCommandHook postCommand;
-		ActorCommand actorCommand;
+	virtual void stopOne(const std::string &name) const = 0;
+	virtual void stopAll(void) const = 0;
+	virtual void restartOne(const std::string &name) const = 0;
+	virtual void restartAll(void) const = 0;
+protected:
+	ControllerApi() = default;
 };
 
 #endif
