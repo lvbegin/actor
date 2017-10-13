@@ -26,32 +26,24 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef CONTEXT_H__
+#define CONTEXT_H__
 
-#include <commandExecutor.h>
+#include <state.h>
 
-const PreCommandHook DEFAULT_PRECOMMAND_HOOK = [](Context &, Command, const RawData &, const ActorLink &) {
-	return StatusCode::OK;
+using Command = uint32_t; //duplicate
+
+class Context {
+public:
+	virtual ~Context() = default;
+	virtual void notifySupervisor(Command command) const = 0;
+	virtual void sendErrorToSupervisor(Command command) const = 0;
+	virtual void restartActors() const = 0;
+	virtual void stopActors() const = 0;
+	virtual State &getState() = 0;
+protected:
+	Context() = default;
 };
 
-const PostCommandHook DEFAULT_POSTCOMMAND_HOOK = [](Context &, Command, const RawData &, const ActorLink &) { };
 
-CommandExecutor::CommandExecutor(const commandMap map[]) :
-	CommandExecutor(DEFAULT_PRECOMMAND_HOOK, DEFAULT_POSTCOMMAND_HOOK, map) { }
-CommandExecutor::CommandExecutor(PreCommandHook preCommand, PostCommandHook postCommand, const commandMap map[]) :
-	preCommand(preCommand), postCommand(postCommand), actorCommand(ActorCommand(map)) { }
-CommandExecutor::~CommandExecutor() = default;
-
-StatusCode CommandExecutor::execute(Context &context, Command commandCode, const RawData &data,
-										const ActorLink &actorLink) const {
-	auto rc = preCommand(context, commandCode, data, actorLink);
-	if (StatusCode::OK != rc)
-		return rc;
-	try {
-		rc  = actorCommand.execute(context, commandCode, data, actorLink);
-	} catch (std::exception &e) {
-		postCommand(context, commandCode, data, actorLink);
-		throw ;
-	}
-
-	return (postCommand(context, commandCode, data, actorLink), rc);
-}
+#endif

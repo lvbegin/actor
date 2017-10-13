@@ -1,3 +1,5 @@
+#include <string>
+
 class State {
 public:
 	virtual ~State() = default;

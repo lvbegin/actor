@@ -27,31 +27,31 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <commandExecutor.h>
+#include <actorContext.h>
 
-const PreCommandHook DEFAULT_PRECOMMAND_HOOK = [](Context &, Command, const RawData &, const ActorLink &) {
-	return StatusCode::OK;
-};
+ActorContext::ActorContext(ActionStrategy strategy, LinkRef self, std::unique_ptr<State> state) :
+				state(std::move(state)), supervisor(strategy, self) { }
 
-const PostCommandHook DEFAULT_POSTCOMMAND_HOOK = [](Context &, Command, const RawData &, const ActorLink &) { };
+ActorContext::~ActorContext() = default;
 
-CommandExecutor::CommandExecutor(const commandMap map[]) :
-	CommandExecutor(DEFAULT_PRECOMMAND_HOOK, DEFAULT_POSTCOMMAND_HOOK, map) { }
-CommandExecutor::CommandExecutor(PreCommandHook preCommand, PostCommandHook postCommand, const commandMap map[]) :
-	preCommand(preCommand), postCommand(postCommand), actorCommand(ActorCommand(map)) { }
-CommandExecutor::~CommandExecutor() = default;
-
-StatusCode CommandExecutor::execute(Context &context, Command commandCode, const RawData &data,
-										const ActorLink &actorLink) const {
-	auto rc = preCommand(context, commandCode, data, actorLink);
-	if (StatusCode::OK != rc)
-		return rc;
-	try {
-		rc  = actorCommand.execute(context, commandCode, data, actorLink);
-	} catch (std::exception &e) {
-		postCommand(context, commandCode, data, actorLink);
-		throw ;
-	}
-
-	return (postCommand(context, commandCode, data, actorLink), rc);
+void ActorContext::notifySupervisor(Command command) const {
+	getConstSupervisor().notifySupervisor(command);
 }
+
+void ActorContext::sendErrorToSupervisor(Command command) const  {
+	getConstSupervisor().sendErrorToSupervisor(command);
+}
+
+void ActorContext::restartActors() const {
+	getConstSupervisor().restartActors();
+}
+
+void ActorContext::stopActors() const {
+	getConstSupervisor().stopActors();
+}
+
+State &ActorContext::getState() { return *state; }
+
+Supervisor &ActorContext::getSupervisor() { return supervisor; }
+
+const Supervisor &ActorContext::getConstSupervisor() const { return supervisor; }

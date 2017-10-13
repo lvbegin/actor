@@ -33,6 +33,7 @@
 #include <actorController.h>
 #include <executor.h>
 #include <actorStateMachine.h>
+#include <actorContext.h>
 
 #include <mutex>
 #include <future>
@@ -189,10 +190,10 @@ public:
 	std::unique_ptr<Executor> executor;
 };
 
-const AtStartHook DEFAULT_START_HOOK = [](const ActorContext&) { return StatusCode::OK; };
-const AtStopHook DEFAULT_STOP_HOOK = [](const ActorContext& c) { c.getConstSupervisor().stopActors(); };
-const AtRestartHook DEFAULT_RESTART_HOOK = [](const ActorContext& c) {
-	c.getConstSupervisor().restartActors();
+const AtStartHook DEFAULT_START_HOOK = [](const Context&) { return StatusCode::OK; };
+const AtStopHook DEFAULT_STOP_HOOK = [](const Context& c) { c.stopActors(); };
+const AtRestartHook DEFAULT_RESTART_HOOK = [](const Context& c) {
+	c.restartActors();
 	return StatusCode::OK;
 };
 const ActionStrategy DEFAULT_RESTART_STRATEGY = [](ErrorCode) { return RestartActor::create(); };

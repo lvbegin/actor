@@ -36,9 +36,9 @@
 #include <rawData.h>
 #include <linkApi.h>
 #include <commandValue.h>
-#include <actorContext.h>
+#include <context.h>
 
-using CommandFunction = std::function<StatusCode(ActorContext &, const RawData &, const ActorLink &)>;
+using CommandFunction = std::function<StatusCode(Context &, const RawData &, const ActorLink &)>;
 
 typedef struct {
 	Command commandCode;
@@ -51,7 +51,7 @@ public:
 	ActorCommand(const commandMap map[]) : commands(ActorCommand::buildMap(map)) { }
 	~ActorCommand() = default;
 
-	StatusCode execute(ActorContext &context, Command commandCode, const RawData &data,
+	StatusCode execute(Context &context, Command commandCode, const RawData &data,
 						const ActorLink &actorLink) const {
 		CommandFunction f;
 		try {
@@ -81,7 +81,7 @@ private:
 		}
 		return map;
 	}
-	static StatusCode shutdownCase(ActorContext &, const RawData &, const ActorLink &) { return StatusCode::SHUTDOWN; };
+	static StatusCode shutdownCase(Context &, const RawData &, const ActorLink &) { return StatusCode::SHUTDOWN; };
 };
 
 #endif
