@@ -27,9 +27,9 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <proxyContainer.h>
-#include <commandValue.h>
-#include <uniqueId.h>
+#include <private/proxyContainer.h>
+#include <private/commandValue.h>
+#include <private/uniqueId.h>
 
 #include <tuple>
 
@@ -53,5 +53,5 @@ void ProxyContainer::createNewProxy(ActorLink actor, Connection connection, Find
 StatusCode ProxyContainer::executeCommand(Command command, const RawData &id) {
 	if (CommandValue::SHUTDOWN == command)
 		return StatusCode::SHUTDOWN;
-	return (proxies.erase(id.toId()), StatusCode::OK);
+	return (proxies.erase(toId(id)), StatusCode::OK);
 }

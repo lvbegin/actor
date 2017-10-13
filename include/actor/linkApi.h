@@ -27,33 +27,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SERVER_SOCKET_H__
-#define SERVER_SOCKET_H__
+#ifndef LINK_API_H__
+#define LINK_API_H__
 
-#include <connection.h>
-#include <netAddr.h>
-#include <cstddef>
-#include <string>
+#include <actor/rawData.h>
 
-class ServerSocket {
+#include <memory>
+
+class LinkApi;
+using ActorLink = std::shared_ptr<LinkApi>;
+using Command = uint32_t;
+
+class LinkApi {
 public:
-	ServerSocket(uint16_t port);
-	~ServerSocket();
+	virtual void post(Command command, ActorLink sender = ActorLink()) = 0;
+	virtual void post(Command command, const RawData &data, ActorLink sender = ActorLink()) = 0;
 
-	ServerSocket(const ServerSocket &s) = delete;
-	ServerSocket &operator=(const ServerSocket &s) = delete;
+	const std::string &getName(void) const { return name; }
+	bool hasName(const std::string &n) const { return 0 == name.compare(n); }
 
-	ServerSocket(ServerSocket&& s);
-	ServerSocket &operator=(ServerSocket&& s);
+	static std::function<bool(const ActorLink &l)> nameComparator(const std::string &name) {
+		return [&name](const ActorLink &l) { return l->hasName(name); };
+	}
 
-	Connection acceptOneConnection(int timeout = 2, struct NetAddr *client_addr = NULL) const;
-	static Connection getConnection(int port);
-private:
-	int acceptFd;
-	fd_set set;
-
-	static int listenOnSocket(uint16_t port);
-	void closeSocket(void);
+protected:
+	LinkApi(std::string name) : name(std::move(name)) { }
+	virtual ~LinkApi() = default;
+private :
+	const std::string name;
 };
+
 
 #endif

@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,25 +27,21 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PROXY_CONTAINER_H__
-#define PROXY_CONTAINER_H__
+#ifndef UNIQUE_ID_H__
+#define UNIQUE_ID_H__
 
-#include <executor.h>
-#include <sharedMap.h>
-#include <actor.h>
-#include <uniqueId.h>
-#include <proxyServer.h>
+#include <private/types.h>
 
-class ProxyContainer {
+#include <atomic>
+
+class UniqueId {
 public:
-	ProxyContainer();
-	~ProxyContainer();
-	void createNewProxy(ActorLink actor, Connection connection, FindActor findActor);
-	StatusCode executeCommand(Command command, const RawData &id);
+	UniqueId() = delete;
+
+	static Id newId(void);
 private:
-	SharedMap<Id, ProxyServer> proxies;
-	MessageQueue executorQueue;
-	const Executor executor;
+	static std::atomic<Id> id;
 };
 
 #endif
+

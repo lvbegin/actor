@@ -27,7 +27,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <errorStrategy.h>
+#include <actor/errorStrategy.h>
 
 const RestartActor RestartActor::singletonElement;
 const StopActor StopActor::singletonElement;

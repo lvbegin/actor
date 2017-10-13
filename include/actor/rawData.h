@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,36 +27,30 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <private/clientSocket.h>
-#include <private/exception.h>
+#ifndef RAW_DATA_H__
+#define RAW_DATA_H__
 
-#include <stdexcept>
+#include <actor/types.h>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-
-#include <memory.h>
+#include <vector>
+#include <string>
+#include <cstddef>
 
 
-Connection ClientSocket::openHostConnection(const std::string &host, uint16_t port) {
-	return openHostConnection(toNetAddr(host, port));
-}
+class RawData : public std::vector<uint8_t> {
+public:
+	using v = std::vector<uint8_t>;
+	using v::v;
 
-Connection ClientSocket::openHostConnection(const struct NetAddr &sin) {
-	const auto fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (-1 == fd)
-		THROW(std::runtime_error, "socket creation failed.");
-	if (-1 == connect(fd, &sin.ai_addr, sin.ai_addrlen))
-		THROW(std::runtime_error, "cannot connect.");
-	return Connection(fd);
-}
+	RawData();
+	/* add a constructor and move constructor for a vector */
+	RawData(uint32_t value);
+	RawData(void *buffer, size_t size);
+	RawData(const std::string &s);
+	~RawData();
 
-struct NetAddr ClientSocket::toNetAddr(const std::string &host, uint16_t port) {
-	struct addrinfo *addr;
-	if (0 > getaddrinfo(host.c_str(), std::to_string(port).c_str(), NULL, &addr))
-		THROW(std::runtime_error, "cannot convert hostname.");
-	const auto rc = NetAddr(*addr->ai_addr, addr->ai_addrlen);
-	freeaddrinfo(addr);
-	return rc;
-}
+	std::string toString() const;
+	uint32_t toInt() const;
+};
+
+#endif

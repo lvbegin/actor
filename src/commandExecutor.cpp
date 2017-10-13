@@ -27,31 +27,59 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <commandExecutor.h>
+#include <actor/commandExecutor.h>
 
-const PreCommandHook DEFAULT_PRECOMMAND_HOOK = [](ActorContext &, Command, const RawData &, const ActorLink &) {
+#include <private/actorCommand.h>
+
+struct 	CommandExecutor::CommandExecutorImpl {
+	PreCommandHook preCommand;
+	PostCommandHook postCommand;
+	ActorCommand actorCommand;
+	CommandExecutorImpl(PreCommandHook preCommand, PostCommandHook postCommand, ActorCommand actorCommand) :
+		preCommand(preCommand), postCommand(postCommand), actorCommand(actorCommand) { }
+	~CommandExecutorImpl() = default;
+};
+
+
+const PreCommandHook DEFAULT_PRECOMMAND_HOOK = [](Context &, Command, const RawData &, const ActorLink &) {
 	return StatusCode::OK;
 };
 
-const PostCommandHook DEFAULT_POSTCOMMAND_HOOK = [](ActorContext &, Command, const RawData &, const ActorLink &) { };
+const PostCommandHook DEFAULT_POSTCOMMAND_HOOK = [](Context &, Command, const RawData &, const ActorLink &) { };
 
 CommandExecutor::CommandExecutor(const commandMap map[]) :
 	CommandExecutor(DEFAULT_PRECOMMAND_HOOK, DEFAULT_POSTCOMMAND_HOOK, map) { }
-CommandExecutor::CommandExecutor(PreCommandHook preCommand, PostCommandHook postCommand, const commandMap map[]) :
-	preCommand(preCommand), postCommand(postCommand), actorCommand(ActorCommand(map)) { }
-CommandExecutor::~CommandExecutor() = default;
 
-StatusCode CommandExecutor::execute(ActorContext &context, Command commandCode, const RawData &data,
+CommandExecutor::CommandExecutor(PreCommandHook preCommand, PostCommandHook postCommand, const commandMap map[]) :
+		pImpl(new CommandExecutorImpl(preCommand, postCommand, ActorCommand(map))) { }
+
+CommandExecutor::CommandExecutor(CommandExecutor &&c) : pImpl(nullptr)
+{
+	this->pImpl = c.pImpl;
+	c.pImpl = nullptr;
+}
+CommandExecutor &CommandExecutor::operator=(CommandExecutor &&c)
+{
+	std::swap(this->pImpl, c.pImpl);
+	return *this;
+}
+
+
+CommandExecutor::~CommandExecutor() {
+	delete pImpl;
+}
+
+StatusCode CommandExecutor::execute(Context &context, Command commandCode, const RawData &data,
 										const ActorLink &actorLink) const {
-	auto rc = preCommand(context, commandCode, data, actorLink);
+	auto rc = pImpl->preCommand(context, commandCode, data, actorLink);
 	if (StatusCode::OK != rc)
 		return rc;
 	try {
-		rc  = actorCommand.execute(context, commandCode, data, actorLink);
+		rc  = pImpl->actorCommand.execute(context, commandCode, data, actorLink);
 	} catch (std::exception &e) {
-		postCommand(context, commandCode, data, actorLink);
+		pImpl->postCommand(context, commandCode, data, actorLink);
 		throw ;
 	}
 
-	return (postCommand(context, commandCode, data, actorLink), rc);
+	return (pImpl->postCommand(context, commandCode, data, actorLink), rc);
 }

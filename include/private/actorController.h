@@ -27,34 +27,36 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DESCRIPTOR_WAIT_H__
-#define DESCRIPTOR_WAIT_H__
+#ifndef ACTOR_CONTROLLER_H__
+#define ACTOR_CONTROLLER_H__
 
-#include <exception.h>
+#include <private/messageQueue.h>
+#include <private/sharedVector.h>
+#include <private/commandValue.h>
+#include <actor/controllerApi.h>
 
-#include <sys/select.h>
-#include <stdexcept>
+using LinkRef = std::shared_ptr<MessageQueue>;
+using LinkRefOperation = std::function<void(const LinkRef &)>;
 
-template <typename E1, typename E2>
-void waitForRead(int fd, fd_set set, struct timeval *timeout) {
-	if (-1 == fd)
-		THROW(std::runtime_error, "invalid fd.");
-	switch(select(fd + 1, &set, NULL, NULL, timeout)) {
-		case 0:
-			THROW(E1, "timeout on read.");
-		case -1:
-			THROW(E2, "error while waiting for read.");
-		default:
-			return ;
-	}
-}
+class ActorController : public ControllerApi {
+public:
+	ActorController();
+	~ActorController();
 
-template <typename E1, typename E2>
-void waitForRead(int fd, const fd_set &set, int timeoutInSeconds) {
-	if (-1 == fd)
-		THROW(std::runtime_error, "invalid fd.");
-	struct timeval timeout { .tv_sec = timeoutInSeconds, .tv_usec = 0, };
-	waitForRead<E1, E2>(fd, set, &timeout);
-}
+	void add(LinkRef actorLink);
+	void remove(const std::string &name);
+	void stopOne(const std::string &name) const override;
+	void stopAll(void) const override;
+	void restartOne(const std::string &name) const override;
+	void restartAll(void) const override;
+private:
+	SharedVector<LinkRef> actors;
+
+	void doOperationOneActor(const std::string &name, LinkRefOperation op) const;
+	void doOperationAllActors(LinkRefOperation op) const;
+	static void restart(const LinkRef &link);
+	static void stop(const LinkRef &link);
+	static void sendMessage(const LinkRef &link, Command command);
+};
 
 #endif

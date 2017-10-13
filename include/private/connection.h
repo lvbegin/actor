@@ -27,36 +27,58 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LINK_API_H__
-#define LINK_API_H__
+#ifndef CONNECTION_H__
+#define CONNECTION_H__
 
-#include <types.h>
-#include <rawData.h>
+#include <actor/rawData.h>
 
-#include <memory>
+#include <unistd.h>
+#include <string>
+#include <vector>
+#include <stdexcept>
+#include <arpa/inet.h>
 
-class LinkApi;
-using ActorLink = std::shared_ptr<LinkApi>;
-using Command = uint32_t;
 
-class LinkApi {
+class ConnectionTimeout : public std::runtime_error {
 public:
-	virtual void post(Command command, ActorLink sender = ActorLink()) = 0;
-	virtual void post(Command command, const RawData &data, ActorLink sender = ActorLink()) = 0;
-
-	const std::string &getName(void) const { return name; }
-	bool hasName(const std::string &n) const { return 0 == name.compare(n); }
-
-	static std::function<bool(const ActorLink &l)> nameComparator(const std::string &name) {
-		return [&name](const ActorLink &l) { return l->hasName(name); };
-	}
-
-protected:
-	LinkApi(std::string name) : name(std::move(name)) { }
-	virtual ~LinkApi() = default;
-private :
-	const std::string name;
+	ConnectionTimeout(std::string s) : std::runtime_error(s) {}
 };
 
+class Connection {
+public:
+	Connection();
+	Connection(int fd);
+
+	~Connection();
+	Connection(const Connection &connection) = delete;
+	Connection &operator=(const Connection &connection) = delete;
+	Connection(Connection &&connection);
+	Connection &operator=(Connection &&connection);
+
+	template<typename T>
+	const Connection &writeInt(T hostValue) const {
+		const auto sentValue = htonl(static_cast<uint32_t>(hostValue));
+		return writeBytes(&sentValue, sizeof(sentValue));
+	}
+
+	template<typename T>
+	T readInt(void) const {
+		uint32_t value;
+		readBytes(&value, sizeof(value));
+		return static_cast<T>(ntohl(value));
+	}
+	const Connection &writeString(const std::string &hostValue) const;
+	std::string readString(void) const;
+	const Connection &writeRawData(const RawData &data) const;
+	RawData readRawData(void) const;
+private:
+	int fd;
+	fd_set set;
+
+	const Connection &writeBytes(const void *buffer, size_t count) const;
+	void readBytes(void *buffer, size_t count, int timeout = 5) const;
+	void readBytesNonBlocking(void *buffer, size_t count) const;
+	void closeConnection(void);
+};
 
 #endif

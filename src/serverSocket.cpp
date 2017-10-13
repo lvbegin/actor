@@ -27,9 +27,9 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <serverSocket.h>
-#include <exception.h>
-#include <descriptorWait.h>
+#include <private/serverSocket.h>
+#include <private/exception.h>
+#include <private/descriptorWait.h>
 
 #include <stdexcept>
 #include <cstring>

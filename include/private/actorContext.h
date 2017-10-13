@@ -27,21 +27,30 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef UNIQUE_ID_H__
-#define UNIQUE_ID_H__
+#ifndef ACTOR_CONTEXT_H__
+#define ACTOR_CONTEXT_H__
 
-#include <types.h>
+#include <actor/context.h>
+#include <actor/linkApi.h>
+#include <private/supervisor.h>
 
-#include <atomic>
-
-class UniqueId {
+class ActorContext : public Context {
 public:
-	UniqueId() = delete;
+	ActorContext(ActionStrategy strategy, LinkRef self, std::unique_ptr<State> state);
+	ActorContext() = delete;
+	~ActorContext();
 
-	static Id newId(void);
+	void notifySupervisor(Command command) const override;
+	void sendErrorToSupervisor(Command command) const override;
+	void restartActors() const override;
+	void stopActors() const override;
+	State &getState() override;
+
+	Supervisor &getSupervisor();
+	const Supervisor &getConstSupervisor() const;
 private:
-	static std::atomic<Id> id;
+	std::unique_ptr<State> state;
+	Supervisor supervisor;
 };
 
 #endif
-

@@ -27,35 +27,21 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RAW_DATA_H__
-#define RAW_DATA_H__
+#ifndef CONTROLLER_API_H__
+#define CONTROLLER_API_H__
 
-#include <types.h>
-#include <exception.h>
+#include <string>
 
-#include <algorithm>
-#include <vector>
-
-class RawData : public std::vector<uint8_t> {
+class ControllerApi {
 public:
-	using v = std::vector<uint8_t>;
-	using v::v;
-	RawData() = default;
-	RawData(Id value) :  v(reinterpret_cast<uint8_t *>(&value), reinterpret_cast<uint8_t *>((&value) + 1)) { }
-	RawData(const std::string &s) : v(s.begin(), s.end()) { }
-	~RawData() = default;
+	virtual ~ControllerApi() = default;
 
-	std::string toString() const { return std::string(begin(), end()); }
-	Id toId() const {
-		Id rc;
-
-		if (sizeof(rc) != size())
-			THROW(std::runtime_error, "serialized integer does not have correct size.");
-		void * const ptr = &rc;
-		const auto first = static_cast<uint8_t *>(ptr);
-		std::for_each(first, first + sizeof(rc), [first, this](uint8_t &p) { p = (*this)[&p - first]; });
-		return rc;
-	}
+	virtual void stopOne(const std::string &name) const = 0;
+	virtual void stopAll(void) const = 0;
+	virtual void restartOne(const std::string &name) const = 0;
+	virtual void restartAll(void) const = 0;
+protected:
+	ControllerApi() = default;
 };
 
 #endif

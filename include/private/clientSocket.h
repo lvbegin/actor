@@ -1,4 +1,4 @@
-/* Copyright 2017 Laurent Van Begin
+/* Copyright 2016 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,65 +27,24 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SHARED_VECTOR_H__
-#define SHARED_VECTOR_H__
+#ifndef CLIENT_SOCKET_H__
+#define CLIENT_SOCKET_H__
 
-#include <exception.h>
+#include <private/connection.h>
+#include <private/netAddr.h>
 
-#include <vector>
-#include <mutex>
-#include <algorithm>
+#include <string>
+#include <cstdint>
 
-template <typename T>
-using FindTest=std::function<bool(const T&)>;
 
-template <typename T>
-using VectorIterator= typename std::vector<T>::const_iterator;
-
-template <typename T>
-class SharedVector {
+class ClientSocket {
 public:
-	SharedVector() = default;
-	~SharedVector() = default;
+	ClientSocket() = delete;
 
-	SharedVector(const SharedVector &m) = delete;
-	SharedVector &operator=(const SharedVector &m) = delete;
-	SharedVector(SharedVector &&m) = delete;
-	SharedVector &operator=(SharedVector &&m) = delete;
-
-	void push_back(T&& value) {
-		std::unique_lock<std::mutex> l(mutex);
-
-		vector.push_back(std::forward<T>(value));
-	}
-
-	void erase(FindTest<T> findTest) {
-		std::unique_lock<std::mutex> l(mutex);
-
-		vector.erase(internalFind_if(findTest));
-	}
-
-	T find_if(FindTest<T> findTest) const {
-		std::unique_lock<std::mutex> l(mutex);
-
-		return *internalFind_if(findTest);
-	}
-
-	void for_each(std::function<void(const T&)> f) const {
-		std::unique_lock<std::mutex> l(mutex);
-
-		std::for_each(vector.begin(), vector.end(), f);
-	}
-private:
-	mutable std::mutex mutex;
-	std::vector<T> vector;
-
-	VectorIterator<T> internalFind_if(FindTest<T> findTest) const {
-		const auto it = std::find_if(vector.begin(), vector.end(), findTest);
-		if (vector.end() == it)
-			THROW(std::out_of_range, "element not found in shared vector.");
-		return it;
-	}
+	static Connection openHostConnection(const std::string &host, uint16_t port);
+	static Connection openHostConnection(const struct NetAddr &sin);
+	static struct NetAddr toNetAddr(const std::string &host, uint16_t port);
 };
+
 
 #endif

@@ -27,36 +27,54 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <private/clientSocket.h>
+#ifndef SHARED_MAP_H__
+#define SHARED_MAP_H__
+
 #include <private/exception.h>
 
-#include <stdexcept>
+#include <map>
+#include <mutex>
+#include <algorithm>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+template<typename K, typename T>
+class SharedMap {
+public:
+	SharedMap() = default;
+	~SharedMap() = default;
 
-#include <memory.h>
+	SharedMap(const SharedMap &m) = delete;
+	SharedMap &operator=(const SharedMap &m) = delete;
+	SharedMap(SharedMap &&m) = delete;
+	SharedMap &operator=(SharedMap &&m) = delete;
 
+	template <typename L, typename M>
+	void insert(L&& key, M &&value) {
+		std::unique_lock<std::mutex> l(mutex);
 
-Connection ClientSocket::openHostConnection(const std::string &host, uint16_t port) {
-	return openHostConnection(toNetAddr(host, port));
-}
+		map.insert(std::make_pair(std::forward<L>(key), std::forward<M>(value)));
+	}
+	template <typename... Args>
+	void emplace(Args&&... args) {
+		std::unique_lock<std::mutex> l(mutex);
 
-Connection ClientSocket::openHostConnection(const struct NetAddr &sin) {
-	const auto fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (-1 == fd)
-		THROW(std::runtime_error, "socket creation failed.");
-	if (-1 == connect(fd, &sin.ai_addr, sin.ai_addrlen))
-		THROW(std::runtime_error, "cannot connect.");
-	return Connection(fd);
-}
+		map.emplace(std::forward<Args>(args)...);
+	}
+	void erase(const K &key) {
+		std::unique_lock<std::mutex> l(mutex);
 
-struct NetAddr ClientSocket::toNetAddr(const std::string &host, uint16_t port) {
-	struct addrinfo *addr;
-	if (0 > getaddrinfo(host.c_str(), std::to_string(port).c_str(), NULL, &addr))
-		THROW(std::runtime_error, "cannot convert hostname.");
-	const auto rc = NetAddr(*addr->ai_addr, addr->ai_addrlen);
-	freeaddrinfo(addr);
-	return rc;
-}
+		const auto it = map.find(key);
+		if (map.end() == it)
+			THROW(std::runtime_error, "element to erase does not exist. WTF");
+		map.erase(it);
+	}
+	void for_each(std::function<void(const std::pair<const K, const T> &)> f) const {
+		std::unique_lock<std::mutex> l(mutex);
+
+		std::for_each(map.begin(), map.end(), f);
+	}
+private:
+	mutable std::mutex mutex;
+	std::map<const K, const T> map;
+};
+
+#endif

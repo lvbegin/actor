@@ -27,7 +27,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <messageQueue.h>
+#include <private/messageQueue.h>
 
 MessageQueue::Message::Message(MessageType type, int code, RawData params, ActorLink sender) :
 				type(type), code(code), params(std::move(params)), sender(std::move(sender)) { }

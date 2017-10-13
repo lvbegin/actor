@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,21 +27,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PROXY_CLIENT_H__
-#define PROXY_CLIENT_H__
+#ifndef SUPERVISOR_H__
+#define SUPERVISOR_H__
 
-#include <connection.h>
-#include <linkApi.h>
+#include <private/actorController.h>
+#include <private/messageQueue.h>
+#include <private/commandValue.h>
+#include <actor/errorStrategy.h>
 
-class ProxyClient : public LinkApi {
+using  ActionStrategy = std::function<const ErrorStrategy *(ErrorCode error)>;
+
+class Supervisor {
 public:
-	ProxyClient(std::string name, Connection connection);
-	~ProxyClient();
+	Supervisor(ActionStrategy strategy, LinkRef self);
+	~Supervisor();
 
-	void post(Command command, ActorLink sender = ActorLink());
-	void post(Command command, const RawData &params, ActorLink sender = ActorLink());
+	void notifySupervisor(Command command) const;
+	void sendErrorToSupervisor(Command command) const;
+	void manageErrorFromSupervised(ErrorCode error, const RawData &params) const;
+	void restartActors() const;
+	void stopActors() const;
+
+	void removeActor(const std::string &name);
+	void registerMonitored(Supervisor &monitored);
+	void unregisterMonitored(Supervisor &monitored);
+
 private:
-	const Connection connection;
+	mutable std::mutex monitorMutex;
+	const ActionStrategy restartStrategy;
+	const LinkRef self;
+	ActorController supervisedRefs;
+	std::weak_ptr<MessageQueue> supervisorRef;
+
+	void postSupervisor(MessageType type, Command command, const RawData &data) const;
+	void sendToSupervisor(MessageType type, uint32_t code) const;
+	void doOperation(std::function<void(void)> op) const;
+	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
 };
 
 #endif

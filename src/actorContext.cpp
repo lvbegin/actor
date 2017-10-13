@@ -27,42 +27,31 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SUPERVISOR_H__
-#define SUPERVISOR_H__
+#include <private/actorContext.h>
 
-#include <actorController.h>
-#include <messageQueue.h>
-#include <commandValue.h>
-#include <errorStrategy.h>
+ActorContext::ActorContext(ActionStrategy strategy, LinkRef self, std::unique_ptr<State> state) :
+				state(std::move(state)), supervisor(strategy, self) { }
 
-using  ActionStrategy = std::function<const ErrorStrategy *(ErrorCode error)>;
+ActorContext::~ActorContext() = default;
 
-class Supervisor {
-public:
-	Supervisor(ActionStrategy strategy, LinkRef self);
-	~Supervisor();
+void ActorContext::notifySupervisor(Command command) const {
+	getConstSupervisor().notifySupervisor(command);
+}
 
-	void notifySupervisor(Command command) const;
-	void sendErrorToSupervisor(Command command) const;
-	void manageErrorFromSupervised(ErrorCode error, const RawData &params) const;
-	void restartActors() const;
-	void stopActors() const;
+void ActorContext::sendErrorToSupervisor(Command command) const  {
+	getConstSupervisor().sendErrorToSupervisor(command);
+}
 
-	void removeActor(const std::string &name);
-	void registerMonitored(Supervisor &monitored);
-	void unregisterMonitored(Supervisor &monitored);
+void ActorContext::restartActors() const {
+	getConstSupervisor().restartActors();
+}
 
-private:
-	mutable std::mutex monitorMutex;
-	const ActionStrategy restartStrategy;
-	const LinkRef self;
-	ActorController supervisedRefs;
-	std::weak_ptr<MessageQueue> supervisorRef;
+void ActorContext::stopActors() const {
+	getConstSupervisor().stopActors();
+}
 
-	void postSupervisor(MessageType type, Command command, const RawData &data) const;
-	void sendToSupervisor(MessageType type, uint32_t code) const;
-	void doOperation(std::function<void(void)> op) const;
-	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
-};
+State &ActorContext::getState() { return *state; }
 
-#endif
+Supervisor &ActorContext::getSupervisor() { return supervisor; }
+
+const Supervisor &ActorContext::getConstSupervisor() const { return supervisor; }

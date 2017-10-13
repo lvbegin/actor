@@ -27,36 +27,25 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <private/clientSocket.h>
-#include <private/exception.h>
+#ifndef PROXY_CONTAINER_H__
+#define PROXY_CONTAINER_H__
 
-#include <stdexcept>
+#include <private/executor.h>
+#include <private/sharedMap.h>
+#include <private/uniqueId.h>
+#include <private/proxyServer.h>
+#include <actor/actor.h>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+class ProxyContainer {
+public:
+	ProxyContainer();
+	~ProxyContainer();
+	void createNewProxy(ActorLink actor, Connection connection, FindActor findActor);
+	StatusCode executeCommand(Command command, const RawData &id);
+private:
+	SharedMap<Id, ProxyServer> proxies;
+	MessageQueue executorQueue;
+	const Executor executor;
+};
 
-#include <memory.h>
-
-
-Connection ClientSocket::openHostConnection(const std::string &host, uint16_t port) {
-	return openHostConnection(toNetAddr(host, port));
-}
-
-Connection ClientSocket::openHostConnection(const struct NetAddr &sin) {
-	const auto fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (-1 == fd)
-		THROW(std::runtime_error, "socket creation failed.");
-	if (-1 == connect(fd, &sin.ai_addr, sin.ai_addrlen))
-		THROW(std::runtime_error, "cannot connect.");
-	return Connection(fd);
-}
-
-struct NetAddr ClientSocket::toNetAddr(const std::string &host, uint16_t port) {
-	struct addrinfo *addr;
-	if (0 > getaddrinfo(host.c_str(), std::to_string(port).c_str(), NULL, &addr))
-		THROW(std::runtime_error, "cannot convert hostname.");
-	const auto rc = NetAddr(*addr->ai_addr, addr->ai_addrlen);
-	freeaddrinfo(addr);
-	return rc;
-}
+#endif

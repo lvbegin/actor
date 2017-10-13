@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,35 +27,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EXECUTOR_H__
-#define EXECUTOR_H__
+#ifndef ACTOR_COMMAND_H__
+#define ACTOR_COMMAND_H__
 
-#include <messageQueue.h>
+
+#include <actor/context.h>
+#include <actor/rawData.h>
+#include <actor/commandMap.h>
+#include <actor/linkApi.h>
+
+#include <map>
 #include <functional>
-#include <thread>
 
-using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const ActorLink &sender)>;
-using ExecutorHook = std::function<void(void)>;
-using ExecutorAtStart = std::function<StatusCode(void)>;
 
-class Executor {
+class ActorCommand {
 public:
-	Executor(ExecutorBody body, MessageQueue &queue, ExecutorAtStart atStart = [](void) { return StatusCode::OK; },
-													ExecutorHook atStop = [](void) { });
-	~Executor();
+	ActorCommand();
+	ActorCommand(const commandMap map[]);
+	~ActorCommand();
 
-	Executor() = delete;
-	Executor(const Executor &a) = delete;
-	Executor &operator=(const Executor &a) = delete;
-	Executor(Executor &&a) = delete;
-	Executor &operator=(Executor &&a) = delete;
+	StatusCode execute(Context &context, Command commandCode, const RawData &data,
+						const ActorLink &actorLink) const;
 private:
-	MessageQueue &messageQueue;
-	std::thread thread;
-
-	void run(ExecutorBody body, ExecutorAtStart atStart, ExecutorHook atStop) const;
-	void executeBody(ExecutorBody body) const;
+	const std::map<Command, CommandFunction> commands;
 };
-
 
 #endif

@@ -27,8 +27,8 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <supervisor.h>
-#include <uniqueId.h>
+#include <private/supervisor.h>
+#include <private/uniqueId.h>
 
 #include <iostream>
 
@@ -65,8 +65,12 @@ void Supervisor::doOperation(std::function<void(void)> op) const {
 
 void Supervisor::manageErrorFromSupervised(ErrorCode error, const RawData &params) const {
 	std::unique_lock<std::mutex> l(monitorMutex);
-
-	restartStrategy(error)->executeAction(supervisedRefs, supervisorRef, error, params, self);
+	auto notifySupervisor([this](const std::string &actorName, ErrorCode error) {
+		const auto ref = supervisorRef.lock();
+		if (nullptr != ref.get())
+			ref->post(MessageType::ERROR_MESSAGE, error, actorName);
+	});
+	restartStrategy(error)->executeAction(supervisedRefs, notifySupervisor, error, params, self);
 }
 
 void Supervisor::registerMonitored(Supervisor &monitored) {

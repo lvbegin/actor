@@ -27,32 +27,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef COMMAND_EXECUTOR_H__
-#define COMMAND_EXECUTOR_H__
+#ifndef TYPES_H__
+#define TYPES_H__
 
-#include <actorCommand.h>
-
+#include <cstdint>
 #include <functional>
 
-using PreCommandHook = std::function<StatusCode(ActorContext &, Command, const RawData &, const ActorLink &)>;
-using PostCommandHook = std::function<void(ActorContext &, Command, const RawData &, const ActorLink &)>;
+enum class StatusCode : uint32_t { OK, SHUTDOWN, ERROR, };
 
-extern const PreCommandHook DEFAULT_PRECOMMAND_HOOK;
-extern const PostCommandHook DEFAULT_POSTCOMMAND_HOOK;
+using Command = uint32_t;
 
-class CommandExecutor {
-	public:
-	CommandExecutor(const commandMap map[] = nullptr);
-	CommandExecutor(PreCommandHook preCommand, PostCommandHook postCommand, const commandMap map[] = nullptr);
-	~CommandExecutor();
-
-	StatusCode execute(ActorContext &context, Command commandCode, const RawData &data,
-						const ActorLink &actorLink) const;
-
-	private:
-		PreCommandHook preCommand;
-		PostCommandHook postCommand;
-		ActorCommand actorCommand;
-};
 
 #endif

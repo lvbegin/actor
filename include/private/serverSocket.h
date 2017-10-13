@@ -27,54 +27,34 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SHARED_MAP_H__
-#define SHARED_MAP_H__
+#ifndef SERVER_SOCKET_H__
+#define SERVER_SOCKET_H__
 
-#include <exception.h>
+#include <private/connection.h>
+#include <private/netAddr.h>
 
-#include <map>
-#include <mutex>
-#include <algorithm>
+#include <cstddef>
+#include <string>
 
-template<typename K, typename T>
-class SharedMap {
+class ServerSocket {
 public:
-	SharedMap() = default;
-	~SharedMap() = default;
+	ServerSocket(uint16_t port);
+	~ServerSocket();
 
-	SharedMap(const SharedMap &m) = delete;
-	SharedMap &operator=(const SharedMap &m) = delete;
-	SharedMap(SharedMap &&m) = delete;
-	SharedMap &operator=(SharedMap &&m) = delete;
+	ServerSocket(const ServerSocket &s) = delete;
+	ServerSocket &operator=(const ServerSocket &s) = delete;
 
-	template <typename L, typename M>
-	void insert(L&& key, M &&value) {
-		std::unique_lock<std::mutex> l(mutex);
+	ServerSocket(ServerSocket&& s);
+	ServerSocket &operator=(ServerSocket&& s);
 
-		map.insert(std::make_pair(std::forward<L>(key), std::forward<M>(value)));
-	}
-	template <typename... Args>
-	void emplace(Args&&... args) {
-		std::unique_lock<std::mutex> l(mutex);
-
-		map.emplace(std::forward<Args>(args)...);
-	}
-	void erase(const K &key) {
-		std::unique_lock<std::mutex> l(mutex);
-
-		const auto it = map.find(key);
-		if (map.end() == it)
-			THROW(std::runtime_error, "element to erase does not exist. WTF");
-		map.erase(it);
-	}
-	void for_each(std::function<void(const std::pair<const K, const T> &)> f) const {
-		std::unique_lock<std::mutex> l(mutex);
-
-		std::for_each(map.begin(), map.end(), f);
-	}
+	Connection acceptOneConnection(int timeout = 2, struct NetAddr *client_addr = NULL) const;
+	static Connection getConnection(int port);
 private:
-	mutable std::mutex mutex;
-	std::map<const K, const T> map;
+	int acceptFd;
+	fd_set set;
+
+	static int listenOnSocket(uint16_t port);
+	void closeSocket(void);
 };
 
 #endif

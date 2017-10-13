@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,17 +27,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TYPES_H__
-#define TYPES_H__
+#include <string>
 
-#include <cstdint>
+class State {
+public:
+	virtual ~State() = default;
 
-enum class StatusCode : uint32_t { OK, SHUTDOWN, ERROR, };
+	virtual void init(const std::string &name) = 0;
+protected:
+	State() = default;
+};
 
-enum class MessageType:uint32_t { COMMAND_MESSAGE, ERROR_MESSAGE, MANAGEMENT_MESSAGE, };
-
-typedef uint32_t Id;
-
-enum class postType : uint32_t { NewMessage = 0xFFFFFFFF, } ;
-
-#endif
+class NoState : public State {
+public:
+	NoState() = default;
+	~NoState() = default;
+	void init(const std::string &name) { }
+};

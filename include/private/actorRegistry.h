@@ -27,59 +27,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CONNECTION_H__
-#define CONNECTION_H__
+#ifndef ACTOR_REGISTRY_H__
+#define ACTOR_REGISTRY_H__
 
-#include <types.h>
-#include <rawData.h>
+#include <private/proxyContainer.h>
+#include <private/serverSocket.h>
+#include <private/sharedMap.h>
+#include <private/sharedVector.h>
+#include <actor/actor.h>
 
-#include <unistd.h>
-#include <string>
-#include <vector>
-#include <stdexcept>
-#include <arpa/inet.h>
+#include <cstdint>
+#include <thread>
 
-
-class ConnectionTimeout : public std::runtime_error {
+class ActorRegistry {
 public:
-	ConnectionTimeout(std::string s) : std::runtime_error(s) {}
-};
-
-class Connection {
-public:
-	Connection();
-	Connection(int fd);
-
-	~Connection();
-	Connection(const Connection &connection) = delete;
-	Connection &operator=(const Connection &connection) = delete;
-	Connection(Connection &&connection);
-	Connection &operator=(Connection &&connection);
-
-	template<typename T>
-	const Connection &writeInt(T hostValue) const {
-		const auto sentValue = htonl(static_cast<uint32_t>(hostValue));
-		return writeBytes(&sentValue, sizeof(sentValue));
-	}
-
-	template<typename T>
-	T readInt(void) const {
-		uint32_t value;
-		readBytes(&value, sizeof(value));
-		return static_cast<T>(ntohl(value));
-	}
-	const Connection &writeString(const std::string &hostValue) const;
-	std::string readString(void) const;
-	const Connection &writeRawData(const RawData &data) const;
-	RawData readRawData(void) const;
+	ActorRegistry(std::string name, uint16_t port);
+	~ActorRegistry();
+	std::string addReference(const std::string &host, uint16_t port);
+	void removeReference(const std::string &registryName);
+	void registerActor(ActorLink actor);
+	void unregisterActor(const std::string &name);
+	ActorLink  getActor(const std::string &name) const;
 private:
-	int fd;
-	fd_set set;
+	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY = 0, SEARCH_ACTOR = 1, };
+	enum class ActorSearchResult : uint32_t { ACTOR_NOT_FOUND = 0, ACTOR_FOUND = 1, };
+	const std::string name;
+	const uint16_t port;
+	const FindActor findActorCallback;
+	bool terminated;
+	SharedMap<const std::string, const struct NetAddr> registryAddresses;
+	SharedVector<ActorLink> actors;
+	ProxyContainer proxies;
+	std::thread t;
 
-	const Connection &writeBytes(const void *buffer, size_t count) const;
-	void readBytes(void *buffer, size_t count, int timeout = 5) const;
-	void readBytesNonBlocking(void *buffer, size_t count) const;
-	void closeConnection(void);
+	void registryBody(const ServerSocket &s);
+	ActorLink getLocalActor(const std::string &name) const;
+	ActorLink getRemoteActor(const std::string &name) const;
 };
 
 #endif

@@ -27,22 +27,35 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CLIENT_SOCKET_H__
-#define CLIENT_SOCKET_H__
+#ifndef EXECUTOR_H__
+#define EXECUTOR_H__
 
-#include <connection.h>
-#include <netAddr.h>
-#include <string>
-#include <cstdint>
+#include <private/messageQueue.h>
 
+#include <functional>
+#include <thread>
 
-class ClientSocket {
+using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const ActorLink &sender)>;
+using ExecutorHook = std::function<void(void)>;
+using ExecutorAtStart = std::function<StatusCode(void)>;
+
+class Executor {
 public:
-	ClientSocket() = delete;
+	Executor(ExecutorBody body, MessageQueue &queue, ExecutorAtStart atStart = [](void) { return StatusCode::OK; },
+													ExecutorHook atStop = [](void) { });
+	~Executor();
 
-	static Connection openHostConnection(const std::string &host, uint16_t port);
-	static Connection openHostConnection(const struct NetAddr &sin);
-	static struct NetAddr toNetAddr(const std::string &host, uint16_t port);
+	Executor() = delete;
+	Executor(const Executor &a) = delete;
+	Executor &operator=(const Executor &a) = delete;
+	Executor(Executor &&a) = delete;
+	Executor &operator=(Executor &&a) = delete;
+private:
+	MessageQueue &messageQueue;
+	std::thread thread;
+
+	void run(ExecutorBody body, ExecutorAtStart atStart, ExecutorHook atStop) const;
+	void executeBody(ExecutorBody body) const;
 };
 
 

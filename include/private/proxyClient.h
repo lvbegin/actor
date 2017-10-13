@@ -27,39 +27,21 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MESSAGE_QUEUE_H__
-#define MESSAGE_QUEUE_H__
+#ifndef PROXY_CLIENT_H__
+#define PROXY_CLIENT_H__
 
-#include <sharedQueue.h>
-#include <linkApi.h>
-#include <types.h>
+#include <private/connection.h>
+#include <actor/linkApi.h>
 
-class MessageQueue : public LinkApi {
+class ProxyClient : public LinkApi {
 public:
-	struct Message {
-		const MessageType type;
-		const Command code;
-		RawData params;
-		std::shared_ptr<LinkApi> sender;
-		Message(MessageType type, int code, RawData params, ActorLink sender);
-		~Message();
-		Message(struct Message &&m);
-		Message (const struct Message &m) = delete;
-		struct Message &operator=(const struct Message &m) = delete;
-	};
-	MessageQueue(std::string name = std::string());
-	virtual ~MessageQueue();
+	ProxyClient(std::string name, Connection connection);
+	~ProxyClient();
 
 	void post(Command command, ActorLink sender = ActorLink());
 	void post(Command command, const RawData &params, ActorLink sender = ActorLink());
-
-	void post(MessageType type, Command command, RawData params = RawData());
-
-	Message get(void);
 private:
-	SharedQueue<Message> queue;
-
-	void putMessage(MessageType type, Command command, RawData params, ActorLink sender);
+	const Connection connection;
 };
 
 #endif

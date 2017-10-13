@@ -27,8 +27,9 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <clientSocket.h>
-#include <proxyClient.h>
+#include <private/types.h>
+#include <private/clientSocket.h>
+#include <private/proxyClient.h>
 
 ProxyClient::ProxyClient(std::string name, Connection connection) :
 						LinkApi(std::move(name)), connection(std::move(connection)) { }

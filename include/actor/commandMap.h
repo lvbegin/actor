@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,36 +27,19 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <private/clientSocket.h>
-#include <private/exception.h>
+#ifndef COMMAND_MAP_H__
+#define COMMAND_MAP_H__
 
-#include <stdexcept>
+#include <actor/types.h>
+#include <actor/context.h>
+#include <actor/rawData.h>
+#include <actor/linkApi.h>
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+using CommandFunction = std::function<StatusCode(Context &, const RawData &, const ActorLink &)>;
 
-#include <memory.h>
+struct commandMap {
+	Command commandCode;
+	CommandFunction command;
+};
 
-
-Connection ClientSocket::openHostConnection(const std::string &host, uint16_t port) {
-	return openHostConnection(toNetAddr(host, port));
-}
-
-Connection ClientSocket::openHostConnection(const struct NetAddr &sin) {
-	const auto fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (-1 == fd)
-		THROW(std::runtime_error, "socket creation failed.");
-	if (-1 == connect(fd, &sin.ai_addr, sin.ai_addrlen))
-		THROW(std::runtime_error, "cannot connect.");
-	return Connection(fd);
-}
-
-struct NetAddr ClientSocket::toNetAddr(const std::string &host, uint16_t port) {
-	struct addrinfo *addr;
-	if (0 > getaddrinfo(host.c_str(), std::to_string(port).c_str(), NULL, &addr))
-		THROW(std::runtime_error, "cannot convert hostname.");
-	const auto rc = NetAddr(*addr->ai_addr, addr->ai_addrlen);
-	freeaddrinfo(addr);
-	return rc;
-}
+#endif

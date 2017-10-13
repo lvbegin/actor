@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,42 +27,33 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ACTOR_REGISTRY_H__
-#define ACTOR_REGISTRY_H__
+#include <actor/rawData.h>
+#include <private/exception.h>
 
-#include <actor.h>
-#include <proxyContainer.h>
-#include <serverSocket.h>
-#include <sharedMap.h>
-#include <sharedVector.h>
+#include <algorithm>
+#include <arpa/inet.h>
 
-#include <cstdint>
-#include <thread>
+RawData::RawData() = default;
 
-class ActorRegistry {
-public:
-	ActorRegistry(std::string name, uint16_t port);
-	~ActorRegistry();
-	std::string addReference(const std::string &host, uint16_t port);
-	void removeReference(const std::string &registryName);
-	void registerActor(ActorLink actor);
-	void unregisterActor(const std::string &name);
-	ActorLink  getActor(const std::string &name) const;
-private:
-	enum class RegistryCommand : uint32_t { REGISTER_REGISTRY = 0, SEARCH_ACTOR = 1, };
-	enum class ActorSearchResult : uint32_t { ACTOR_NOT_FOUND = 0, ACTOR_FOUND = 1, };
-	const std::string name;
-	const uint16_t port;
-	const FindActor findActorCallback;
-	bool terminated;
-	SharedMap<const std::string, const struct NetAddr> registryAddresses;
-	SharedVector<ActorLink> actors;
-	ProxyContainer proxies;
-	std::thread t;
+RawData::RawData(uint32_t value) {
+	uint32_t independantOrderValue = htonl(value);
+	*this = RawData(&independantOrderValue, sizeof(independantOrderValue));
+}
 
-	void registryBody(const ServerSocket &s);
-	ActorLink getLocalActor(const std::string &name) const;
-	ActorLink getRemoteActor(const std::string &name) const;
-};
+RawData::RawData(void *buffer, size_t size) : v(reinterpret_cast<uint8_t *>(buffer), reinterpret_cast<uint8_t *>(buffer) + size) { }
 
-#endif
+RawData::RawData(const std::string &s) : v(s.begin(), s.end()) { }
+
+RawData::~RawData() = default;
+
+std::string RawData::toString() const { return std::string(begin(), end()); }
+uint32_t RawData::toInt() const {
+	uint32_t rc;
+
+	if (sizeof(rc) != size())
+		THROW(std::runtime_error, "serialized integer does not have correct size.");
+	void * const ptr = &rc;
+	const auto first = static_cast<uint8_t *>(ptr);
+	std::for_each(first, first + sizeof(rc), [first, this](uint8_t &p) { p = (*this)[&p - first]; });
+	return ntohl(rc);
+}

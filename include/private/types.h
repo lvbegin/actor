@@ -27,35 +27,20 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ACTOR_CONTROLLER_H__
-#define ACTOR_CONTROLLER_H__
+#ifndef PRIVATE_TYPES_H__
+#define PRIVATE_TYPES_H__
 
-#include <messageQueue.h>
-#include <sharedVector.h>
-#include <commandValue.h>
+#include <actor/types.h>
+#include <actor/rawData.h>
 
-using LinkRef = std::shared_ptr<MessageQueue>;
-using LinkRefOperation = std::function<void(const LinkRef &)>;
+enum class MessageType:uint32_t { COMMAND_MESSAGE, ERROR_MESSAGE, MANAGEMENT_MESSAGE, };
 
-class ActorController {
-public:
-	ActorController();
-	~ActorController();
+typedef uint32_t Id;
+static inline Id toId(const RawData &data)
+{
+	return data.toInt();
+}
 
-	void add(LinkRef actorLink);
-	void remove(const std::string &name);
-	void stopOne(const std::string &name) const;
-	void stopAll(void) const;
-	void restartOne(const std::string &name) const;
-	void restartAll(void) const;
-private:
-	SharedVector<LinkRef> actors;
-
-	void doOperationOneActor(const std::string &name, LinkRefOperation op) const;
-	void doOperationAllActors(LinkRefOperation op) const;
-	static void restart(const LinkRef &link);
-	static void stop(const LinkRef &link);
-	static void sendMessage(const LinkRef &link, Command command);
-};
+enum class postType : uint32_t { NewMessage = 0xFFFFFFFF, } ;
 
 #endif

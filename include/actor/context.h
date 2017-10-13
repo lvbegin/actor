@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2017 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -26,31 +26,23 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef CONTEXT_H__
+#define CONTEXT_H__
 
-#ifndef PROXY_SERVER_H__
-#define PROXY_SERVER_H__
+#include <actor/types.h>
+#include <actor/state.h>
 
-#include <actor.h>
-#include <connection.h>
-
-#include <thread>
-
-using FindActor = std::function<ActorLink(const std::string &)> ;
-
-class ProxyServer {
+class Context {
 public:
-	ProxyServer(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor);
-	~ProxyServer();
-
-	ProxyServer(const ProxyServer &p) = delete;
-	ProxyServer &operator=(const ProxyServer &p) = delete;
-	ProxyServer &operator=(ProxyServer &&p) = delete;
-	ProxyServer(ProxyServer &&p) = delete;
-private:
-	std::thread t;
-
-	static void startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate,
-							FindActor findActor);
+	virtual ~Context() = default;
+	virtual void notifySupervisor(Command command) const = 0;
+	virtual void sendErrorToSupervisor(Command command) const = 0;
+	virtual void restartActors() const = 0;
+	virtual void stopActors() const = 0;
+	virtual State &getState() = 0;
+protected:
+	Context() = default;
 };
+
 
 #endif

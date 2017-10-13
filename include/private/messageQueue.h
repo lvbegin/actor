@@ -1,4 +1,4 @@
-/* Copyright 2017 Laurent Van Begin
+/* Copyright 2016 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,26 +27,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ACTOR_CONTEXT_H__
-#define ACTOR_CONTEXT_H__
+#ifndef MESSAGE_QUEUE_H__
+#define MESSAGE_QUEUE_H__
 
-#include <linkApi.h>
-#include <state.h>
-#include <supervisor.h>
+#include <private/sharedQueue.h>
+#include <private/types.h>
+#include <actor/linkApi.h>
 
-class ActorContext {
+class MessageQueue : public LinkApi {
 public:
-	ActorContext(ActionStrategy strategy, LinkRef self, std::unique_ptr<State> state) :
-				state(std::move(state)), supervisor(strategy, self) { }
-	ActorContext() = delete;
-	~ActorContext() = default;
+	struct Message {
+		const MessageType type;
+		const Command code;
+		RawData params;
+		std::shared_ptr<LinkApi> sender;
+		Message(MessageType type, int code, RawData params, ActorLink sender);
+		~Message();
+		Message(struct Message &&m);
+		Message (const struct Message &m) = delete;
+		struct Message &operator=(const struct Message &m) = delete;
+	};
+	MessageQueue(std::string name = std::string());
+	virtual ~MessageQueue();
 
-	Supervisor &getSupervisor() { return supervisor; }
-	const Supervisor &getConstSupervisor() const { return supervisor; }
-	State &getState() { return *state; }
+	void post(Command command, ActorLink sender = ActorLink());
+	void post(Command command, const RawData &params, ActorLink sender = ActorLink());
+
+	void post(MessageType type, Command command, RawData params = RawData());
+
+	Message get(void);
 private:
-	std::unique_ptr<State> state;
-	Supervisor supervisor;
+	SharedQueue<Message> queue;
+
+	void putMessage(MessageType type, Command command, RawData params, ActorLink sender);
 };
 
 #endif

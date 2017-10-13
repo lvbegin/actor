@@ -27,36 +27,47 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <private/actorController.h>
+#include <private/actorCommand.h>
+#include <private/commandValue.h>
 #include <private/exception.h>
 
-ActorController::ActorController() = default;
-ActorController::~ActorController() = default;
 
-void ActorController::add(LinkRef actorLink) { actors.push_back(std::move(actorLink)); }
+static std::map<Command, CommandFunction> buildMap(const commandMap array[]);
+static StatusCode shutdownCase(Context &, const RawData &, const ActorLink &);
 
-void ActorController::remove(const std::string &name) { actors.erase(LinkApi::nameComparator(name)); }
+ActorCommand::ActorCommand() : commands(buildMap(nullptr)) { }
 
-void ActorController::restartOne(const std::string &name) const { doOperationOneActor(name, restart); }
+ActorCommand::ActorCommand(const commandMap map[]) : commands(buildMap(map)) { }
+ActorCommand::~ActorCommand() = default;
 
-void ActorController::stopOne(const std::string &name) const { doOperationOneActor(name, stop); }
-
-void ActorController::stopAll(void) const { doOperationAllActors(stop); }
-
-void ActorController::restartAll(void) const { doOperationAllActors(restart); }
-
-void ActorController::restart(const LinkRef &link) { sendMessage(link, CommandValue::RESTART); }
-
-void ActorController::stop(const LinkRef &link) { sendMessage(link, CommandValue::SHUTDOWN); }
-
-void ActorController::sendMessage(const LinkRef &link, Command command) {
-	link->post(MessageType::MANAGEMENT_MESSAGE, command);
-}
-
-void ActorController::doOperationOneActor(const std::string &name, LinkRefOperation op) const {
+StatusCode ActorCommand::execute(Context &context, Command commandCode, const RawData &data,
+						const ActorLink &actorLink) const {
+	CommandFunction f;
 	try {
-		op(actors.find_if(LinkApi::nameComparator(name)));
-	} catch (const std::out_of_range &) { }
+		f = commands.at(commandCode);
+	} catch (std::out_of_range &e) {
+		if (nullptr != actorLink)
+			actorLink->post(CommandValue::UNKNOWN_COMMAND);
+		return StatusCode::OK;
+	}
+	return f(context, data, actorLink);
 }
 
-void ActorController::doOperationAllActors(LinkRefOperation op) const { actors.for_each([&op](auto &e) { op(e);} ); }
+static std::map<Command, CommandFunction> buildMap(const commandMap array[]) {
+	std::map<Command, CommandFunction> map;
+
+	map[static_cast<Command>(CommandValue::SHUTDOWN)] = shutdownCase;
+	if (nullptr == array)
+		return map;
+	for (const commandMap * ptr = array; !(0 == ptr->commandCode && nullptr == ptr->command) ; ptr ++) {
+		if (0 == ptr->commandCode && nullptr == ptr->command)
+			break;
+		if (CommandValue::isInternalCommand(ptr->commandCode))
+			THROW(std::runtime_error, "command reserved for internal use.");
+		map[ptr->commandCode] = ptr->command;
+	}
+	return map;
+}
+
+static StatusCode shutdownCase(Context &, const RawData &, const ActorLink &) { return StatusCode::SHUTDOWN; };
+
