@@ -26,39 +26,24 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef CONTEXT_H__
+#define CONTEXT_H__
 
-#ifndef COMMAND_EXECUTOR_H__
-#define COMMAND_EXECUTOR_H__
+#include <state.h>
 
-#include <actor/context.h>
-#include <actor/rawData.h>
-#include <actor/linkApi.h>
+using Command = uint32_t; //duplicate
 
-#include <functional>
-
-using PreCommandHook = std::function<StatusCode(Context &, Command, const RawData &, const ActorLink &)>;
-using PostCommandHook = std::function<void(Context &, Command, const RawData &, const ActorLink &)>;
-
-extern const PreCommandHook DEFAULT_PRECOMMAND_HOOK;
-extern const PostCommandHook DEFAULT_POSTCOMMAND_HOOK;
-
-struct commandMap;
-
-class CommandExecutor {
-	public:
-	CommandExecutor(const commandMap map[] = nullptr);
-	CommandExecutor(PreCommandHook preCommand, PostCommandHook postCommand, const commandMap map[] = nullptr);
-	CommandExecutor(CommandExecutor &&c);
-	CommandExecutor &operator=(CommandExecutor &&c);
-
-	~CommandExecutor();
-
-	StatusCode execute(Context &context, Command commandCode, const RawData &data,
-						const ActorLink &actorLink) const;
-
-	private:
-	struct CommandExecutorImpl;
-	CommandExecutorImpl *pImpl;
+class Context {
+public:
+	virtual ~Context() = default;
+	virtual void notifySupervisor(Command command) const = 0;
+	virtual void sendErrorToSupervisor(Command command) const = 0;
+	virtual void restartActors() const = 0;
+	virtual void stopActors() const = 0;
+	virtual State &getState() = 0;
+protected:
+	Context() = default;
 };
+
 
 #endif
