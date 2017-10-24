@@ -11,8 +11,7 @@ AC_CONFIG_MACRO_DIRS([m4])
 CXXFLAGS=
 # Checks for programs.
 AC_PROG_CXX
-AC_PROG_CC
-#AC_PROG_RANLIB
+AC_LANG([C++])
 # Checks for libraries.
 AM_INIT_AUTOMAKE()
 #LT_INIT
@@ -34,4 +33,5 @@ AC_FUNC_ERROR_AT_LINE
 AC_CHECK_FUNCS([select socket])
 AC_CHECK_LIB(pthread, pthread_create)
 AC_CONFIG_FILES([Makefile])
+AX_CHECK_COMPILE_FLAG([-std=c++14])
 AC_OUTPUT
