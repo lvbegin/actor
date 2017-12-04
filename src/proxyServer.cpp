@@ -37,14 +37,14 @@
 ProxyServer::ProxyServer(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate,
 						FindActor findActor) :
 					t([actor, connection {std::move(connection)}, notifyTerminate, findActor]() mutable
-						{ startThread(std::move(actor), std::move(connection), notifyTerminate, findActor); }) { }
+						{ serverBody(std::move(actor), std::move(connection), notifyTerminate, findActor); }) { }
 
 ProxyServer::~ProxyServer() {
 	if (t.joinable())
 		t.join();
 };
 
-void ProxyServer::startThread(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate,
+void ProxyServer::serverBody(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate,
 								FindActor findActor) {
 	while (true) {
 		try {
