@@ -36,6 +36,9 @@
 #include <private/actorRegistry.h>
 #include <private/clientSocket.h>
 #include <private/commandValue.h>
+#include <private/messageQueue.h>
+#include <private/serverSocket.h>
+#include <private/executor.h>
 
 #include <cstdlib>
 #include <iostream>

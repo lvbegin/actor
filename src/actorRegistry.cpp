@@ -28,6 +28,10 @@
  */
 
 #include <private/actorRegistry.h>
+#include <private/proxyContainer.h>
+#include <private/serverSocket.h>
+#include <private/sharedMap.h>
+#include <private/sharedVector.h>
 #include <private/clientSocket.h>
 #include <private/proxyClient.h>
 
@@ -35,82 +39,111 @@
 
 static void threadBody(uint16_t port, std::function<void(const ServerSocket &s)> body);
 
-ActorRegistry::ActorRegistry(std::string name, uint16_t port) : name(std::move(name)), port(port),
+class ActorRegistry::ActorRegistryImpl {
+	public:
+		ActorRegistryImpl(std::string name, uint16_t port) : name(std::move(name)), port(port),
 		findActorCallback([this](auto &name) { return this->getRemoteActor(name); }), terminated(false),
 		t([this]() {  threadBody(this->port, [this](const ServerSocket &s) { registryBody(s); }); }) { }
 
-static void threadBody(uint16_t port, std::function<void(const ServerSocket &s)> body) {
-	body(*std::make_unique<ServerSocket>(port));
-}
+		~ActorRegistryImpl() {
+			terminated = true;
+			t.join();
+		}
+		
+		std::string addReference(const std::string &host, uint16_t port)  {
+			const auto connection = ClientSocket::openHostConnection(host, port);
+			connection.writeInt(RegistryCommand::REGISTER_REGISTRY).writeInt<uint32_t>(this->port).writeString(name);
+			const auto otherName = connection.readString();
+			registryAddresses.insert(otherName, ClientSocket::toNetAddr(host, port));
+			return otherName;
+		}
 
-ActorRegistry::~ActorRegistry() {
-	terminated = true;
-	t.join();
-}
+		void removeReference(const std::string &registryName) { registryAddresses.erase(registryName); }
 
-void ActorRegistry::registryBody(const ServerSocket &s) {
-	while (!terminated) {
-		try {
-			struct NetAddr client_addr;
-			Connection connection = s.acceptOneConnection(2, &client_addr);
-			switch (connection.readInt<RegistryCommand>()) {
-				case RegistryCommand::REGISTER_REGISTRY:
-					reinterpret_cast<sockaddr_in *>(&client_addr.ai_addr)->sin_port =
-																			htons(connection.readInt<uint32_t>());
-					registryAddresses.insert(connection.readString(), client_addr);
-					connection.writeString(this->name);
-					break;
-				case RegistryCommand::SEARCH_ACTOR:
-					try {
-						auto actor = getLocalActor(connection.readString());
-						connection.writeInt(ActorSearchResult::ACTOR_FOUND);
-						proxies.createNewProxy(std::move(actor), std::move(connection), findActorCallback);
-					} catch (const std::out_of_range &e) {
-						connection.writeInt(ActorSearchResult::ACTOR_NOT_FOUND);
-					}
-					break;
-				default:
-					std::cerr << "Unknown Registry command in " << __PRETTY_FUNCTION__ << std::endl;
-					break;
+		void registerActor(ActorLink actor) { actors.push_back(std::move(actor)); }
+
+		void unregisterActor(const std::string &name) { actors.erase(LinkApi::nameComparator(name)); }
+		
+		
+		ActorLink  getActor(const std::string &name) const {
+			try {
+				return getLocalActor(name);
+			} catch (const std::out_of_range &e) {
+				return getRemoteActor(name);
 			}
 		}
-		catch (const std::exception &e) { }
+
+	private:
+		enum class RegistryCommand : uint32_t { REGISTER_REGISTRY = 0, SEARCH_ACTOR = 1, };
+		enum class ActorSearchResult : uint32_t { ACTOR_NOT_FOUND = 0, ACTOR_FOUND = 1, };
+		const std::string name;
+		const uint16_t port;
+		const FindActor findActorCallback;
+		bool terminated;
+		SharedMap<const std::string, const struct NetAddr> registryAddresses;
+		SharedVector<ActorLink> actors;
+		ProxyContainer proxies;
+		std::thread t;
+
+	void registryBody(const ServerSocket &s) {
+		while (!terminated) {
+			try {
+				struct NetAddr client_addr;
+				Connection connection = s.acceptOneConnection(2, &client_addr);
+				switch (connection.readInt<RegistryCommand>()) {
+					case RegistryCommand::REGISTER_REGISTRY:
+						reinterpret_cast<sockaddr_in *>(&client_addr.ai_addr)->sin_port =
+																			htons(connection.readInt<uint32_t>());
+						registryAddresses.insert(connection.readString(), client_addr);
+						connection.writeString(this->name);
+						break;
+					case RegistryCommand::SEARCH_ACTOR:
+						try {
+							auto actor = getLocalActor(connection.readString());
+							connection.writeInt(ActorSearchResult::ACTOR_FOUND);
+							proxies.createNewProxy(std::move(actor), std::move(connection), findActorCallback);
+						} catch (const std::out_of_range &e) {
+							connection.writeInt(ActorSearchResult::ACTOR_NOT_FOUND);
+						}
+						break;
+					default:
+						std::cerr << "Unknown Registry command in " << __PRETTY_FUNCTION__ << std::endl;
+						break;
+				}
+			}
+			catch (const std::exception &e) { }
+		}
 	}
-}
 
-std::string ActorRegistry::addReference(const std::string &host, uint16_t port) {
-	const auto connection = ClientSocket::openHostConnection(host, port);
-	connection.writeInt(RegistryCommand::REGISTER_REGISTRY).writeInt<uint32_t>(this->port).writeString(name);
-	const auto otherName = connection.readString();
-	registryAddresses.insert(otherName, ClientSocket::toNetAddr(host, port));
-	return otherName;
-}
-
-void ActorRegistry::removeReference(const std::string &registryName) { registryAddresses.erase(registryName); }
-
-void ActorRegistry::registerActor(ActorLink actor) { actors.push_back(std::move(actor)); }
-
-void ActorRegistry::unregisterActor(const std::string &name) { actors.erase(LinkApi::nameComparator(name)); }
-
-ActorLink  ActorRegistry::getActor(const std::string &name) const {
-	try {
-		return getLocalActor(name);
-	} catch (const std::out_of_range &e) {
-		return getRemoteActor(name);
+	ActorLink getLocalActor(const std::string &name) const {
+		return actors.find_if(LinkApi::nameComparator(name));
 	}
-}
 
-ActorLink ActorRegistry::getLocalActor(const std::string &name) const {
-	return actors.find_if(LinkApi::nameComparator(name));
-}
+	ActorLink getRemoteActor(const std::string &name) const {
+		ActorLink actor;
+		registryAddresses.for_each([&actor, &name](const std::pair<const std::string, const struct NetAddr> &c) {
+			auto connection = ClientSocket::openHostConnection(c.second);
+			connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
+			if (ActorSearchResult::ACTOR_FOUND == connection.readInt<ActorSearchResult>())
+				actor.reset(new ProxyClient(name, std::move(connection)));
+		});
+		return actor;
+	}
 
-ActorLink ActorRegistry::getRemoteActor(const std::string &name) const {
-	ActorLink actor;
-	registryAddresses.for_each([&actor, &name](const std::pair<const std::string, const struct NetAddr> &c) {
-		auto connection = ClientSocket::openHostConnection(c.second);
-		connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
-		if (ActorSearchResult::ACTOR_FOUND == connection.readInt<ActorSearchResult>())
-			actor.reset(new ProxyClient(name, std::move(connection)));
-	});
-	return actor;
+};
+
+ActorRegistry::ActorRegistry(std::string name, uint16_t port) : pImpl(new ActorRegistryImpl(std::move(name), port)) { }
+
+ActorRegistry::~ActorRegistry() { delete pImpl; }
+
+
+std::string ActorRegistry::addReference(const std::string &host, uint16_t port) { return pImpl->addReference(host, port); }
+void ActorRegistry::removeReference(const std::string &registryName) { pImpl->removeReference(registryName); }
+void ActorRegistry::registerActor(ActorLink actor) { pImpl->registerActor(std::move(actor)); }
+void ActorRegistry::unregisterActor(const std::string &name) { pImpl->unregisterActor(name); }
+ActorLink  ActorRegistry::getActor(const std::string &name) const { return pImpl->getActor(name); } 
+
+
+static void threadBody(uint16_t port, std::function<void(const ServerSocket &s)> body) {
+	body(*std::make_unique<ServerSocket>(port));
 }
