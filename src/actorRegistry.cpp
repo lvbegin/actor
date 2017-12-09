@@ -27,7 +27,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <private/actorRegistry.h>
+#include <actor/actorRegistry.h>
 #include <private/proxyContainer.h>
 #include <private/serverSocket.h>
 #include <private/sharedMap.h>

@@ -30,10 +30,10 @@
 #include <actor/actor.h>
 #include <actor/rawData.h>
 #include <actor/commandMap.h>
+#include <actor/actorRegistry.h>
 #include <private/proxyClient.h>
 #include <private/actorCommand.h>
 #include <private/proxyServer.h>
-#include <private/actorRegistry.h>
 #include <private/clientSocket.h>
 #include <private/commandValue.h>
 #include <private/messageQueue.h>
