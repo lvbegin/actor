@@ -552,6 +552,31 @@ static int supervisorStopActorTest() {
 	return (exceptionThrown && actorStopped) ? 0 : 1;
 }
 
+static int supervisorStopAllActorsTest() {
+	static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
+	static bool exceptionThrown = false;
+	static int actorStopped = 0;
+	const auto link = std::make_shared<MessageQueue>("queue for reply");
+	Actor supervisor("supervisor", CommandExecutor(), [](ErrorCode) { return StopAllActor::create(); });
+	static const ActorHooks hooks(DEFAULT_START_HOOK, [](const Context&) { actorStopped++; },
+			 						DEFAULT_RESTART_HOOK);
+	static const commandMap commands[] = {
+		{STOP_COMMAND, [](Context &, const RawData &, const ActorLink &link) -> StatusCode { exceptionThrown = true; throw std::runtime_error("some error"); }},
+		{ 0, NULL},
+	};
+
+	Actor firstSupervised("firstSupervised", CommandExecutor(commands), hooks);
+	Actor secondSupervised("secondSupervised", CommandExecutor(), hooks);
+	supervisor.registerActor(firstSupervised);
+	supervisor.registerActor(secondSupervised);
+	firstSupervised.post(STOP_COMMAND, link);
+
+	for (int i = 0; i < 5 && !exceptionThrown; i++) sleep(1);
+	for (int i = 0; i < 5 && actorStopped < 2; i++) sleep(1);
+	return (exceptionThrown && actorStopped) ? 0 : 1;
+}
+
+
 static int supervisorForwardErrorRestartTest() {
 	static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static bool exceptionThrown = false;
@@ -703,7 +728,7 @@ static int restartAllActorBySupervisorTest() {
 	return (supervisorRestarted || !supervised1Restarted || !supervised2Restarted) ? 1 : 0;
 }
 
-static int stoppingSupervisorStopsSupervisedTest() {
+static int stoppingSupervisorStopssupervisedTest() {
 	static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static bool supervisorStopped = false;
 	static bool supervisedStopped = false;
@@ -975,7 +1000,7 @@ int main() {
 			TEST(actorDoesNothingIfNoSupervisorTest),
 			TEST(actorDoesNothingIfNoSupervisorAndExceptionThrownTest),
 			TEST(restartAllActorBySupervisorTest),
-			TEST(stoppingSupervisorStopsSupervisedTest),
+			TEST(stoppingSupervisorStopssupervisedTest),
 			TEST(supervisorHasDifferentStrategyDependingOnErrorTest),
 			TEST(executorTest),
 			TEST(serializationTest),

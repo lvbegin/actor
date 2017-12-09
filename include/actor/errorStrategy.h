@@ -77,13 +77,28 @@ private:
 	static const StopActor singletonElement;
 };
 
+class StopAllActor : public ErrorStrategy {
+public:
+	static const ErrorStrategy *create() { return &singletonElement; }
+	virtual ~StopAllActor() = default;
+	void executeAction(const ControllerApi &supervisedRefs, 
+			NotifySupervisor notifySupervisor,
+			ErrorCode error, const RawData &params, const ActorLink &actor)  const {
+		supervisedRefs.stopAll(); 
+	}
+private:
+	StopAllActor() = default;
+	static const StopActor singletonElement;
+};
 class RestartAllActor : public ErrorStrategy {
 public:
 	static const ErrorStrategy *create() { return &singletonElement; }
 	virtual ~RestartAllActor() = default;
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const ActorLink &actor)  const { supervisedRefs.restartAll(); }
+			ErrorCode error, const RawData &params, const ActorLink &actor)  const { 
+		supervisedRefs.restartAll(); 
+	}
 private:
 	RestartAllActor() = default;
 	static const RestartAllActor singletonElement;
