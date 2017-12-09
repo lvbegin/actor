@@ -31,5 +31,6 @@
 
 const RestartActor RestartActor::singletonElement;
 const StopActor StopActor::singletonElement;
+const StopAllActor StopAllActor::singletonElement;
 const RestartAllActor RestartAllActor::singletonElement;
 const EscalateError EscalateError::singletonElement;
