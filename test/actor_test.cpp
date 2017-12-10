@@ -660,12 +660,13 @@ static int actorNotifiesErrorToSupervisorTest() {
 }
 
 static int actorDoesNothingIfNoSupervisorTest() {
-	bool supervisorRestarted = false;
+	static int commandExecuted = 0;
+	static bool supervisorRestarted = false;
 	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	static const ActorHooks hooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
-			[&supervisorRestarted](const Context &){ supervisorRestarted = true; return StatusCode::OK; });
+			[](const Context &){ supervisorRestarted = true; return StatusCode::OK; });
 	static const commandMap commands[] = {
-			{SOME_COMMAND, [](Context &, const RawData &, const ActorLink &link) { return (Actor::notifyError(0x69), StatusCode::OK); }},
+			{SOME_COMMAND, [](Context &, const RawData &, const ActorLink &link) { commandExecuted++; return (Actor::notifyError(0x69), StatusCode::OK); }},
 			{ 0, NULL},
 		};
 
@@ -674,8 +675,11 @@ static int actorDoesNothingIfNoSupervisorTest() {
 	supervised->post(SOME_COMMAND);
 	supervised->post(SOME_COMMAND);
 
+	for (int i = 0; i < 5 && 2 > commandExecuted; i++)
+		sleep(1);
 	supervised.reset();
-	return !supervisorRestarted ? 0 : 1;
+
+	return ( commandExecuted == 2 && !supervisorRestarted) ? 0 : 1;
 }
 
 static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
