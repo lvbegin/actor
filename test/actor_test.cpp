@@ -700,6 +700,29 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 	return !supervisorRestarted ? 0 : 1;
 }
 
+static int actorDoesNothingIfSupervisorUsesDoNothingErrorStrategyTest() {
+	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
+	static bool supervisedRestarted = false;
+	static int commandExecuted = 0;
+	static const ActorHooks hooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
+			[](const Context &){ supervisedRestarted = true; return StatusCode::OK; });
+	static const commandMap commands[] = {
+			{SOME_COMMAND, [](Context &, const RawData &, const ActorLink &link) -> StatusCode
+							{ commandExecuted++; throw std::runtime_error("some error"); }},
+			{ 0, NULL},
+		};
+
+	Actor supervisor("supervisor", CommandExecutor(), [](ErrorCode) { return DoNothingError::create(); });		
+	Actor supervised("supervised", CommandExecutor(commands), hooks);
+	supervisor.registerActor(supervised);
+	supervised.post(SOME_COMMAND);
+	supervised.post(SOME_COMMAND);
+	for (int i = 0; i < 5 && 2 > commandExecuted; i++)
+		sleep(1);
+
+	return (2 == commandExecuted  && !supervisedRestarted) ? 0 : 1;
+}
+
 static int restartAllActorBySupervisorTest() {
 	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	bool supervisorRestarted = false;
@@ -1004,6 +1027,7 @@ int main() {
 		 	TEST(actorNotifiesErrorToSupervisorTest),
 			TEST(actorDoesNothingIfNoSupervisorTest),
 			TEST(actorDoesNothingIfNoSupervisorAndExceptionThrownTest),
+			TEST(actorDoesNothingIfSupervisorUsesDoNothingErrorStrategyTest),
 			TEST(restartAllActorBySupervisorTest),
 			TEST(stoppingSupervisorStopssupervisedTest),
 			TEST(supervisorHasDifferentStrategyDependingOnErrorTest),
