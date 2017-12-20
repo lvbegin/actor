@@ -30,7 +30,7 @@
 #ifndef ACTOR_H__
 #define ACTOR_H__
 
-#include <actor/errorStrategy.h>
+#include <actor/actionStrategy.h>
 #include <actor/context.h>
 #include <actor/commandExecutor.h>
 
@@ -39,8 +39,6 @@
 using AtStopHook = std::function<void(const Context &)>;
 using AtStartHook = std::function<StatusCode(const Context &)>;
 using AtRestartHook = std::function<StatusCode(const Context &)>;
-
-using  ActionStrategy = std::function<const ErrorStrategy *(ErrorCode error)>; //duplicate
 
 extern const AtStartHook DEFAULT_START_HOOK;
 extern const AtStopHook DEFAULT_STOP_HOOK;

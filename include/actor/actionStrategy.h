@@ -27,40 +27,14 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SUPERVISOR_H__
-#define SUPERVISOR_H__
+#ifndef ACTION_STRATEGY_H__
+#define ACTION_STRATEGY_H__
 
-#include <private/actorController.h>
-#include <private/messageQueue.h>
-#include <private/commandValue.h>
-#include <actor/actionStrategy.h>
+#include <actor/errorStrategy.h>
 
-class Supervisor {
-public:
-	Supervisor(ActionStrategy strategy, LinkRef self);
-	~Supervisor();
+#include <functional>
 
-	bool notifySupervisor(Command command) const;
-	bool sendErrorToSupervisor(Command command) const;
-	void manageErrorFromSupervised(ErrorCode error, const RawData &params) const;
-	void restartActors() const;
-	void stopActors() const;
+using  ActionStrategy = std::function<const ErrorStrategy *(ErrorCode error)>;
 
-	void removeActor(const std::string &name);
-	void registerMonitored(Supervisor &monitored);
-	void unregisterMonitored(Supervisor &monitored);
-private:
-	mutable std::mutex monitorMutex;
-	const ActionStrategy restartStrategy;
-	const LinkRef self;
-	ActorController supervisedRefs;
-	std::weak_ptr<MessageQueue> supervisorRef;
-
-	bool postSupervisor(MessageType type, Command command, const RawData &data) const;
-	bool sendToSupervisor(MessageType type, uint32_t code) const;
-	void doOperation(std::function<void(void)> op) const;
-	bool doOperationWithReturn(std::function<bool(void)> op) const;
-	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
-};
 
 #endif
