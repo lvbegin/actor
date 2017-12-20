@@ -40,6 +40,7 @@
 #include <future>
 #include <memory>
 #include <iostream>
+#include <exception>
 
 
 class ActorException : public std::runtime_error {
@@ -166,15 +167,15 @@ public:
 	StatusCode executeActorBody(Command command, const RawData &params, const ActorLink &sender) {
 		try {
 			const auto rc = commandExecutor.execute(context, command, params, sender);
-			if (StatusCode::ERROR == rc)
-				context.getConstSupervisor().sendErrorToSupervisor(ACTOR_BODY_FAILED);
-			return rc;
+			if (StatusCode::ERROR != rc)
+				return rc;
+			throw std::runtime_error("Actor command terminated on error.");
 		} catch (const ActorException &e) {
-			context.getConstSupervisor().sendErrorToSupervisor(e.getErrorCode());
-			return StatusCode::ERROR;
+			return (context.getConstSupervisor().sendErrorToSupervisor(e.getErrorCode())) ?
+					StatusCode::ERROR : StatusCode::SHUTDOWN;
 		} catch (const std::exception &e) {
-			context.getConstSupervisor().sendErrorToSupervisor(ACTOR_BODY_FAILED);
-			return StatusCode::ERROR;
+			return (context.getConstSupervisor().sendErrorToSupervisor(ACTOR_BODY_FAILED)) ?
+					StatusCode::ERROR : StatusCode::SHUTDOWN;;
 		}
 	}
 

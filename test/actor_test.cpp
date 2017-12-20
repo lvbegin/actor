@@ -659,28 +659,52 @@ static int actorNotifiesErrorToSupervisorTest() {
 	return (supervisorRestarted || ! (2 == supervised1Restarted) || supervised2Restarted) ? 1 : 0;
 }
 
-static int actorDoesNothingIfNoSupervisorTest() {
+static int noEffectIfErrorNotifiedAndNoSupervisorTest() {
 	static int commandExecuted = 0;
-	static bool supervisorRestarted = false;
+	static bool supervisedRestarted = false;
+	static bool supervisedStopped = false;
 	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
-	static const ActorHooks hooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
-			[](const Context &){ supervisorRestarted = true; return StatusCode::OK; });
+	static const ActorHooks hooks(DEFAULT_START_HOOK, 
+			[](const Context &){ supervisedStopped = true;  },
+			[](const Context &){ supervisedRestarted = true; return StatusCode::OK; });
 	static const commandMap commands[] = {
 			{SOME_COMMAND, [](Context &, const RawData &, const ActorLink &link) { commandExecuted++; return (Actor::notifyError(0x69), StatusCode::OK); }},
 			{ 0, NULL},
 		};
 
-	auto supervised = std::make_shared<Actor>("supervised", CommandExecutor(commands), hooks);
+	Actor supervised("supervised", CommandExecutor(commands), hooks);
 
-	supervised->post(SOME_COMMAND);
-	supervised->post(SOME_COMMAND);
+	supervised.post(SOME_COMMAND);
 
-	for (int i = 0; i < 5 && 2 > commandExecuted; i++)
+	for (int i = 0; i < 5 && 1 > commandExecuted; i++)
 		sleep(1);
-	supervised.reset();
 
-	return ( commandExecuted == 2 && !supervisorRestarted) ? 0 : 1;
+	return ( commandExecuted == 1 && !supervisedRestarted && supervisedStopped) ? 0 : 1;
 }
+
+static int noEffectIfActorCommandReturnsErrorAndNoSupervisorTest() {
+	static int commandExecuted = 0;
+	static bool supervisedRestarted = false;
+	static bool supervisedStopped = false;
+	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
+	static const ActorHooks hooks(DEFAULT_START_HOOK, 
+			[](const Context &){ supervisedStopped = true;  },
+			[](const Context &){ supervisedRestarted = true; return StatusCode::OK; });
+	static const commandMap commands[] = {
+			{SOME_COMMAND, [](Context &, const RawData &, const ActorLink &link) { commandExecuted++; return StatusCode::ERROR; }},
+			{ 0, NULL},
+		};
+
+	Actor supervised("supervised", CommandExecutor(commands), hooks);
+
+	supervised.post(SOME_COMMAND);
+
+	for (int i = 0; i < 5 && 1 > commandExecuted; i++)
+		sleep(1);
+
+	return ( commandExecuted == 1 && !supervisedRestarted && supervisedStopped) ? 0 : 1;
+}
+
 
 static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
@@ -1025,7 +1049,8 @@ int main() {
 			TEST(supervisorForwardErrorRestartTest),
 			TEST(supervisorForwardErrorStopTest),
 		 	TEST(actorNotifiesErrorToSupervisorTest),
-			TEST(actorDoesNothingIfNoSupervisorTest),
+			TEST(noEffectIfErrorNotifiedAndNoSupervisorTest),
+			TEST(noEffectIfActorCommandReturnsErrorAndNoSupervisorTest),
 			TEST(actorDoesNothingIfNoSupervisorAndExceptionThrownTest),
 			TEST(actorDoesNothingIfSupervisorUsesDoNothingErrorStrategyTest),
 			TEST(restartAllActorBySupervisorTest),

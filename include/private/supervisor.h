@@ -42,8 +42,8 @@ public:
 	Supervisor(ActionStrategy strategy, LinkRef self);
 	~Supervisor();
 
-	void notifySupervisor(Command command) const;
-	void sendErrorToSupervisor(Command command) const;
+	bool notifySupervisor(Command command) const;
+	bool sendErrorToSupervisor(Command command) const;
 	void manageErrorFromSupervised(ErrorCode error, const RawData &params) const;
 	void restartActors() const;
 	void stopActors() const;
@@ -51,7 +51,6 @@ public:
 	void removeActor(const std::string &name);
 	void registerMonitored(Supervisor &monitored);
 	void unregisterMonitored(Supervisor &monitored);
-
 private:
 	mutable std::mutex monitorMutex;
 	const ActionStrategy restartStrategy;
@@ -59,9 +58,10 @@ private:
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;
 
-	void postSupervisor(MessageType type, Command command, const RawData &data) const;
-	void sendToSupervisor(MessageType type, uint32_t code) const;
+	bool postSupervisor(MessageType type, Command command, const RawData &data) const;
+	bool sendToSupervisor(MessageType type, uint32_t code) const;
 	void doOperation(std::function<void(void)> op) const;
+	bool doOperationWithReturn(std::function<bool(void)> op) const;
 	void doRegistrationOperation(Supervisor &monitored, std::function<void(void)> op) const;
 };
 

@@ -37,18 +37,18 @@ Supervisor::Supervisor(ActionStrategy strategy, LinkRef self) :
 
 Supervisor::~Supervisor() = default;
 
-void Supervisor::notifySupervisor(Command command) const{ sendToSupervisor(MessageType::COMMAND_MESSAGE, command); }
+bool Supervisor::notifySupervisor(Command command) const { return sendToSupervisor(MessageType::COMMAND_MESSAGE, command); }
 
-void Supervisor::sendErrorToSupervisor(Command command) const { sendToSupervisor(MessageType::ERROR_MESSAGE, command); }
+bool Supervisor::sendErrorToSupervisor(Command command) const { return sendToSupervisor(MessageType::ERROR_MESSAGE, command); }
 
-void Supervisor::sendToSupervisor(MessageType type, Command command) const {
-	doOperation([this, type, command](){ postSupervisor(type, command, self->getName()); });
+bool Supervisor::sendToSupervisor(MessageType type, Command command) const {
+	return doOperationWithReturn([this, type, command]() { return postSupervisor(type, command, self->getName()); });
 }
 
-void Supervisor::postSupervisor(MessageType type, Command command, const RawData &data) const {
+bool Supervisor::postSupervisor(MessageType type, Command command, const RawData &data) const {
 	const auto ref = supervisorRef.lock();
-	if (nullptr != ref.get())
-		ref->post(type, command, data);
+	return (nullptr == ref.get()) ? false :
+									(ref->post(type, command, data), true);
 }
 
 void Supervisor::removeActor(const std::string &name) { doOperation([&name, this](){ supervisedRefs.remove(name); } ); }
@@ -57,10 +57,14 @@ void Supervisor::restartActors() const { doOperation([this]() { supervisedRefs.r
 
 void Supervisor::stopActors() const { doOperation([this]() { supervisedRefs.stopAll(); }); }
 
-void Supervisor::doOperation(std::function<void(void)> op) const {
+void Supervisor::doOperation(std::function<void(void)> op) const { 
+	doOperationWithReturn([&op]() { op(); return true; }); 
+}
+
+bool Supervisor::doOperationWithReturn(std::function<bool(void)> op) const {
 	std::unique_lock<std::mutex> l(monitorMutex);
 
-	op();
+	return op();
 }
 
 void Supervisor::manageErrorFromSupervised(ErrorCode error, const RawData &params) const {
