@@ -45,7 +45,7 @@ extern const PostCommandHook DEFAULT_POSTCOMMAND_HOOK;
 struct commandMap;
 
 class CommandExecutor {
-	public:
+public:
 	CommandExecutor(const commandMap map[] = nullptr);
 	CommandExecutor(PreCommandHook preCommand, PostCommandHook postCommand, const commandMap map[] = nullptr);
 	CommandExecutor(CommandExecutor &&c);
@@ -56,7 +56,7 @@ class CommandExecutor {
 	StatusCode execute(Context &context, Command commandCode, const RawData &data,
 						const ActorLink &actorLink) const;
 
-	private:
+private:
 	struct CommandExecutorImpl;
 	CommandExecutorImpl *pImpl;
 };
