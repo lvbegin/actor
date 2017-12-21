@@ -36,6 +36,6 @@
 enum class StatusCode : uint32_t { OK, SHUTDOWN, ERROR, };
 
 using Command = uint32_t;
-
+using ErrorCode = uint32_t;
 
 #endif

@@ -34,7 +34,6 @@
 #include <actor/linkApi.h>
 #include <actor/types.h>
 
-typedef uint32_t ErrorCode;
 
 using NotifySupervisor = std::function<void(const std::string &actorName, ErrorCode error)>; 
 
@@ -50,85 +49,74 @@ protected:
 
 class RestartActor : public ErrorStrategy {
 public:
-	static const ErrorStrategy *create() { return &singletonElement; }
-	virtual ~RestartActor() = default;
+	static const ErrorStrategy *create();
+	virtual ~RestartActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,			
-		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
-		supervisedRefs.restartOne(params.toString());
-	}
+		ErrorCode error, const RawData &params, const ActorLink &actor)  const override;
 private:
-	RestartActor() = default;
+	RestartActor();
 	static const RestartActor singletonElement;
 
 };
 
 class StopActor : public ErrorStrategy {
 public:
-	static const ErrorStrategy *create() { return &singletonElement; }
-	virtual ~StopActor() = default;
+	static const ErrorStrategy *create();
+	virtual ~StopActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const ActorLink &actor)  const {
-		supervisedRefs.stopOne(params.toString());
-	}
+			ErrorCode error, const RawData &params, const ActorLink &actor)  const override;
 private:
-	StopActor() = default;
+	StopActor();
 	static const StopActor singletonElement;
 };
 
 class StopAllActor : public ErrorStrategy {
 public:
-	static const ErrorStrategy *create() { return &singletonElement; }
-	virtual ~StopAllActor() = default;
+	static const ErrorStrategy *create();
+	virtual ~StopAllActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const ActorLink &actor)  const {
-		supervisedRefs.stopAll(); 
-	}
+			ErrorCode error, const RawData &params, const ActorLink &actor)  const override;
 private:
-	StopAllActor() = default;
+	StopAllActor();
 	static const StopAllActor singletonElement;
 };
 
 class RestartAllActor : public ErrorStrategy {
 public:
-	static const ErrorStrategy *create() { return &singletonElement; }
-	virtual ~RestartAllActor() = default;
+	static const ErrorStrategy *create();
+	virtual ~RestartAllActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const ActorLink &actor)  const { 
-		supervisedRefs.restartAll(); 
-	}
+			ErrorCode error, const RawData &params, const ActorLink &actor)  const override;
 private:
-	RestartAllActor() = default;
+	RestartAllActor();
 	static const RestartAllActor singletonElement;
-
 };
 
 class EscalateError : public ErrorStrategy {
 public:
-	static const ErrorStrategy *create() { return &singletonElement; }
-	virtual~EscalateError() = default;
+	static const ErrorStrategy *create();
+	virtual~EscalateError();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const ActorLink &actor)  const {
-		notifySupervisor(actor->getName(), error);
-	}
+			ErrorCode error, const RawData &params, const ActorLink &actor)  const override;
 private:
-	EscalateError() = default;
+	EscalateError();
 	static const EscalateError singletonElement;
 };
 
 class DoNothingError : public ErrorStrategy {
 public:
-	static const ErrorStrategy *create() { return &singletonElement; }
-	virtual~DoNothingError() = default;
+	static const ErrorStrategy *create();
+	virtual~DoNothingError();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const ActorLink &actor)  const { }
+			ErrorCode error, const RawData &params, const ActorLink &actor)  const override;
 private:
-	DoNothingError() = default;
+	DoNothingError();
 	static const DoNothingError singletonElement;
 };
 

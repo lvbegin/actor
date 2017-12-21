@@ -36,7 +36,6 @@
 
 class LinkApi;
 using ActorLink = std::shared_ptr<LinkApi>;
-using Command = uint32_t;
 
 class LinkApi {
 public:
@@ -56,6 +55,5 @@ protected:
 private :
 	const std::string name;
 };
-
 
 #endif

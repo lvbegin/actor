@@ -30,8 +30,67 @@
 #include <actor/errorStrategy.h>
 
 const RestartActor RestartActor::singletonElement;
+
+RestartActor::RestartActor() = default;
+RestartActor::~RestartActor() = default;
+const ErrorStrategy *RestartActor::create() { return &singletonElement; }
+void RestartActor::executeAction(const ControllerApi &supervisedRefs, 
+		NotifySupervisor notifySupervisor,			
+		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
+	supervisedRefs.restartOne(params.toString());
+}
+
 const StopActor StopActor::singletonElement;
+
+StopActor::StopActor() = default;
+StopActor::~StopActor() = default;
+const ErrorStrategy *StopActor::create() { return &singletonElement; }
+void StopActor::executeAction(const ControllerApi &supervisedRefs, 
+		NotifySupervisor notifySupervisor,
+		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
+	supervisedRefs.stopOne(params.toString());
+}
+	
+
 const StopAllActor StopAllActor::singletonElement;
+
+StopAllActor::StopAllActor() = default;
+StopAllActor::~StopAllActor() = default;
+const ErrorStrategy *StopAllActor::create() { return &singletonElement; }
+void StopAllActor::executeAction(const ControllerApi &supervisedRefs, 
+		NotifySupervisor notifySupervisor,
+		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
+	supervisedRefs.stopAll(); 
+}
+
 const RestartAllActor RestartAllActor::singletonElement;
+
+RestartAllActor::RestartAllActor() = default;
+RestartAllActor::~RestartAllActor() = default;
+const ErrorStrategy *RestartAllActor::create() { return &singletonElement; }
+void RestartAllActor::executeAction(const ControllerApi &supervisedRefs, 
+		NotifySupervisor notifySupervisor,
+		ErrorCode error, const RawData &params, const ActorLink &actor)  const { 
+	supervisedRefs.restartAll(); 
+}
+
 const EscalateError EscalateError::singletonElement;
+
+EscalateError::EscalateError() = default;
+EscalateError::~EscalateError() = default;
+const ErrorStrategy *EscalateError::create() { return &singletonElement; }
+void EscalateError::executeAction(const ControllerApi &supervisedRefs, 
+		NotifySupervisor notifySupervisor,
+		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
+	notifySupervisor(actor->getName(), error);
+}
+
 const DoNothingError DoNothingError::singletonElement;
+
+DoNothingError::DoNothingError() = default;
+DoNothingError::~DoNothingError() = default;
+const ErrorStrategy *DoNothingError::create() { return &singletonElement; }
+void DoNothingError::executeAction(const ControllerApi &supervisedRefs, 
+		NotifySupervisor notifySupervisor,
+		ErrorCode error, const RawData &params, const ActorLink &actor)  const { }
+
