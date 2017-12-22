@@ -35,7 +35,8 @@
 
 enum class MessageType:uint32_t { COMMAND_MESSAGE, ERROR_MESSAGE, MANAGEMENT_MESSAGE, };
 
-typedef uint32_t Id;
+using Id = uint32_t;
+
 static inline Id toId(const RawData &data)
 {
 	return data.toInt();
