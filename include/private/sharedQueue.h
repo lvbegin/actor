@@ -33,11 +33,13 @@
 #include <mutex>
 #include <condition_variable>
 #include <queue>
+#include <functional>
+#include <chrono>
 
 template<typename T>
 class SharedQueue {
 public:
-	SharedQueue() = default;
+	SharedQueue(std::function<T(void)> invalidValue = [](){ return T(); }) : invalidValue(invalidValue) { }
 	~SharedQueue() = default;
 
 	void post (T &&v) {
@@ -47,17 +49,35 @@ public:
 		condition.notify_one();
 	}
 	T get(void) {
+		return get([this](std::unique_lock<std::mutex> &l) { 
+			condition.wait(l, [this]() { return !q.empty();}); 
+			return true;
+		});
+	}
+
+	T get (unsigned int timeout_in_ms) {
+		std::chrono::milliseconds timeout(timeout_in_ms);
+		return get([this, &timeout](std::unique_lock<std::mutex> &l) { 
+			return condition.wait_for(l, timeout, [this]() { return !q.empty();}); 
+		});
+	}
+private:
+	using WaitMessage = std::function<bool(std::unique_lock<std::mutex> &)> ;
+
+	T get(WaitMessage &&waitMessage) {
 		std::unique_lock<std::mutex> l(mutexQueue);
 
-		condition.wait(l, [this]() { return !q.empty();});
+		if (!waitMessage(l)) 
+			return invalidValue();	
 		auto message = std::move(q.front());
 		q.pop();
 		return message;
+		
 	}
-private:
 	std::mutex mutexQueue;
 	std::condition_variable condition;
 	std::queue<T> q;
+	std::function<T(void)> invalidValue;
 };
 
 #endif

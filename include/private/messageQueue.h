@@ -36,16 +36,22 @@
 
 class MessageQueue : public LinkApi {
 public:
-	struct Message {
-		const MessageType type;
-		const Command code;
-		RawData params;
-		std::shared_ptr<LinkApi> sender;
-		Message(MessageType type, int code, RawData params, ActorLink sender);
-		~Message();
-		Message(struct Message &&m);
-		Message (const struct Message &m) = delete;
-		struct Message &operator=(const struct Message &m) = delete;
+	class Message {
+		public:
+			const MessageType type;
+			const Command code;
+			RawData params;
+			std::shared_ptr<LinkApi> sender;
+			Message(MessageType type, int code, RawData params, ActorLink sender);
+			Message();
+			~Message();
+			Message(struct Message &&m);
+			Message (const struct Message &m) = delete;
+			struct Message &operator=(const struct Message &m) = delete;
+
+			bool isValid();
+		private:
+			const bool valid;
 	};
 	MessageQueue(std::string name = std::string());
 	virtual ~MessageQueue();
@@ -56,6 +62,7 @@ public:
 	void post(MessageType type, Command command, RawData params = RawData());
 
 	Message get(void);
+	Message get(unsigned int timeout_in_ms);
 private:
 	SharedQueue<Message> queue;
 

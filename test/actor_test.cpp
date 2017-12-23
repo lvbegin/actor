@@ -121,6 +121,25 @@ static int actorSendMessageAndReceiveAnAnswerTest(void) {
 	return (OK_ANSWER == queue->get().code) ? 0 : 1;
 }
 
+static int actorSendMessageAndDoNptReceiveAnAnswerTest(void) {
+	static const std::string paramValue("Hello World");
+	static const uint32_t OK_ANSWER = 0x00;
+	static const uint32_t NOK_ANSWER = 0x01;
+	static const uint32_t command = 1 | CommandValue::COMMAND_FLAG;
+	static const commandMap commands[] = {
+			{command, [](Context &, const RawData &params, const ActorLink &link) {
+				return StatusCode::OK;
+				}},
+			{ 0, NULL},
+	};
+
+	const Actor a("actor name", CommandExecutor(commands));
+	auto queue = std::make_shared<MessageQueue>();
+	a.post(command, paramValue, queue);
+	auto answer = queue->get(2000);
+	return (!answer.isValid()) ? 0 : 1;
+}
+
 static int actorSendUnknownCommandAndReceiveErrorCodeTest(void) {
 	static const std::string paramValue("Hello World");
 
@@ -1027,6 +1046,7 @@ int main() {
 			TEST(basicActorWithParamsTest),
 			TEST(proxyTest),
 			TEST(actorSendMessageAndReceiveAnAnswerTest),
+			TEST(actorSendMessageAndDoNptReceiveAnAnswerTest),
 			TEST(actorSendUnknownCommandAndReceiveErrorCodeTest),
 			TEST(actorSendUnknownCommandCodeTest),
 			TEST(registryConnectTest),

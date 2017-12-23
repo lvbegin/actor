@@ -30,13 +30,17 @@
 #include <private/messageQueue.h>
 
 MessageQueue::Message::Message(MessageType type, int code, RawData params, ActorLink sender) :
-				type(type), code(code), params(std::move(params)), sender(std::move(sender)) { }
+				type(type), code(code), params(std::move(params)), sender(std::move(sender)), valid(true) { }
+MessageQueue::Message::Message() : type(MessageType::COMMAND_MESSAGE), code(0), valid(false) { }
 
 MessageQueue::Message::~Message() = default;
 MessageQueue::Message::Message(struct Message &&m) = default;
 
+bool MessageQueue::Message::isValid() { return valid; }
+
 MessageQueue::MessageQueue(std::string name) : LinkApi(std::move(name)) { }
 MessageQueue::~MessageQueue() = default;
+
 
 void MessageQueue::post(Command command, ActorLink sender) {
 	static const RawData EMPTY_DATA;
@@ -53,6 +57,8 @@ void MessageQueue::post(MessageType type, Command command, RawData params) {
 }
 
 struct MessageQueue::Message MessageQueue::get(void) { return queue.get(); }
+
+MessageQueue::Message MessageQueue::get(unsigned int timeout_in_ms) { return queue.get(timeout_in_ms); }
 
 void MessageQueue::putMessage(MessageType type, Command command, RawData params, ActorLink sender) {
 	queue.post(Message(type, command, std::move(params), std::move(sender)));
