@@ -31,7 +31,7 @@
 #define ACTOR_CONTEXT_H__
 
 #include <actor/context.h>
-#include <actor/linkApi.h>
+#include <actor/senderApi.h>
 #include <private/supervisor.h>
 
 class ActorContext : public Context {

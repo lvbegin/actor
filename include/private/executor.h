@@ -30,7 +30,7 @@
 #ifndef EXECUTOR_H__
 #define EXECUTOR_H__
 
-#include <private/messageQueue.h>
+#include <actor/messageQueue.h>
 
 #include <functional>
 #include <thread>

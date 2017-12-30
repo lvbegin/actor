@@ -30,10 +30,10 @@
 #ifndef ACTOR_CONTROLLER_H__
 #define ACTOR_CONTROLLER_H__
 
-#include <private/messageQueue.h>
+#include <actor/controllerApi.h>
+#include <actor/messageQueue.h>
 #include <private/sharedVector.h>
 #include <private/commandValue.h>
-#include <actor/controllerApi.h>
 
 using LinkRef = std::shared_ptr<MessageQueue>;
 using LinkRefOperation = std::function<void(const LinkRef &)>;

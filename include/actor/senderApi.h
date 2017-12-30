@@ -1,4 +1,4 @@
-/* Copyright 2017 Laurent Van Begin
+/* Copyright 2016 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,17 +27,29 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <actor/linkApi.h>
+#ifndef LINK_API_H__
+#define LINK_API_H__
 
+#include <actor/rawData.h>
 
-LinkApi::LinkApi(std::string name) : name(std::move(name)) { }
+#include <memory>
 
-LinkApi::~LinkApi() = default;
+class SenderApi;
+using ActorLink = std::shared_ptr<SenderApi>;
 
-const std::string &LinkApi::getName(void) const { return name; }
+class SenderApi {
+public:
+	virtual void post(Command command, ActorLink sender = ActorLink()) = 0;
+	virtual void post(Command command, const RawData &data, ActorLink sender = ActorLink()) = 0;
 
-bool LinkApi::hasName(const std::string &n) const { return 0 == name.compare(n); }
+	const std::string &getName(void) const;
+	bool hasName(const std::string &n) const;
+	static std::function<bool(const ActorLink &l)> nameComparator(const std::string &name);
+protected:
+	SenderApi(std::string name);
+	virtual ~SenderApi();
+private :
+	const std::string name;
+};
 
-std::function<bool(const ActorLink &l)> LinkApi::nameComparator(const std::string &name) {
-		return [&name](const ActorLink &l) { return l->hasName(name); };
-	}
+#endif

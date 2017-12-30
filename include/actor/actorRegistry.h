@@ -30,7 +30,7 @@
 #ifndef ACTOR_REGISTRY_H__
 #define ACTOR_REGISTRY_H__
 
-#include <actor/linkApi.h>
+#include <actor/senderApi.h>
 
 #include <cstdint>
 #include <thread>

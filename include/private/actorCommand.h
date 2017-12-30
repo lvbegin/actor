@@ -34,7 +34,7 @@
 #include <actor/context.h>
 #include <actor/rawData.h>
 #include <actor/commandMap.h>
-#include <actor/linkApi.h>
+#include <actor/senderApi.h>
 
 #include <map>
 #include <functional>

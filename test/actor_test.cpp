@@ -31,12 +31,12 @@
 #include <actor/rawData.h>
 #include <actor/commandMap.h>
 #include <actor/actorRegistry.h>
+#include <actor/messageQueue.h>
 #include <private/proxyClient.h>
 #include <private/actorCommand.h>
 #include <private/proxyServer.h>
 #include <private/clientSocket.h>
 #include <private/commandValue.h>
-#include <private/messageQueue.h>
 #include <private/serverSocket.h>
 #include <private/executor.h>
 

@@ -62,7 +62,7 @@ class ActorRegistry::ActorRegistryImpl {
 
 		void registerActor(ActorLink actor) { actors.push_back(std::move(actor)); }
 
-		void unregisterActor(const std::string &name) { actors.erase(LinkApi::nameComparator(name)); }
+		void unregisterActor(const std::string &name) { actors.erase(SenderApi::nameComparator(name)); }
 		
 		
 		ActorLink  getActor(const std::string &name) const {
@@ -116,7 +116,7 @@ class ActorRegistry::ActorRegistryImpl {
 	}
 
 	ActorLink getLocalActor(const std::string &name) const {
-		return actors.find_if(LinkApi::nameComparator(name));
+		return actors.find_if(SenderApi::nameComparator(name));
 	}
 
 	ActorLink getRemoteActor(const std::string &name) const {

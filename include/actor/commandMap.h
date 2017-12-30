@@ -33,7 +33,7 @@
 #include <actor/types.h>
 #include <actor/context.h>
 #include <actor/rawData.h>
-#include <actor/linkApi.h>
+#include <actor/senderApi.h>
 
 using CommandFunction = std::function<StatusCode(Context &, const RawData &, const ActorLink &)>;
 

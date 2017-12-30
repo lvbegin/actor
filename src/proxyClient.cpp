@@ -32,7 +32,7 @@
 #include <private/proxyClient.h>
 
 ProxyClient::ProxyClient(std::string name, Connection connection) :
-						LinkApi(std::move(name)), connection(std::move(connection)) { }
+						SenderApi(std::move(name)), connection(std::move(connection)) { }
 ProxyClient::~ProxyClient() = default;
 
 void ProxyClient::post(Command command, ActorLink sender) {

@@ -35,7 +35,7 @@ ActorController::~ActorController() = default;
 
 void ActorController::add(LinkRef actorLink) { actors.push_back(std::move(actorLink)); }
 
-void ActorController::remove(const std::string &name) { actors.erase(LinkApi::nameComparator(name)); }
+void ActorController::remove(const std::string &name) { actors.erase(SenderApi::nameComparator(name)); }
 
 void ActorController::restartOne(const std::string &name) const { doOperationOneActor(name, restart); }
 
@@ -55,7 +55,7 @@ void ActorController::sendMessage(const LinkRef &link, Command command) {
 
 void ActorController::doOperationOneActor(const std::string &name, LinkRefOperation op) const {
 	try {
-		op(actors.find_if(LinkApi::nameComparator(name)));
+		op(actors.find_if(SenderApi::nameComparator(name)));
 	} catch (const std::out_of_range &) { }
 }
 

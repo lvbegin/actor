@@ -31,9 +31,9 @@
 #define PROXY_CLIENT_H__
 
 #include <private/connection.h>
-#include <actor/linkApi.h>
+#include <actor/senderApi.h>
 
-class ProxyClient : public LinkApi {
+class ProxyClient : public SenderApi {
 public:
 	ProxyClient(std::string name, Connection connection);
 	~ProxyClient();

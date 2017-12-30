@@ -27,7 +27,7 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <private/messageQueue.h>
+#include <actor/messageQueue.h>
 
 MessageQueue::Message::Message(MessageType type, int code, RawData params, ActorLink sender) :
 				type(type), code(code), params(std::move(params)), sender(std::move(sender)), valid(true) { }
@@ -38,7 +38,7 @@ MessageQueue::Message::Message(struct Message &&m) = default;
 
 bool MessageQueue::Message::isValid() { return valid; }
 
-MessageQueue::MessageQueue(std::string name) : LinkApi(std::move(name)) { }
+MessageQueue::MessageQueue(std::string name) : SenderApi(std::move(name)) { }
 MessageQueue::~MessageQueue() = default;
 
 

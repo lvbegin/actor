@@ -32,7 +32,7 @@
 
 #include <actor/context.h>
 #include <actor/rawData.h>
-#include <actor/linkApi.h>
+#include <actor/senderApi.h>
 
 #include <functional>
 

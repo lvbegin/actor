@@ -30,8 +30,9 @@
 #ifndef ERROR_STRATEGY_H__
 #define ERROR_STRATEGY_H__
 
+#include <actor/errorStrategy.h>
 #include <actor/controllerApi.h>
-#include <actor/linkApi.h>
+#include <actor/senderApi.h>
 #include <actor/types.h>
 
 

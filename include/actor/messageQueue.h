@@ -32,16 +32,16 @@
 
 #include <private/sharedQueue.h>
 #include <private/types.h>
-#include <actor/linkApi.h>
+#include <actor/senderApi.h>
 
-class MessageQueue : public LinkApi {
+class MessageQueue : public SenderApi {
 public:
 	class Message {
 		public:
 			const MessageType type;
 			const Command code;
 			RawData params;
-			std::shared_ptr<LinkApi> sender;
+			ActorLink sender;
 			Message(MessageType type, int code, RawData params, ActorLink sender);
 			Message();
 			~Message();

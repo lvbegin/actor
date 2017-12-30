@@ -30,10 +30,10 @@
 #ifndef SUPERVISOR_H__
 #define SUPERVISOR_H__
 
-#include <private/actorController.h>
-#include <private/messageQueue.h>
-#include <private/commandValue.h>
+#include <actor/messageQueue.h>
 #include <actor/actionStrategy.h>
+#include <private/actorController.h>
+#include <private/commandValue.h>
 
 class Supervisor {
 public:
