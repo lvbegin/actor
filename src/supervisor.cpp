@@ -32,8 +32,8 @@
 
 #include <iostream>
 
-Supervisor::Supervisor(ActionStrategy strategy, LinkRef self) :
-					restartStrategy(std::move(strategy)), self(std::move(self)) { }
+Supervisor::Supervisor(ErrorActionDispatcher strategy, LinkRef self) :
+					actionDispatcher(std::move(strategy)), self(std::move(self)) { }
 
 Supervisor::~Supervisor() = default;
 
@@ -74,7 +74,7 @@ void Supervisor::manageErrorFromSupervised(ErrorCode error, const RawData &param
 		if (nullptr != ref.get())
 			ref->post(MessageType::ERROR_MESSAGE, error, actorName);
 	});
-	restartStrategy(error)->executeAction(supervisedRefs, notifySupervisor, error, params, self);
+	actionDispatcher(error)->executeAction(supervisedRefs, notifySupervisor, error, params, self);
 }
 
 void Supervisor::registerMonitored(Supervisor &monitored) {

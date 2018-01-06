@@ -31,13 +31,13 @@
 #define SUPERVISOR_H__
 
 #include <actor/messageQueue.h>
-#include <actor/actionStrategy.h>
+#include <actor/errorActionDispatcher.h>
 #include <private/actorController.h>
 #include <private/commandValue.h>
 
 class Supervisor {
 public:
-	Supervisor(ActionStrategy strategy, LinkRef self);
+	Supervisor(ErrorActionDispatcher strategy, LinkRef self);
 	~Supervisor();
 
 	bool notifySupervisor(Command command) const;
@@ -51,7 +51,7 @@ public:
 	void unregisterMonitored(Supervisor &monitored);
 private:
 	mutable std::mutex monitorMutex;
-	const ActionStrategy restartStrategy;
+	const ErrorActionDispatcher actionDispatcher;
 	const LinkRef self;
 	ActorController supervisedRefs;
 	std::weak_ptr<MessageQueue> supervisorRef;

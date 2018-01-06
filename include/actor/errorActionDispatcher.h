@@ -27,14 +27,14 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ACTION_STRATEGY_H__
-#define ACTION_STRATEGY_H__
+#ifndef ERROR_ACTION_DISPATCHER_H__
+#define ERROR_ACTION_DISPATCHER_H__
 
 #include <actor/errorStrategy.h>
 
 #include <functional>
 
-using  ActionStrategy = std::function<const ErrorStrategy *(ErrorCode error)>;
+using  ErrorActionDispatcher = std::function<const ErrorStrategy *(ErrorCode error)>;
 
 
 #endif

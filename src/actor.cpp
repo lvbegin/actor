@@ -58,10 +58,10 @@ class ActorException : public std::runtime_error {
 class Actor::ActorImpl {
 public:
 	ActorImpl(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, std::unique_ptr<State> state,
-			ActionStrategy restartStrategy) :
+			ErrorActionDispatcher errorDispatcher) :
 				executorQueue(std::make_shared<MessageQueue>(std::move(name))),
 				hooks(hooks), commandExecutor(std::move(commandExecutor)),
-				context(restartStrategy, executorQueue,	std::move(state)),
+				context(errorDispatcher, executorQueue,	std::move(state)),
 				executor(createAtStartExecutor())
 				{ checkActorInitialization(); }
 	~ActorImpl() {
@@ -198,23 +198,23 @@ const AtRestartHook DEFAULT_RESTART_HOOK = [](const Context& c) {
 	c.restartActors();
 	return StatusCode::OK;
 };
-const ActionStrategy DEFAULT_RESTART_STRATEGY = [](ErrorCode) { return RestartActor::create(); };
+const ErrorActionDispatcher DEFAULT_ERROR_DISPATCHER = [](ErrorCode) { return RestartActor::create(); };
 static const ActorHooks DEFAULT_HOOKS = ActorHooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK, DEFAULT_RESTART_HOOK);
 
 
-Actor::Actor(std::string name, CommandExecutor commandExecutor, ActionStrategy restartStrategy) :
-				Actor(std::move(name), std::move(commandExecutor), DEFAULT_HOOKS, std::make_unique<NoState>(),restartStrategy) { }
+Actor::Actor(std::string name, CommandExecutor commandExecutor, ErrorActionDispatcher errorDispatcher) :
+				Actor(std::move(name), std::move(commandExecutor), DEFAULT_HOOKS, std::make_unique<NoState>(),errorDispatcher) { }
 
-Actor::Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, ActionStrategy restartStrategy) :
-		Actor(std::move(name), std::move(commandExecutor), hooks, std::make_unique<NoState>(),restartStrategy) { }
+Actor::Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, ErrorActionDispatcher errorDispatcher) :
+		Actor(std::move(name), std::move(commandExecutor), hooks, std::make_unique<NoState>(),errorDispatcher) { }
 
 Actor::Actor(std::string name, CommandExecutor commandExecutor, std::unique_ptr<State> state,
-				ActionStrategy restartStrategy) :
-						Actor(std::move(name), std::move(commandExecutor), DEFAULT_HOOKS, std::move(state), restartStrategy) { }
+				ErrorActionDispatcher errorDispatcher) :
+						Actor(std::move(name), std::move(commandExecutor), DEFAULT_HOOKS, std::move(state), errorDispatcher) { }
 
 Actor::Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, std::unique_ptr<State> state,
-				ActionStrategy restartStrategy) :
-					pImpl(new Actor::ActorImpl(name, std::move(commandExecutor), hooks, std::move(state), restartStrategy))
+				ErrorActionDispatcher errorDispatcher) :
+					pImpl(new Actor::ActorImpl(name, std::move(commandExecutor), hooks, std::move(state), errorDispatcher))
 										{ }
 
 Actor::~Actor() { delete pImpl; }

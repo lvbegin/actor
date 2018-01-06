@@ -36,7 +36,7 @@
 
 class ActorContext : public Context {
 public:
-	ActorContext(ActionStrategy strategy, LinkRef self, std::unique_ptr<State> state);
+	ActorContext(ErrorActionDispatcher strategy, LinkRef self, std::unique_ptr<State> state);
 	ActorContext() = delete;
 	~ActorContext();
 

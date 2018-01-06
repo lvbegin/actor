@@ -30,7 +30,7 @@
 #ifndef ACTOR_H__
 #define ACTOR_H__
 
-#include <actor/actionStrategy.h>
+#include <actor/errorActionDispatcher.h>
 #include <actor/context.h>
 #include <actor/commandExecutor.h>
 
@@ -43,7 +43,7 @@ using AtRestartHook = std::function<StatusCode(const Context &)>;
 extern const AtStartHook DEFAULT_START_HOOK;
 extern const AtStopHook DEFAULT_STOP_HOOK;
 extern const AtRestartHook DEFAULT_RESTART_HOOK;
-extern const ActionStrategy DEFAULT_RESTART_STRATEGY;
+extern const ErrorActionDispatcher DEFAULT_ERROR_DISPATCHER;
 
 
 class ActorStartFailure : public std::runtime_error {
@@ -64,14 +64,14 @@ class Executor;
 
 class Actor {
 public:
-	Actor(std::string name, CommandExecutor commandExecutor, ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
+	Actor(std::string name, CommandExecutor commandExecutor, ErrorActionDispatcher errorDispatcher = DEFAULT_ERROR_DISPATCHER);
 	Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks,
-			ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
+			ErrorActionDispatcher errorDispatcher = DEFAULT_ERROR_DISPATCHER);
 
 	Actor(std::string name, CommandExecutor commandExecutor, std::unique_ptr<State> state,
-			ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
+			ErrorActionDispatcher errorDispatcher = DEFAULT_ERROR_DISPATCHER);
 	Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, std::unique_ptr<State> state,
-			ActionStrategy restartStrategy = DEFAULT_RESTART_STRATEGY);
+			ErrorActionDispatcher errorDispatcher = DEFAULT_ERROR_DISPATCHER);
 
 	~Actor();
 
