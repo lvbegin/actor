@@ -27,13 +27,13 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <actor/errorStrategy.h>
+#include <actor/errorReaction.h>
 
 const RestartActor RestartActor::singletonElement;
 
 RestartActor::RestartActor() = default;
 RestartActor::~RestartActor() = default;
-const ErrorStrategy *RestartActor::create() { return &singletonElement; }
+const ErrorReaction *RestartActor::create() { return &singletonElement; }
 void RestartActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,			
 		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
@@ -44,7 +44,7 @@ const StopActor StopActor::singletonElement;
 
 StopActor::StopActor() = default;
 StopActor::~StopActor() = default;
-const ErrorStrategy *StopActor::create() { return &singletonElement; }
+const ErrorReaction *StopActor::create() { return &singletonElement; }
 void StopActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
@@ -56,7 +56,7 @@ const StopAllActor StopAllActor::singletonElement;
 
 StopAllActor::StopAllActor() = default;
 StopAllActor::~StopAllActor() = default;
-const ErrorStrategy *StopAllActor::create() { return &singletonElement; }
+const ErrorReaction *StopAllActor::create() { return &singletonElement; }
 void StopAllActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
@@ -67,7 +67,7 @@ const RestartAllActor RestartAllActor::singletonElement;
 
 RestartAllActor::RestartAllActor() = default;
 RestartAllActor::~RestartAllActor() = default;
-const ErrorStrategy *RestartAllActor::create() { return &singletonElement; }
+const ErrorReaction *RestartAllActor::create() { return &singletonElement; }
 void RestartAllActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const ActorLink &actor)  const { 
@@ -78,7 +78,7 @@ const EscalateError EscalateError::singletonElement;
 
 EscalateError::EscalateError() = default;
 EscalateError::~EscalateError() = default;
-const ErrorStrategy *EscalateError::create() { return &singletonElement; }
+const ErrorReaction *EscalateError::create() { return &singletonElement; }
 void EscalateError::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
@@ -89,7 +89,7 @@ const DoNothingError DoNothingError::singletonElement;
 
 DoNothingError::DoNothingError() = default;
 DoNothingError::~DoNothingError() = default;
-const ErrorStrategy *DoNothingError::create() { return &singletonElement; }
+const ErrorReaction *DoNothingError::create() { return &singletonElement; }
 void DoNothingError::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const ActorLink &actor)  const { }

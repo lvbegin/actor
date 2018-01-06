@@ -30,7 +30,6 @@
 #ifndef ERROR_STRATEGY_H__
 #define ERROR_STRATEGY_H__
 
-#include <actor/errorStrategy.h>
 #include <actor/controllerApi.h>
 #include <actor/senderApi.h>
 #include <actor/types.h>
@@ -38,19 +37,19 @@
 
 using NotifySupervisor = std::function<void(const std::string &actorName, ErrorCode error)>; 
 
-class ErrorStrategy {
+class ErrorReaction {
 public:
 		virtual void executeAction(const ControllerApi &supervisedRefs,
 				NotifySupervisor notifySupervisor, ErrorCode error, const RawData &params,
 				const ActorLink &actor) const = 0;
 protected:
-		ErrorStrategy() = default;
-		virtual ~ErrorStrategy() = default;
+	ErrorReaction() = default;
+	virtual ~ErrorReaction() = default;
 };
 
-class RestartActor : public ErrorStrategy {
+class RestartActor : public ErrorReaction {
 public:
-	static const ErrorStrategy *create();
+	static const ErrorReaction *create();
 	virtual ~RestartActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,			
@@ -61,9 +60,9 @@ private:
 
 };
 
-class StopActor : public ErrorStrategy {
+class StopActor : public ErrorReaction {
 public:
-	static const ErrorStrategy *create();
+	static const ErrorReaction *create();
 	virtual ~StopActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
@@ -73,9 +72,9 @@ private:
 	static const StopActor singletonElement;
 };
 
-class StopAllActor : public ErrorStrategy {
+class StopAllActor : public ErrorReaction {
 public:
-	static const ErrorStrategy *create();
+	static const ErrorReaction *create();
 	virtual ~StopAllActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
@@ -85,9 +84,9 @@ private:
 	static const StopAllActor singletonElement;
 };
 
-class RestartAllActor : public ErrorStrategy {
+class RestartAllActor : public ErrorReaction {
 public:
-	static const ErrorStrategy *create();
+	static const ErrorReaction *create();
 	virtual ~RestartAllActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
@@ -97,9 +96,9 @@ private:
 	static const RestartAllActor singletonElement;
 };
 
-class EscalateError : public ErrorStrategy {
+class EscalateError : public ErrorReaction {
 public:
-	static const ErrorStrategy *create();
+	static const ErrorReaction *create();
 	virtual~EscalateError();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
@@ -109,9 +108,9 @@ private:
 	static const EscalateError singletonElement;
 };
 
-class DoNothingError : public ErrorStrategy {
+class DoNothingError : public ErrorReaction {
 public:
-	static const ErrorStrategy *create();
+	static const ErrorReaction *create();
 	virtual~DoNothingError();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,

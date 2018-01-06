@@ -30,11 +30,11 @@
 #ifndef ERROR_ACTION_DISPATCHER_H__
 #define ERROR_ACTION_DISPATCHER_H__
 
-#include <actor/errorStrategy.h>
+#include <actor/errorReaction.h>
 
 #include <functional>
 
-using  ErrorActionDispatcher = std::function<const ErrorStrategy *(ErrorCode error)>;
+using  ErrorActionDispatcher = std::function<const ErrorReaction *(ErrorCode error)>;
 
 
 #endif
