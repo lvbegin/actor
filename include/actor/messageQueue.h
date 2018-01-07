@@ -36,8 +36,7 @@
 
 class MessageQueue : public SenderApi {
 public:
-	class Message {
-		public:
+	struct Message {
 			const MessageType type;
 			const Command code;
 			RawData params;
