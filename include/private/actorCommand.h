@@ -47,7 +47,7 @@ public:
 	~ActorCommand();
 
 	StatusCode execute(Context &context, Command commandCode, const RawData &data,
-						const ActorLink &actorLink) const;
+						const SenderLink &actorLink) const;
 private:
 	const std::map<Command, CommandFunction> commands;
 };

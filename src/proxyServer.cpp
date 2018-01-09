@@ -34,7 +34,7 @@
 
 #include <arpa/inet.h>
 
-ProxyServer::ProxyServer(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate,
+ProxyServer::ProxyServer(SenderLink actor, Connection connection, std::function<void(void)> notifyTerminate,
 						FindActor findActor) :
 					t([actor, connection {std::move(connection)}, notifyTerminate, findActor]() mutable
 						{ serverBody(std::move(actor), std::move(connection), notifyTerminate, findActor); }) { }
@@ -44,7 +44,7 @@ ProxyServer::~ProxyServer() {
 		t.join();
 };
 
-void ProxyServer::serverBody(ActorLink actor, Connection connection, std::function<void(void)> notifyTerminate,
+void ProxyServer::serverBody(SenderLink actor, Connection connection, std::function<void(void)> notifyTerminate,
 								FindActor findActor) {
 	while (true) {
 		try {
@@ -53,7 +53,7 @@ void ProxyServer::serverBody(ActorLink actor, Connection connection, std::functi
 		} catch (const ConnectionTimeout &) { continue ; }
 		  catch (const std::runtime_error &) {  return; }
 		const auto name = connection.readString();
-		const auto sender = (name.size() > 0) ? findActor(name) : ActorLink();
+		const auto sender = (name.size() > 0) ? findActor(name) : SenderLink();
 		const auto command = connection.readInt<uint32_t>();
 		actor->post(command, connection.readRawData(), std::move(sender));
 		if (CommandValue::SHUTDOWN == command) {

@@ -36,7 +36,7 @@ RestartActor::~RestartActor() = default;
 const ErrorReaction *RestartActor::create() { return &singletonElement; }
 void RestartActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,			
-		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
+		ErrorCode error, const RawData &params, const SenderLink &actor)  const {
 	supervisedRefs.restartOne(params.toString());
 }
 
@@ -47,7 +47,7 @@ StopActor::~StopActor() = default;
 const ErrorReaction *StopActor::create() { return &singletonElement; }
 void StopActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
+		ErrorCode error, const RawData &params, const SenderLink &actor)  const {
 	supervisedRefs.stopOne(params.toString());
 }
 	
@@ -59,7 +59,7 @@ StopAllActor::~StopAllActor() = default;
 const ErrorReaction *StopAllActor::create() { return &singletonElement; }
 void StopAllActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
+		ErrorCode error, const RawData &params, const SenderLink &actor)  const {
 	supervisedRefs.stopAll(); 
 }
 
@@ -70,7 +70,7 @@ RestartAllActor::~RestartAllActor() = default;
 const ErrorReaction *RestartAllActor::create() { return &singletonElement; }
 void RestartAllActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const ActorLink &actor)  const { 
+		ErrorCode error, const RawData &params, const SenderLink &actor)  const { 
 	supervisedRefs.restartAll(); 
 }
 
@@ -81,7 +81,7 @@ EscalateError::~EscalateError() = default;
 const ErrorReaction *EscalateError::create() { return &singletonElement; }
 void EscalateError::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const ActorLink &actor)  const {
+		ErrorCode error, const RawData &params, const SenderLink &actor)  const {
 	notifySupervisor(actor->getName(), error);
 }
 
@@ -92,5 +92,5 @@ DoNothingError::~DoNothingError() = default;
 const ErrorReaction *DoNothingError::create() { return &singletonElement; }
 void DoNothingError::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const ActorLink &actor)  const { }
+		ErrorCode error, const RawData &params, const SenderLink &actor)  const { }
 

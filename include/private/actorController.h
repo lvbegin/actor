@@ -31,11 +31,11 @@
 #define ACTOR_CONTROLLER_H__
 
 #include <actor/controllerApi.h>
-#include <actor/messageQueue.h>
+#include <actor/link.h>
 #include <private/sharedVector.h>
 #include <private/commandValue.h>
 
-using LinkRef = std::shared_ptr<MessageQueue>;
+using LinkRef = std::shared_ptr<Link>;
 using LinkRefOperation = std::function<void(const LinkRef &)>;
 
 class ActorController : public ControllerApi {

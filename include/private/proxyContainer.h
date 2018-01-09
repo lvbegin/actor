@@ -40,11 +40,11 @@ class ProxyContainer {
 public:
 	ProxyContainer();
 	~ProxyContainer();
-	void createNewProxy(ActorLink actor, Connection connection, FindActor findActor);
+	void createNewProxy(SenderLink actor, Connection connection, FindActor findActor);
 	StatusCode executeCommand(Command command, const RawData &id);
 private:
 	SharedMap<Id, ProxyServer> proxies;
-	MessageQueue executorQueue;
+	Link executorQueue;
 	const Executor executor;
 };
 

@@ -78,10 +78,10 @@ public:
 	Actor(const Actor &a) = delete;
 	Actor &operator=(const Actor &a) = delete;
 
-	void post(Command command, ActorLink sender = ActorLink()) const;
-	void post(Command command, const RawData &params, ActorLink sender = ActorLink()) const;
+	void post(Command command, SenderLink sender = SenderLink()) const;
+	void post(Command command, const RawData &params, SenderLink sender = SenderLink()) const;
 
-	ActorLink getActorLinkRef() const;
+	SenderLink getActorLinkRef() const;
 
 	void registerActor(Actor &monitored);
 	void unregisterActor(Actor &monitored);

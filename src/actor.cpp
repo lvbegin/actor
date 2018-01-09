@@ -59,7 +59,7 @@ class Actor::ActorImpl {
 public:
 	ActorImpl(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, std::unique_ptr<State> state,
 			ErrorActionDispatcher errorDispatcher) :
-				executorQueue(std::make_shared<MessageQueue>(std::move(name))),
+				executorQueue(std::make_shared<Link>(std::move(name))),
 				hooks(hooks), commandExecutor(std::move(commandExecutor)),
 				context(errorDispatcher, executorQueue,	std::move(state)),
 				executor(createAtStartExecutor())
@@ -103,7 +103,7 @@ public:
 	void initContextState() { context.getState().init(executorQueue->getName()); }
 
 
-	StatusCode actorExecutor(MessageType type, Command command, const RawData &params, const ActorLink &sender) {
+	StatusCode actorExecutor(MessageType type, Command command, const RawData &params, const SenderLink &sender) {
 		static const ActorStateMachine::State stoppedValue[] = { ActorStateMachine::State::STOPPED };
 		static const std::vector<ActorStateMachine::State> stopped(stoppedValue, stoppedValue +
 																			sizeof(stoppedValue) / sizeof(stoppedValue[0]));
@@ -164,7 +164,7 @@ public:
 				atStartCb, [this]() { executorStopCb(); } );
 	}
 
-	StatusCode executeActorBody(Command command, const RawData &params, const ActorLink &sender) {
+	StatusCode executeActorBody(Command command, const RawData &params, const SenderLink &sender) {
 		try {
 			const auto rc = commandExecutor.execute(context, command, params, sender);
 			if (StatusCode::ERROR != rc)
@@ -220,16 +220,16 @@ Actor::Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks
 Actor::~Actor() { delete pImpl; }
 
 
-void Actor::post(Command command, ActorLink sender) const {
+void Actor::post(Command command, SenderLink sender) const {
 	static const RawData EMPTY_DATA;
 	pImpl->executorQueue->post(command, EMPTY_DATA, std::move(sender));
 }
 
-void Actor::post(Command command, const RawData &params, ActorLink sender) const {
+void Actor::post(Command command, const RawData &params, SenderLink sender) const {
 	pImpl->executorQueue->post(command, params, std::move(sender));
 }
 
-ActorLink Actor::getActorLinkRef() const { return pImpl->executorQueue; }
+SenderLink Actor::getActorLinkRef() const { return pImpl->executorQueue; }
 
 void Actor::registerActor(Actor &monitored) {
 	pImpl->context.getSupervisor().registerMonitored(monitored.pImpl->context.getSupervisor());

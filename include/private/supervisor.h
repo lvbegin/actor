@@ -30,7 +30,7 @@
 #ifndef SUPERVISOR_H__
 #define SUPERVISOR_H__
 
-#include <actor/messageQueue.h>
+#include <actor/link.h>
 #include <actor/errorActionDispatcher.h>
 #include <private/actorController.h>
 #include <private/commandValue.h>
@@ -54,7 +54,7 @@ private:
 	const ErrorActionDispatcher actionDispatcher;
 	const LinkRef self;
 	ActorController supervisedRefs;
-	std::weak_ptr<MessageQueue> supervisorRef;
+	std::weak_ptr<Link> supervisorRef;
 
 	bool postSupervisor(MessageType type, Command command, const RawData &data) const;
 	bool sendToSupervisor(MessageType type, uint32_t code) const;

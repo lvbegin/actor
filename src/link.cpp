@@ -27,45 +27,39 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MESSAGE_QUEUE_H__
-#define MESSAGE_QUEUE_H__
+#include <actor/link.h>
 
-#include <private/sharedQueue.h>
-#include <private/types.h>
-#include <actor/senderApi.h>
+Link::Message::Message(MessageType type, int code, RawData params, SenderLink sender) :
+				type(type), code(code), params(std::move(params)), sender(std::move(sender)), valid(true) { }
+Link::Message::Message() : type(MessageType::COMMAND_MESSAGE), code(0), valid(false) { }
 
-class MessageQueue : public SenderApi {
-public:
-	struct Message {
-			const MessageType type;
-			const Command code;
-			RawData params;
-			ActorLink sender;
-			Message(MessageType type, int code, RawData params, ActorLink sender);
-			Message();
-			~Message();
-			Message(struct Message &&m);
-			Message (const struct Message &m) = delete;
-			struct Message &operator=(const struct Message &m) = delete;
+Link::Message::~Message() = default;
+Link::Message::Message(struct Message &&m) = default;
 
-			bool isValid();
-		private:
-			const bool valid;
-	};
-	MessageQueue(std::string name = std::string());
-	virtual ~MessageQueue();
+bool Link::Message::isValid() { return valid; }
 
-	void post(Command command, ActorLink sender = ActorLink());
-	void post(Command command, const RawData &params, ActorLink sender = ActorLink());
+Link::Link(std::string name) : SenderApi(std::move(name)) { }
+Link::~Link() = default;
 
-	void post(MessageType type, Command command, RawData params = RawData());
 
-	Message get(void);
-	Message get(unsigned int timeout_in_ms);
-private:
-	SharedQueue<Message> queue;
+void Link::post(Command command, SenderLink sender) {
+	static const RawData EMPTY_DATA;
+	post(command, EMPTY_DATA, std::move(sender));
+}
 
-	void putMessage(MessageType type, Command command, RawData params, ActorLink sender);
-};
+void Link::post(Command command, const RawData &params, SenderLink sender) {
+	putMessage(MessageType::COMMAND_MESSAGE, command, params, std::move(sender));
+}
 
-#endif
+void Link::post(MessageType type, Command command, RawData params) {
+	static const SenderLink NO_LINK;
+	putMessage(type, command, std::move(params), NO_LINK);
+}
+
+struct Link::Message Link::get(void) { return queue.get(); }
+
+Link::Message Link::get(unsigned int timeout_in_ms) { return queue.get(timeout_in_ms); }
+
+void Link::putMessage(MessageType type, Command command, RawData params, SenderLink sender) {
+	queue.post(Message(type, command, std::move(params), std::move(sender)));
+}

@@ -30,18 +30,18 @@
 #ifndef EXECUTOR_H__
 #define EXECUTOR_H__
 
-#include <actor/messageQueue.h>
+#include <actor/link.h>
 
 #include <functional>
 #include <thread>
 
-using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const ActorLink &sender)>;
+using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const SenderLink &sender)>;
 using ExecutorHook = std::function<void(void)>;
 using ExecutorAtStart = std::function<StatusCode(void)>;
 
 class Executor {
 public:
-	Executor(ExecutorBody body, MessageQueue &queue, ExecutorAtStart atStart = [](void) { return StatusCode::OK; },
+	Executor(ExecutorBody body, Link &queue, ExecutorAtStart atStart = [](void) { return StatusCode::OK; },
 													ExecutorHook atStop = [](void) { });
 	~Executor();
 
@@ -51,7 +51,7 @@ public:
 	Executor(Executor &&a) = delete;
 	Executor &operator=(Executor &&a) = delete;
 private:
-	MessageQueue &messageQueue;
+	Link &messageQueue;
 	std::thread thread;
 
 	void run(ExecutorBody body, ExecutorAtStart atStart, ExecutorHook atStop) const;

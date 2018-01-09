@@ -41,9 +41,9 @@ public:
 	~ActorRegistry();
 	std::string addReference(const std::string &host, uint16_t port);
 	void removeReference(const std::string &registryName);
-	void registerActor(ActorLink actor);
+	void registerActor(SenderLink actor);
 	void unregisterActor(const std::string &name);
-	ActorLink  getActor(const std::string &name) const;
+	SenderLink  getActor(const std::string &name) const;
 private:
     class ActorRegistryImpl;
 

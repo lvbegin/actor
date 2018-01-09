@@ -35,16 +35,16 @@
 #include <memory>
 
 class SenderApi;
-using ActorLink = std::shared_ptr<SenderApi>;
+using SenderLink = std::shared_ptr<SenderApi>;
 
 class SenderApi {
 public:
-	virtual void post(Command command, ActorLink sender = ActorLink()) = 0;
-	virtual void post(Command command, const RawData &data, ActorLink sender = ActorLink()) = 0;
+	virtual void post(Command command, SenderLink sender = SenderLink()) = 0;
+	virtual void post(Command command, const RawData &data, SenderLink sender = SenderLink()) = 0;
 
 	const std::string &getName(void) const;
 	bool hasName(const std::string &n) const;
-	static std::function<bool(const ActorLink &l)> nameComparator(const std::string &name);
+	static std::function<bool(const SenderLink &l)> nameComparator(const std::string &name);
 protected:
 	SenderApi(std::string name);
 	virtual ~SenderApi();

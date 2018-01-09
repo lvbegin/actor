@@ -91,7 +91,7 @@ void Supervisor::doRegistrationOperation(Supervisor &monitored, std::function<vo
 	std::lock_guard<std::mutex> l2(monitored.monitorMutex, std::adopt_lock);
 
 	auto tmp = std::move(monitored.supervisorRef);
-	monitored.supervisorRef = std::weak_ptr<MessageQueue>(this->self);
+	monitored.supervisorRef = std::weak_ptr<Link>(this->self);
 	try {
 		op();
 	} catch (const std::exception &e) {

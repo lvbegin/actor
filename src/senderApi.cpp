@@ -37,7 +37,7 @@ const std::string &SenderApi::getName(void) const { return name; }
 
 bool SenderApi::hasName(const std::string &n) const { return 0 == name.compare(n); }
 
-std::function<bool(const ActorLink &l)> SenderApi::nameComparator(const std::string &name)
+std::function<bool(const SenderLink &l)> SenderApi::nameComparator(const std::string &name)
 {
-	return [&name](const ActorLink &l) { return l->hasName(name); };
+	return [&name](const SenderLink &l) { return l->hasName(name); };
 }

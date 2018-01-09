@@ -35,12 +35,12 @@
 
 ProxyContainer::ProxyContainer() :
 	executor(
-	[this](MessageType, Command command, const RawData &id, const ActorLink &) { return executeCommand(command, id); },
+	[this](MessageType, Command command, const RawData &id, const SenderLink &) { return executeCommand(command, id); },
 	executorQueue) { }
 
 ProxyContainer::~ProxyContainer() { executorQueue.post(CommandValue::SHUTDOWN); }
 
-void ProxyContainer::createNewProxy(ActorLink actor, Connection connection, FindActor findActor) {
+void ProxyContainer::createNewProxy(SenderLink actor, Connection connection, FindActor findActor) {
 	static const uint32_t USELESS_CODE = 0;
 	const auto id = UniqueId::newId();
 	const auto terminate = [this, id]() {

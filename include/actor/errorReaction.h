@@ -41,7 +41,7 @@ class ErrorReaction {
 public:
 		virtual void executeAction(const ControllerApi &supervisedRefs,
 				NotifySupervisor notifySupervisor, ErrorCode error, const RawData &params,
-				const ActorLink &actor) const = 0;
+				const SenderLink &actor) const = 0;
 protected:
 	ErrorReaction() = default;
 	virtual ~ErrorReaction() = default;
@@ -53,7 +53,7 @@ public:
 	virtual ~RestartActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,			
-		ErrorCode error, const RawData &params, const ActorLink &actor)  const override;
+		ErrorCode error, const RawData &params, const SenderLink &actor)  const override;
 private:
 	RestartActor();
 	static const RestartActor singletonElement;
@@ -66,7 +66,7 @@ public:
 	virtual ~StopActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const ActorLink &actor)  const override;
+			ErrorCode error, const RawData &params, const SenderLink &actor)  const override;
 private:
 	StopActor();
 	static const StopActor singletonElement;
@@ -78,7 +78,7 @@ public:
 	virtual ~StopAllActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const ActorLink &actor)  const override;
+			ErrorCode error, const RawData &params, const SenderLink &actor)  const override;
 private:
 	StopAllActor();
 	static const StopAllActor singletonElement;
@@ -90,7 +90,7 @@ public:
 	virtual ~RestartAllActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const ActorLink &actor)  const override;
+			ErrorCode error, const RawData &params, const SenderLink &actor)  const override;
 private:
 	RestartAllActor();
 	static const RestartAllActor singletonElement;
@@ -102,7 +102,7 @@ public:
 	virtual~EscalateError();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const ActorLink &actor)  const override;
+			ErrorCode error, const RawData &params, const SenderLink &actor)  const override;
 private:
 	EscalateError();
 	static const EscalateError singletonElement;
@@ -114,7 +114,7 @@ public:
 	virtual~DoNothingError();
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const ActorLink &actor)  const override;
+			ErrorCode error, const RawData &params, const SenderLink &actor)  const override;
 private:
 	DoNothingError();
 	static const DoNothingError singletonElement;

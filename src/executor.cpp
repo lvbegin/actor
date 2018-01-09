@@ -31,7 +31,7 @@
 #include <private/exception.h>
 #include <private/commandValue.h>
 
-Executor::Executor(ExecutorBody body, MessageQueue &queue, ExecutorAtStart atStart, ExecutorHook atStop) :
+Executor::Executor(ExecutorBody body, Link &queue, ExecutorAtStart atStart, ExecutorHook atStop) :
 				messageQueue(queue), thread([this, body, atStart, atStop]() { run(body, atStart, atStop); }) { }
 
 Executor::~Executor() { thread.join(); };
