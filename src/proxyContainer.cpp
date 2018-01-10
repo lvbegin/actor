@@ -34,17 +34,18 @@
 #include <tuple>
 
 ProxyContainer::ProxyContainer() :
+    executorQueue(Link::create()),
 	executor(
 	[this](MessageType, Command command, const RawData &id, const SenderLink &) { return executeCommand(command, id); },
-	executorQueue) { }
+	*executorQueue) { }
 
-ProxyContainer::~ProxyContainer() { executorQueue.post(CommandValue::SHUTDOWN); }
+ProxyContainer::~ProxyContainer() { executorQueue->post(CommandValue::SHUTDOWN); }
 
 void ProxyContainer::createNewProxy(SenderLink actor, Connection connection, FindActor findActor) {
 	static const uint32_t USELESS_CODE = 0;
 	const auto id = UniqueId::newId();
 	const auto terminate = [this, id]() {
-			this->executorQueue.post(MessageType::MANAGEMENT_MESSAGE, USELESS_CODE, id);
+			this->executorQueue->post(MessageType::MANAGEMENT_MESSAGE, USELESS_CODE, id);
 		};
 	proxies.emplace(std::piecewise_construct, std::forward_as_tuple(id),
 					std::forward_as_tuple(std::move(actor), std::move(connection), terminate, std::move(findActor)));

@@ -44,7 +44,7 @@ public:
 	StatusCode executeCommand(Command command, const RawData &id);
 private:
 	SharedMap<Id, ProxyServer> proxies;
-	Link executorQueue;
+	std::shared_ptr<Link> executorQueue;
 	const Executor executor;
 };
 

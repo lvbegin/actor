@@ -41,6 +41,7 @@ bool Link::Message::isValid() { return valid; }
 Link::Link(std::string name) : SenderApi(std::move(name)) { }
 Link::~Link() = default;
 
+std::shared_ptr<Link> Link::create(std::string name) { return std::shared_ptr<Link>(new Link(std::move(name))); }
 
 void Link::post(Command command, SenderLink sender) {
 	static const RawData EMPTY_DATA;

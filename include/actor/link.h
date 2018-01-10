@@ -52,7 +52,6 @@ public:
 		private:
 			const bool valid;
 	};
-	Link(std::string name = std::string());
 	virtual ~Link();
 
 	void post(Command command, SenderLink sender = SenderLink());
@@ -62,7 +61,10 @@ public:
 
 	Message get(void);
 	Message get(unsigned int timeout_in_ms);
+
+	static std::shared_ptr<Link> create(std::string name = std::string());
 private:
+	Link(std::string name = std::string());
 	SharedQueue<Message> queue;
 
 	void putMessage(MessageType type, Command command, RawData params, SenderLink sender);

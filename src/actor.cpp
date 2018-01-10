@@ -59,7 +59,7 @@ class Actor::ActorImpl {
 public:
 	ActorImpl(std::string name, CommandExecutor commandExecutor, ActorHooks hooks, std::unique_ptr<State> state,
 			ErrorActionDispatcher errorDispatcher) :
-				executorQueue(std::make_shared<Link>(std::move(name))),
+				executorQueue(Link::create(std::move(name))),
 				hooks(hooks), commandExecutor(std::move(commandExecutor)),
 				context(errorDispatcher, executorQueue,	std::move(state)),
 				executor(createAtStartExecutor())
