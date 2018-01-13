@@ -555,7 +555,7 @@ static int supervisorStopActorTest() {
 	static bool exceptionThrown = false;
 	static bool actorStopped = false;
 	const auto link = Link::create("queue for reply");
-	Actor supervisor("supervisor", CommandExecutor(), [](ErrorCode) { return StopActor::create(); });
+	Actor supervisor("supervisor", CommandExecutor(), [](ErrorCode) { return ErrorReactionFactory::stopActor(); });
 	static const ActorHooks hooks(DEFAULT_START_HOOK, [](const Context&) { actorStopped = true; },
 			 						DEFAULT_RESTART_HOOK);
 	static const commandMap commands[] = {
@@ -577,7 +577,7 @@ static int supervisorStopAllActorsTest() {
 	static bool exceptionThrown = false;
 	static int actorStopped = 0;
 	const auto link = Link::create("queue for reply");
-	Actor supervisor("supervisor", CommandExecutor(), [](ErrorCode) { return StopAllActor::create(); });
+	Actor supervisor("supervisor", CommandExecutor(), [](ErrorCode) { return ErrorReactionFactory::stopAllActor(); });
 	static const ActorHooks hooks(DEFAULT_START_HOOK, [](const Context&) { actorStopped++; },
 			 						DEFAULT_RESTART_HOOK);
 	static const commandMap commands[] = {
@@ -606,10 +606,10 @@ static int supervisorForwardErrorRestartTest() {
 	const auto link = Link::create("queue for reply");
 	static const ActorHooks rootHook(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
 			[](const Context &c) { actorRestarted1 = true; c.restartActors(); return StatusCode::OK; });
-	Actor rootSupervisor("supervisor", CommandExecutor(), rootHook, [](ErrorCode) { return RestartActor::create(); });
+	Actor rootSupervisor("supervisor", CommandExecutor(), rootHook, [](ErrorCode) { return ErrorReactionFactory::restartActor(); });
 	static const ActorHooks supervisorHook(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
 			[](const Context &c) { actorRestarted2 = true; c.restartActors(); return StatusCode::OK; });
-	Actor supervisor("supervisor", CommandExecutor(), supervisorHook, [](ErrorCode) { return EscalateError::create(); });
+	Actor supervisor("supervisor", CommandExecutor(), supervisorHook, [](ErrorCode) { return ErrorReactionFactory::escalateError(); });
 	static const ActorHooks supervisedHooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
 	 [](const Context &){ actorRestarted3 = true; return StatusCode::OK; });
 	static const commandMap commands[] = {
@@ -632,8 +632,8 @@ static int supervisorForwardErrorStopTest() {
 	static bool exceptionThrown = false;
 	static bool stopped = false;
 	const auto link = Link::create("queue for reply");
-	Actor rootSupervisor("supervisor", CommandExecutor(), [](ErrorCode) { return StopActor::create(); });
-	Actor supervisor("supervisor", CommandExecutor(), [](ErrorCode) { return EscalateError::create(); });
+	Actor rootSupervisor("supervisor", CommandExecutor(), [](ErrorCode) { return ErrorReactionFactory::stopActor(); });
+	Actor supervisor("supervisor", CommandExecutor(), [](ErrorCode) { return ErrorReactionFactory::escalateError(); });
 	static const ActorHooks hooks(DEFAULT_START_HOOK, [](const Context &) { stopped = true; }, DEFAULT_RESTART_HOOK);
 	static const commandMap commands[] = {
 			{STOP_COMMAND, [](Context &, const RawData &, const SenderLink &link) -> StatusCode { exceptionThrown = true; throw std::runtime_error("some error"); }},
@@ -756,7 +756,7 @@ static int actorDoesNothingIfSupervisorUsesDoNothingErrorStrategyTest() {
 			{ 0, NULL},
 		};
 
-	Actor supervisor("supervisor", CommandExecutor(), [](ErrorCode) { return DoNothingError::create(); });		
+	Actor supervisor("supervisor", CommandExecutor(), [](ErrorCode) { return ErrorReactionFactory::doNothing(); });		
 	Actor supervised("supervised", CommandExecutor(commands), hooks);
 	supervisor.registerActor(supervised);
 	supervised.post(SOME_COMMAND);
@@ -774,7 +774,7 @@ static int restartAllActorBySupervisorTest() {
 	bool supervised2Restarted = false;
 	static const ActorHooks hooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
 			[&supervisorRestarted](const Context &) { supervisorRestarted = true; return StatusCode::OK; });
-	Actor supervisor("supervisor", CommandExecutor(), hooks, [](ErrorCode) { return RestartAllActor::create(); });
+	Actor supervisor("supervisor", CommandExecutor(), hooks, [](ErrorCode) { return ErrorReactionFactory::restartAllActor(); });
 	static const ActorHooks supervised1Hook(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
 			[&supervised1Restarted](const Context &) { supervised1Restarted = true; return StatusCode::OK; });
 	static const commandMap commands[] = {
@@ -825,9 +825,9 @@ static int supervisorHasDifferentStrategyDependingOnErrorTest() {
 	static const Command second_error = 0x22 | CommandValue::COMMAND_FLAG;
 	static const auto strategy = [](ErrorCode error) {
 		if (first_error == error)
-			return RestartActor::create();
+			return ErrorReactionFactory::restartActor();
 		else
-			return StopActor::create();
+			return ErrorReactionFactory::stopActor();
 	};
 	bool supervisorRestarted = false;
 	bool supervisedRestarted = false;
@@ -896,7 +896,7 @@ static int restartActorFailureTest() {
 	};
 
 	{
-		Actor supervisor("supervisor", CommandExecutor(), [](ErrorCode) { return RestartActor::create(); });
+		Actor supervisor("supervisor", CommandExecutor(), [](ErrorCode) { return ErrorReactionFactory::restartActor(); });
 		Actor supervised("supervised", CommandExecutor(commands), hooks);
 		supervisor.registerActor(supervised);
 		supervised.post(COMMAND);

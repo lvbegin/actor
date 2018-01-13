@@ -30,9 +30,9 @@
 #ifndef ERROR_STRATEGY_H__
 #define ERROR_STRATEGY_H__
 
-#include <actor/controllerApi.h>
 #include <actor/senderApi.h>
 #include <actor/types.h>
+#include <private/controllerApi.h>
 
 
 using NotifySupervisor = std::function<void(const std::string &actorName, ErrorCode error)>; 
@@ -48,7 +48,7 @@ protected:
 };
 
 class RestartActor : public ErrorReaction {
-public:
+public: 
 	static const ErrorReaction *create();
 	virtual ~RestartActor();
 	void executeAction(const ControllerApi &supervisedRefs, 
@@ -103,6 +103,7 @@ public:
 	void executeAction(const ControllerApi &supervisedRefs, 
 			NotifySupervisor notifySupervisor,
 			ErrorCode error, const RawData &params, const SenderLink &actor)  const override;
+
 private:
 	EscalateError();
 	static const EscalateError singletonElement;

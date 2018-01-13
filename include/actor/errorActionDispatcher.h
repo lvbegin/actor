@@ -30,7 +30,8 @@
 #ifndef ERROR_ACTION_DISPATCHER_H__
 #define ERROR_ACTION_DISPATCHER_H__
 
-#include <actor/errorReaction.h>
+#include <actor/errorReactionFactory.h>
+#include <actor/types.h>
 
 #include <functional>
 

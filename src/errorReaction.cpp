@@ -27,70 +27,70 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <actor/errorReaction.h>
-
-const RestartActor RestartActor::singletonElement;
+#include <private/errorReaction.h>
 
 RestartActor::RestartActor() = default;
 RestartActor::~RestartActor() = default;
-const ErrorReaction *RestartActor::create() { return &singletonElement; }
 void RestartActor::executeAction(const ControllerApi &supervisedRefs, 
-		NotifySupervisor notifySupervisor,			
-		ErrorCode error, const RawData &params, const SenderLink &actor)  const {
-	supervisedRefs.restartOne(params.toString());
+	NotifySupervisor notifySupervisor,			
+	ErrorCode error, const RawData &params, const SenderLink &actor)  const {
+    supervisedRefs.restartOne(params.toString());
 }
+const ErrorReaction *RestartActor::create() { return &singletonElement; }
 
-const StopActor StopActor::singletonElement;
+const RestartActor RestartActor::singletonElement;
 
 StopActor::StopActor() = default;
 StopActor::~StopActor() = default;
-const ErrorReaction *StopActor::create() { return &singletonElement; }
 void StopActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const SenderLink &actor)  const {
-	supervisedRefs.stopOne(params.toString());
+    supervisedRefs.stopOne(params.toString());
 }
-	
+const ErrorReaction *StopActor::create() { return &singletonElement; }
 
-const StopAllActor StopAllActor::singletonElement;
+const StopActor StopActor::singletonElement;
 
 StopAllActor::StopAllActor() = default;
 StopAllActor::~StopAllActor() = default;
-const ErrorReaction *StopAllActor::create() { return &singletonElement; }
 void StopAllActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const SenderLink &actor)  const {
-	supervisedRefs.stopAll(); 
+    supervisedRefs.stopAll(); 
 }
+const ErrorReaction *StopAllActor::create() { return &singletonElement; }
 
-const RestartAllActor RestartAllActor::singletonElement;
+const StopAllActor StopAllActor::singletonElement;
 
 RestartAllActor::RestartAllActor() = default;
 RestartAllActor::~RestartAllActor() = default;
-const ErrorReaction *RestartAllActor::create() { return &singletonElement; }
 void RestartAllActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const SenderLink &actor)  const { 
-	supervisedRefs.restartAll(); 
+    supervisedRefs.restartAll(); 
 }
+const ErrorReaction *RestartAllActor::create() { return &singletonElement; }
 
-const EscalateError EscalateError::singletonElement;
+const RestartAllActor RestartAllActor::singletonElement;
 
 EscalateError::EscalateError() = default;
 EscalateError::~EscalateError() = default;
-const ErrorReaction *EscalateError::create() { return &singletonElement; }
 void EscalateError::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const SenderLink &actor)  const {
-	notifySupervisor(actor->getName(), error);
+    notifySupervisor(actor->getName(), error);
 }
+const ErrorReaction *EscalateError::create() { return &singletonElement; }
 
-const DoNothingError DoNothingError::singletonElement;
+const EscalateError EscalateError::singletonElement;
+
 
 DoNothingError::DoNothingError() = default;
 DoNothingError::~DoNothingError() = default;
-const ErrorReaction *DoNothingError::create() { return &singletonElement; }
 void DoNothingError::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const SenderLink &actor)  const { }
+const ErrorReaction *DoNothingError::create() { return &singletonElement; }
+
+const DoNothingError DoNothingError::singletonElement;
 

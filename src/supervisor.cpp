@@ -28,6 +28,7 @@
  */
 
 #include <private/supervisor.h>
+#include <private/errorReaction.h>
 #include <private/uniqueId.h>
 
 #include <iostream>

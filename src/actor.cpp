@@ -198,7 +198,7 @@ const AtRestartHook DEFAULT_RESTART_HOOK = [](const Context& c) {
 	c.restartActors();
 	return StatusCode::OK;
 };
-const ErrorActionDispatcher DEFAULT_ERROR_DISPATCHER = [](ErrorCode) { return RestartActor::create(); };
+const ErrorActionDispatcher DEFAULT_ERROR_DISPATCHER = [](ErrorCode) { return ErrorReactionFactory::restartActor(); };
 static const ActorHooks DEFAULT_HOOKS = ActorHooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK, DEFAULT_RESTART_HOOK);
 
 

@@ -30,8 +30,8 @@
 #ifndef ACTOR_CONTROLLER_H__
 #define ACTOR_CONTROLLER_H__
 
-#include <actor/controllerApi.h>
 #include <actor/link.h>
+#include <private/controllerApi.h>
 #include <private/sharedVector.h>
 #include <private/commandValue.h>
 
