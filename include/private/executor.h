@@ -35,7 +35,7 @@
 #include <functional>
 #include <thread>
 
-using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const SenderLink &sender)>;
+using ExecutorBody = std::function<StatusCode(MessageType, Command, const RawData &data, const SharedSenderLink &sender)>;
 using ExecutorHook = std::function<void(void)>;
 using ExecutorAtStart = std::function<StatusCode(void)>;
 

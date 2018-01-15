@@ -43,8 +43,8 @@ public:
 			const MessageType type;
 			const Command code;
 			RawData params;
-			SenderLink sender;
-			Message(MessageType type, int code, RawData params, SenderLink sender);
+			SharedSenderLink sender;
+			Message(MessageType type, int code, RawData params, SharedSenderLink sender);
 			Message();
 			~Message();
 			Message(struct Message &&m);
@@ -57,8 +57,8 @@ public:
 	};
 	virtual ~Link();
 
-	void post(Command command, SenderLink sender = SenderLink());
-	void post(Command command, const RawData &params, SenderLink sender = SenderLink());
+	void post(Command command, SharedSenderLink sender = SharedSenderLink());
+	void post(Command command, const RawData &params, SharedSenderLink sender = SharedSenderLink());
 
 	void post(MessageType type, Command command, RawData params = RawData());
 
@@ -70,7 +70,7 @@ private:
 	Link(std::string name = std::string());
 	SharedQueue<Message> queue;
 
-	void putMessage(MessageType type, Command command, RawData params, SenderLink sender);
+	void putMessage(MessageType type, Command command, RawData params, SharedSenderLink sender);
 };
 
 #endif

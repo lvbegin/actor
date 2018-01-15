@@ -35,11 +35,11 @@
 
 #include <thread>
 
-using FindActor = std::function<SenderLink(const std::string &)> ;
+using FindActor = std::function<SharedSenderLink(const std::string &)> ;
 
 class ProxyServer {
 public:
-	ProxyServer(SenderLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor);
+	ProxyServer(SharedSenderLink actor, Connection connection, std::function<void(void)> notifyTerminate, FindActor findActor);
 	~ProxyServer();
 
 	ProxyServer(const ProxyServer &p) = delete;
@@ -49,7 +49,7 @@ public:
 private:
 	std::thread t;
 
-	static void serverBody(SenderLink actor, Connection connection, std::function<void(void)> notifyTerminate,
+	static void serverBody(SharedSenderLink actor, Connection connection, std::function<void(void)> notifyTerminate,
 							FindActor findActor);
 };
 

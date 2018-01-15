@@ -40,7 +40,7 @@ class ProxyContainer {
 public:
 	ProxyContainer();
 	~ProxyContainer();
-	void createNewProxy(SenderLink actor, Connection connection, FindActor findActor);
+	void createNewProxy(SharedSenderLink actor, Connection connection, FindActor findActor);
 	StatusCode executeCommand(Command command, const RawData &id);
 private:
 	SharedMap<Id, ProxyServer> proxies;

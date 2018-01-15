@@ -40,11 +40,11 @@ struct 	CommandExecutor::CommandExecutorImpl {
 	~CommandExecutorImpl() = default;
 };
 
-const PreCommandHook DEFAULT_PRECOMMAND_HOOK = [](Context &, Command, const RawData &, const SenderLink &) {
+const PreCommandHook DEFAULT_PRECOMMAND_HOOK = [](Context &, Command, const RawData &, const SharedSenderLink &) {
 	return StatusCode::OK;
 };
 
-const PostCommandHook DEFAULT_POSTCOMMAND_HOOK = [](Context &, Command, const RawData &, const SenderLink &) { };
+const PostCommandHook DEFAULT_POSTCOMMAND_HOOK = [](Context &, Command, const RawData &, const SharedSenderLink &) { };
 
 CommandExecutor::CommandExecutor(const commandMap map[]) :
 	CommandExecutor(DEFAULT_PRECOMMAND_HOOK, DEFAULT_POSTCOMMAND_HOOK, map) { }
@@ -69,7 +69,7 @@ CommandExecutor::~CommandExecutor() {
 }
 
 StatusCode CommandExecutor::execute(Context &context, Command commandCode, const RawData &data,
-										const SenderLink &actorLink) const {
+										const SharedSenderLink &actorLink) const {
 	auto rc = pImpl->preCommand(context, commandCode, data, actorLink);
 	if (StatusCode::OK != rc)
 		return rc;

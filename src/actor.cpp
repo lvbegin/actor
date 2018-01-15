@@ -103,7 +103,7 @@ public:
 	void initContextState() { context.getState().init(executorQueue->getName()); }
 
 
-	StatusCode actorExecutor(MessageType type, Command command, const RawData &params, const SenderLink &sender) {
+	StatusCode actorExecutor(MessageType type, Command command, const RawData &params, const SharedSenderLink &sender) {
 		static const ActorStateMachine::State stoppedValue[] = { ActorStateMachine::State::STOPPED };
 		static const std::vector<ActorStateMachine::State> stopped(stoppedValue, stoppedValue +
 																			sizeof(stoppedValue) / sizeof(stoppedValue[0]));
@@ -164,7 +164,7 @@ public:
 				atStartCb, [this]() { executorStopCb(); } );
 	}
 
-	StatusCode executeActorBody(Command command, const RawData &params, const SenderLink &sender) {
+	StatusCode executeActorBody(Command command, const RawData &params, const SharedSenderLink &sender) {
 		try {
 			const auto rc = commandExecutor.execute(context, command, params, sender);
 			if (StatusCode::ERROR != rc)
@@ -220,16 +220,16 @@ Actor::Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks
 Actor::~Actor() { delete pImpl; }
 
 
-void Actor::post(Command command, SenderLink sender) const {
+void Actor::post(Command command, SharedSenderLink sender) const {
 	static const RawData EMPTY_DATA;
 	pImpl->executorQueue->post(command, EMPTY_DATA, std::move(sender));
 }
 
-void Actor::post(Command command, const RawData &params, SenderLink sender) const {
+void Actor::post(Command command, const RawData &params, SharedSenderLink sender) const {
 	pImpl->executorQueue->post(command, params, std::move(sender));
 }
 
-SenderLink Actor::getActorLinkRef() const { return pImpl->executorQueue; }
+SharedSenderLink Actor::getActorLinkRef() const { return pImpl->executorQueue; }
 
 void Actor::registerActor(Actor &monitored) {
 	pImpl->context.getSupervisor().registerMonitored(monitored.pImpl->context.getSupervisor());

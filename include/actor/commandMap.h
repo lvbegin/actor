@@ -35,7 +35,7 @@
 #include <actor/rawData.h>
 #include <actor/senderApi.h>
 
-using CommandFunction = std::function<StatusCode(Context &, const RawData &, const SenderLink &)>;
+using CommandFunction = std::function<StatusCode(Context &, const RawData &, const SharedSenderLink &)>;
 
 struct commandMap {
 	Command commandCode;

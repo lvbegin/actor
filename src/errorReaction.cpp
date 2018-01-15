@@ -33,7 +33,7 @@ RestartActor::RestartActor() = default;
 RestartActor::~RestartActor() = default;
 void RestartActor::executeAction(const ControllerApi &supervisedRefs, 
 	NotifySupervisor notifySupervisor,			
-	ErrorCode error, const RawData &params, const SenderLink &actor)  const {
+	ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const {
     supervisedRefs.restartOne(params.toString());
 }
 const ErrorReaction *RestartActor::create() { return &singletonElement; }
@@ -44,7 +44,7 @@ StopActor::StopActor() = default;
 StopActor::~StopActor() = default;
 void StopActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const SenderLink &actor)  const {
+		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const {
     supervisedRefs.stopOne(params.toString());
 }
 const ErrorReaction *StopActor::create() { return &singletonElement; }
@@ -55,7 +55,7 @@ StopAllActor::StopAllActor() = default;
 StopAllActor::~StopAllActor() = default;
 void StopAllActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const SenderLink &actor)  const {
+		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const {
     supervisedRefs.stopAll(); 
 }
 const ErrorReaction *StopAllActor::create() { return &singletonElement; }
@@ -66,7 +66,7 @@ RestartAllActor::RestartAllActor() = default;
 RestartAllActor::~RestartAllActor() = default;
 void RestartAllActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const SenderLink &actor)  const { 
+		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const { 
     supervisedRefs.restartAll(); 
 }
 const ErrorReaction *RestartAllActor::create() { return &singletonElement; }
@@ -77,7 +77,7 @@ EscalateError::EscalateError() = default;
 EscalateError::~EscalateError() = default;
 void EscalateError::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const SenderLink &actor)  const {
+		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const {
     notifySupervisor(actor->getName(), error);
 }
 const ErrorReaction *EscalateError::create() { return &singletonElement; }
@@ -89,7 +89,7 @@ DoNothingError::DoNothingError() = default;
 DoNothingError::~DoNothingError() = default;
 void DoNothingError::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const SenderLink &actor)  const { }
+		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const { }
 const ErrorReaction *DoNothingError::create() { return &singletonElement; }
 
 const DoNothingError DoNothingError::singletonElement;

@@ -35,12 +35,12 @@ ProxyClient::ProxyClient(std::string name, Connection connection) :
 						SenderApi(std::move(name)), connection(std::move(connection)) { }
 ProxyClient::~ProxyClient() = default;
 
-void ProxyClient::post(Command command, SenderLink sender) {
+void ProxyClient::post(Command command, SharedSenderLink sender) {
 	static const RawData EMPTY_DATA;
 	post(command, EMPTY_DATA, std::move(sender));
 }
 
-void ProxyClient::post(Command command, const RawData &params, SenderLink sender) {
+void ProxyClient::post(Command command, const RawData &params, SharedSenderLink sender) {
 	const auto senderName = (nullptr == sender.get()) ?  std::string() : sender->getName();
 	connection.writeInt(postType::NewMessage).writeString(senderName).writeInt(command).writeRawData(params);
 }

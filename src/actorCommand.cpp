@@ -33,7 +33,7 @@
 
 
 static std::map<Command, CommandFunction> buildMap(const commandMap array[]);
-static StatusCode shutdownCase(Context &, const RawData &, const SenderLink &);
+static StatusCode shutdownCase(Context &, const RawData &, const SharedSenderLink &);
 
 ActorCommand::ActorCommand() : commands(buildMap(nullptr)) { }
 
@@ -41,7 +41,7 @@ ActorCommand::ActorCommand(const commandMap map[]) : commands(buildMap(map)) { }
 ActorCommand::~ActorCommand() = default;
 
 StatusCode ActorCommand::execute(Context &context, Command commandCode, const RawData &data,
-						const SenderLink &actorLink) const {
+						const SharedSenderLink &actorLink) const {
 	CommandFunction f;
 	try {
 		f = commands.at(commandCode);
@@ -69,5 +69,5 @@ static std::map<Command, CommandFunction> buildMap(const commandMap array[]) {
 	return map;
 }
 
-static StatusCode shutdownCase(Context &, const RawData &, const SenderLink &) { return StatusCode::SHUTDOWN; };
+static StatusCode shutdownCase(Context &, const RawData &, const SharedSenderLink &) { return StatusCode::SHUTDOWN; };
 

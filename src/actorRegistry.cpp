@@ -60,12 +60,12 @@ class ActorRegistry::ActorRegistryImpl {
 
 		void removeReference(const std::string &registryName) { registryAddresses.erase(registryName); }
 
-		void registerActor(SenderLink actor) { actors.push_back(std::move(actor)); }
+		void registerActor(SharedSenderLink actor) { actors.push_back(std::move(actor)); }
 
 		void unregisterActor(const std::string &name) { actors.erase(SenderApi::nameComparator(name)); }
 		
 		
-		SenderLink  getActor(const std::string &name) const {
+		SharedSenderLink  getActor(const std::string &name) const {
 			try {
 				return getLocalActor(name);
 			} catch (const std::out_of_range &e) {
@@ -81,7 +81,7 @@ class ActorRegistry::ActorRegistryImpl {
 		const FindActor findActorCallback;
 		bool terminated;
 		SharedMap<const std::string, const struct NetAddr> registryAddresses;
-		SharedVector<SenderLink> actors;
+		SharedVector<SharedSenderLink> actors;
 		ProxyContainer proxies;
 		std::thread t;
 
@@ -115,12 +115,12 @@ class ActorRegistry::ActorRegistryImpl {
 		}
 	}
 
-	SenderLink getLocalActor(const std::string &name) const {
+	SharedSenderLink getLocalActor(const std::string &name) const {
 		return actors.find_if(SenderApi::nameComparator(name));
 	}
 
-	SenderLink getRemoteActor(const std::string &name) const {
-		SenderLink actor;
+	SharedSenderLink getRemoteActor(const std::string &name) const {
+		SharedSenderLink actor;
 		registryAddresses.for_each([&actor, &name](const std::pair<const std::string, const struct NetAddr> &c) {
 			auto connection = ClientSocket::openHostConnection(c.second);
 			connection.writeInt(RegistryCommand::SEARCH_ACTOR).writeString(name);
@@ -139,9 +139,9 @@ ActorRegistry::~ActorRegistry() { delete pImpl; }
 
 std::string ActorRegistry::addReference(const std::string &host, uint16_t port) { return pImpl->addReference(host, port); }
 void ActorRegistry::removeReference(const std::string &registryName) { pImpl->removeReference(registryName); }
-void ActorRegistry::registerActor(SenderLink actor) { pImpl->registerActor(std::move(actor)); }
+void ActorRegistry::registerActor(SharedSenderLink actor) { pImpl->registerActor(std::move(actor)); }
 void ActorRegistry::unregisterActor(const std::string &name) { pImpl->unregisterActor(name); }
-SenderLink  ActorRegistry::getActor(const std::string &name) const { return pImpl->getActor(name); } 
+SharedSenderLink  ActorRegistry::getActor(const std::string &name) const { return pImpl->getActor(name); } 
 
 
 static void threadBody(uint16_t port, std::function<void(const ServerSocket &s)> body) {

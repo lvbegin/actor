@@ -29,7 +29,7 @@
 
 #include <actor/link.h>
 
-Link::Message::Message(MessageType type, int code, RawData params, SenderLink sender) :
+Link::Message::Message(MessageType type, int code, RawData params, SharedSenderLink sender) :
 				type(type), code(code), params(std::move(params)), sender(std::move(sender)), valid(true) { }
 Link::Message::Message() : type(MessageType::COMMAND_MESSAGE), code(0), valid(false) { }
 
@@ -43,17 +43,17 @@ Link::~Link() = default;
 
 SharedLink Link::create(std::string name) { return std::shared_ptr<Link>(new Link(std::move(name))); }
 
-void Link::post(Command command, SenderLink sender) {
+void Link::post(Command command, SharedSenderLink sender) {
 	static const RawData EMPTY_DATA;
 	post(command, EMPTY_DATA, std::move(sender));
 }
 
-void Link::post(Command command, const RawData &params, SenderLink sender) {
+void Link::post(Command command, const RawData &params, SharedSenderLink sender) {
 	putMessage(MessageType::COMMAND_MESSAGE, command, params, std::move(sender));
 }
 
 void Link::post(MessageType type, Command command, RawData params) {
-	static const SenderLink NO_LINK;
+	static const SharedSenderLink NO_LINK;
 	putMessage(type, command, std::move(params), NO_LINK);
 }
 
@@ -61,6 +61,6 @@ struct Link::Message Link::get(void) { return queue.get(); }
 
 Link::Message Link::get(unsigned int timeout_in_ms) { return queue.get(timeout_in_ms); }
 
-void Link::putMessage(MessageType type, Command command, RawData params, SenderLink sender) {
+void Link::putMessage(MessageType type, Command command, RawData params, SharedSenderLink sender) {
 	queue.post(Message(type, command, std::move(params), std::move(sender)));
 }

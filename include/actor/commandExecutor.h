@@ -36,8 +36,8 @@
 
 #include <functional>
 
-using PreCommandHook = std::function<StatusCode(Context &, Command, const RawData &, const SenderLink &)>;
-using PostCommandHook = std::function<void(Context &, Command, const RawData &, const SenderLink &)>;
+using PreCommandHook = std::function<StatusCode(Context &, Command, const RawData &, const SharedSenderLink &)>;
+using PostCommandHook = std::function<void(Context &, Command, const RawData &, const SharedSenderLink &)>;
 
 extern const PreCommandHook DEFAULT_PRECOMMAND_HOOK;
 extern const PostCommandHook DEFAULT_POSTCOMMAND_HOOK;
@@ -54,7 +54,7 @@ public:
 	~CommandExecutor();
 
 	StatusCode execute(Context &context, Command commandCode, const RawData &data,
-						const SenderLink &actorLink) const;
+						const SharedSenderLink &actorLink) const;
 
 private:
 	struct CommandExecutorImpl;
