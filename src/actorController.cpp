@@ -33,7 +33,7 @@
 ActorController::ActorController() = default;
 ActorController::~ActorController() = default;
 
-void ActorController::add(LinkRef actorLink) { actors.push_back(std::move(actorLink)); }
+void ActorController::add(SharedLink actorLink) { actors.push_back(std::move(actorLink)); }
 
 void ActorController::remove(const std::string &name) { actors.erase(SenderApi::nameComparator(name)); }
 
@@ -45,11 +45,11 @@ void ActorController::stopAll(void) const { doOperationAllActors(stop); }
 
 void ActorController::restartAll(void) const { doOperationAllActors(restart); }
 
-void ActorController::restart(const LinkRef &link) { sendMessage(link, CommandValue::RESTART); }
+void ActorController::restart(const SharedLink &link) { sendMessage(link, CommandValue::RESTART); }
 
-void ActorController::stop(const LinkRef &link) { sendMessage(link, CommandValue::SHUTDOWN); }
+void ActorController::stop(const SharedLink &link) { sendMessage(link, CommandValue::SHUTDOWN); }
 
-void ActorController::sendMessage(const LinkRef &link, Command command) {
+void ActorController::sendMessage(const SharedLink &link, Command command) {
 	link->post(MessageType::MANAGEMENT_MESSAGE, command);
 }
 

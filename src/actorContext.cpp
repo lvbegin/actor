@@ -29,7 +29,7 @@
 
 #include <private/actorContext.h>
 
-ActorContext::ActorContext(ErrorActionDispatcher strategy, LinkRef self, std::unique_ptr<State> state) :
+ActorContext::ActorContext(ErrorActionDispatcher strategy, SharedLink self, std::unique_ptr<State> state) :
 				state(std::move(state)), supervisor(strategy, self) { }
 
 ActorContext::~ActorContext() = default;

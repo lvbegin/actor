@@ -34,6 +34,9 @@
 #include <private/types.h>
 #include <actor/senderApi.h>
 
+class Link;
+using SharedLink = std::shared_ptr<Link>;
+
 class Link : public SenderApi {
 public:
 	struct Message {
@@ -62,7 +65,7 @@ public:
 	Message get(void);
 	Message get(unsigned int timeout_in_ms);
 
-	static std::shared_ptr<Link> create(std::string name = std::string());
+	static SharedLink create(std::string name = std::string());
 private:
 	Link(std::string name = std::string());
 	SharedQueue<Message> queue;

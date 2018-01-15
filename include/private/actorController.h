@@ -35,28 +35,27 @@
 #include <private/sharedVector.h>
 #include <private/commandValue.h>
 
-using LinkRef = std::shared_ptr<Link>;
-using LinkRefOperation = std::function<void(const LinkRef &)>;
+using LinkRefOperation = std::function<void(const SharedLink &)>;
 
 class ActorController : public ControllerApi {
 public:
 	ActorController();
 	~ActorController();
 
-	void add(LinkRef actorLink);
+	void add(SharedLink actorLink);
 	void remove(const std::string &name);
 	void stopOne(const std::string &name) const override;
 	void stopAll(void) const override;
 	void restartOne(const std::string &name) const override;
 	void restartAll(void) const override;
 private:
-	SharedVector<LinkRef> actors;
+	SharedVector<SharedLink> actors;
 
 	void doOperationOneActor(const std::string &name, LinkRefOperation op) const;
 	void doOperationAllActors(LinkRefOperation op) const;
-	static void restart(const LinkRef &link);
-	static void stop(const LinkRef &link);
-	static void sendMessage(const LinkRef &link, Command command);
+	static void restart(const SharedLink &link);
+	static void stop(const SharedLink &link);
+	static void sendMessage(const SharedLink &link, Command command);
 };
 
 #endif

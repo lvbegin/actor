@@ -184,7 +184,7 @@ public:
 			throw ActorStartFailure();
 	}
 
-	const LinkRef executorQueue;
+	const SharedLink executorQueue;
 	const ActorHooks hooks;
 	const CommandExecutor commandExecutor;
 	ActorContext context;

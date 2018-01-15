@@ -37,7 +37,7 @@
 
 class Supervisor {
 public:
-	Supervisor(ErrorActionDispatcher strategy, LinkRef self);
+	Supervisor(ErrorActionDispatcher strategy, SharedLink self);
 	~Supervisor();
 
 	bool notifySupervisor(Command command) const;
@@ -52,7 +52,7 @@ public:
 private:
 	mutable std::mutex monitorMutex;
 	const ErrorActionDispatcher actionDispatcher;
-	const LinkRef self;
+	const SharedLink self;
 	ActorController supervisedRefs;
 	std::weak_ptr<Link> supervisorRef;
 

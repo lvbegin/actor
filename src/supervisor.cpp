@@ -33,7 +33,7 @@
 
 #include <iostream>
 
-Supervisor::Supervisor(ErrorActionDispatcher strategy, LinkRef self) :
+Supervisor::Supervisor(ErrorActionDispatcher strategy, SharedLink self) :
 					actionDispatcher(std::move(strategy)), self(std::move(self)) { }
 
 Supervisor::~Supervisor() = default;
