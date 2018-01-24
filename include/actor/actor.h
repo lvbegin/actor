@@ -64,7 +64,7 @@ class Executor;
 
 class Actor {
 public:
-	Actor(std::string name, CommandExecutor commandExecutor, ErrorActionDispatcher errorDispatcher = DEFAULT_ERROR_DISPATCHER);
+	Actor(std::string name, CommandExecutor commandExecutor = CommandExecutor(), ErrorActionDispatcher errorDispatcher = DEFAULT_ERROR_DISPATCHER);
 	Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks,
 			ErrorActionDispatcher errorDispatcher = DEFAULT_ERROR_DISPATCHER);
 
