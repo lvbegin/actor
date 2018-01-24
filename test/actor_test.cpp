@@ -26,7 +26,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#include "test.h"
 #include <actor/actor.h>
 #include <actor/rawData.h>
 #include <actor/commandMap.h>
@@ -44,26 +44,16 @@
 #include <iostream>
 #include <unistd.h>
 
-
-static int actorCommandHasReservedCodeTest(void) {
+static void actorCommandHasReservedCodeTest(void) {
 	static const uint32_t wrongCommand = 0xaa;
 	static const commandMap commands[] = {
 			{wrongCommand, [](Context &, const RawData &, const SharedSenderLink &link) { return StatusCode::OK;}},
 			{ 0, NULL},
 	};
-
-	try {
-		ActorCommand c(commands);
-		return 1;
-	} catch (std::runtime_error &){
-		return 0;
-	} catch (std::exception &){
-		return 1;
-	}
-
+	assert_exception(std::runtime_error, ActorCommand c(commands));
 }
 
-static int basicActorTest(void) {
+static void basicActorTest(void) {
 	static const int ANSWER = 0x22;
 	static const uint32_t command = 0xaa | CommandValue::COMMAND_FLAG;
 	static const commandMap commands[] = {
@@ -74,10 +64,10 @@ static int basicActorTest(void) {
 	const auto link = Link::create();
 	const Actor a("actor name", CommandExecutor(commands));
 	a.post(command, link);
-	return (ANSWER == link->get().code) ? 0 : 1;
+	assert_eq(ANSWER,  link->get().code);
 }
 
-static int basicActorWithParamsTest(void) {
+static void basicActorWithParamsTest(void) {
 	static const std::string paramValue("Hello World");
 	static const uint32_t command = 1 | CommandValue::COMMAND_FLAG;
 	static const int OK_ANSWER = 0x22;
@@ -97,10 +87,10 @@ static int basicActorWithParamsTest(void) {
 
 	const Actor a("actor name", CommandExecutor(commands));
 	a.post(command, paramValue, link);
-	return (OK_ANSWER == link->get().code) ? 0 : 1;
+	assert_eq(OK_ANSWER, link->get().code);
 }
 
-static int actorSendMessageAndReceiveAnAnswerTest(void) {
+static void actorSendMessageAndReceiveAnAnswerTest(void) {
 	static const std::string paramValue("Hello World");
 	static const uint32_t OK_ANSWER = 0x00;
 	static const uint32_t NOK_ANSWER = 0x01;
@@ -119,10 +109,10 @@ static int actorSendMessageAndReceiveAnAnswerTest(void) {
 	const Actor a("actor name", CommandExecutor(commands));
 	auto queue = Link::create();
 	a.post(command, paramValue, queue);
-	return (OK_ANSWER == queue->get().code) ? 0 : 1;
+	assert_eq(OK_ANSWER, queue->get().code);
 }
 
-static int actorSendMessageAndDoNptReceiveAnAnswerTest(void) {
+static void actorSendMessageAndDoNptReceiveAnAnswerTest(void) {
 	static const std::string paramValue("Hello World");
 	static const uint32_t OK_ANSWER = 0x00;
 	static const uint32_t NOK_ANSWER = 0x01;
@@ -138,24 +128,23 @@ static int actorSendMessageAndDoNptReceiveAnAnswerTest(void) {
 	auto queue = Link::create();
 	a.post(command, paramValue, queue);
 	auto answer = queue->get(2000);
-	return (!answer.isValid()) ? 0 : 1;
+	assert_false(answer.isValid());
 }
 
-static int actorSendUnknownCommandAndReceiveErrorCodeTest(void) {
+static void actorSendUnknownCommandAndReceiveErrorCodeTest(void) {
 	static const std::string paramValue("Hello World");
 
 	const Actor a("actor name", CommandExecutor());
 	auto queue = Link::create();
 	a.post(1, paramValue, queue);
-	return (CommandValue::UNKNOWN_COMMAND == queue->get().code) ? 0 : 1;
+	assert_eq(CommandValue::UNKNOWN_COMMAND, queue->get().code);
 }
 
-static int actorSendUnknownCommandCodeTest(void) {
+static void actorSendUnknownCommandCodeTest(void) {
 	static const std::string paramValue("Hello World");
 
 	const Actor a("actor name", CommandExecutor());
 	a.post(1, paramValue);
-	return 0;
 }
 
 static void executeSeverProxy(uint16_t port, int *nbMessages) {
@@ -184,7 +173,7 @@ static void waitMessageProcessed(int &nbMessages) {
 		sleep(1);
 	}
 }
-static int proxyTest(void) {
+static void proxyTest(void) {
 	static const uint16_t PORT = 4011;
 	static const uint32_t CODE = 0x33 | CommandValue::COMMAND_FLAG;
 	int nbMessages { 0 };
@@ -194,17 +183,16 @@ static int proxyTest(void) {
 	waitMessageProcessed(nbMessages);
 	client.post(CommandValue::SHUTDOWN);
 	t.join();
-	return (1 == nbMessages) ? 0 : 1;
+	assert_eq(1, nbMessages);
 }
 
-static int registryConnectTest(void) {
+static void registryConnectTest(void) {
 	static const uint16_t PORT = 4001;
 	const ActorRegistry registry(std::string("name"), PORT);
 	const Connection c = openOneConnection(PORT);
-	return 0;
 }
 
-static int registryAddActorTest(void) {
+static void registryAddActorTest(void) {
 	static const uint16_t PORT = 4001;
 	static const std::string ACTOR_NAME("my actor");
 	static const uint32_t command = 1 | CommandValue::COMMAND_FLAG;
@@ -217,11 +205,9 @@ static int registryAddActorTest(void) {
 	ActorRegistry registry(std::string("name"), PORT);
 
 	registry.registerActor(a.getActorLinkRef());
-
-	return 0;
 }
 
-static int registryAddActorAndRemoveTest(void) {
+static void registryAddActorAndRemoveTest(void) {
 	static const uint16_t PORT = 4001;
 	static const std::string ACTOR_NAME("my actor");
 	const Actor a(ACTOR_NAME, CommandExecutor());
@@ -229,19 +215,15 @@ static int registryAddActorAndRemoveTest(void) {
 
 	registry.registerActor(a.getActorLinkRef());
 	registry.unregisterActor(ACTOR_NAME);
-	try {
-	    registry.unregisterActor(ACTOR_NAME);
-	    return 1;
-	} catch (std::out_of_range &e) { }
+	assert_exception(std::out_of_range, registry.unregisterActor(ACTOR_NAME));
 
 	const Actor anotherA(ACTOR_NAME, CommandExecutor());
 	registry.registerActor(anotherA.getActorLinkRef());
-	return 0;
 }
 
 static void ensureRegistryStarted(uint16_t port) { openOneConnection(port); }
 
-static int registryAddReferenceTest(void) {
+static void registryAddReferenceTest(void) {
 	static const std::string NAME1("name1");
 	static const std::string NAME2("name2");
 	static const uint16_t PORT1 = 4001;
@@ -252,10 +234,10 @@ static int registryAddReferenceTest(void) {
 	ensureRegistryStarted(PORT1);
 	ensureRegistryStarted(port2);
 	const std::string name = registry1.addReference("localhost", port2);
-	return NAME2 == name ? 0 : 1;
+	assert_eq(NAME2, name);
 }
 
-static int registryAddReferenceOverrideExistingOneTest(void) {
+static void registryAddReferenceOverrideExistingOneTest(void) {
 	static const std::string NAME1("name1");
 	static const std::string NAME2("name2");
 	static const uint16_t PORT1 = 4001;
@@ -269,10 +251,10 @@ static int registryAddReferenceOverrideExistingOneTest(void) {
 	ensureRegistryStarted(PORT2);
 	registry1.addReference("localhost", PORT2);
 	const std::string name = registry3.addReference("localhost", PORT2);
-	return NAME2 == name ? 0 : 1;
+    assert_eq(NAME2, name);
 }
 
-static int registeryAddActorFindItBackAndSendMessageTest() {
+static void registeryAddActorFindItBackAndSendMessageTest() {
 	static const Command COMMAND = 0x11 | CommandValue::COMMAND_FLAG;
 	static const int OK_ANSWER = 0x33;
 	static const std::string ACTOR_NAME("my actor");
@@ -290,13 +272,12 @@ static int registeryAddActorFindItBackAndSendMessageTest() {
 
 	const auto b = registry.getActor(ACTOR_NAME);
 
-	if (actorRefLink.get() != b.get())
-		return 1;
+	assert_eq(actorRefLink.get(), b.get());
 	b->post(COMMAND, link);
-	return (OK_ANSWER == link->get().code) ? 0 : 1;
+	assert_eq(OK_ANSWER, link->get().code);
 }
 
-static int registeryFindUnknownActorTest() {
+static void registeryFindUnknownActorTest() {
 	static const std::string ACTOR_NAME("my actor");
 	static const uint16_t PORT = 4001;
 	const Actor a(ACTOR_NAME, CommandExecutor());
@@ -304,10 +285,10 @@ static int registeryFindUnknownActorTest() {
 	registry.registerActor(a.getActorLinkRef());
 
 	const SharedSenderLink b = registry.getActor(std::string("wrong name"));
-	return (nullptr == b.get()) ? 0 : 1;
+	assert_eq(nullptr, b.get());
 }
 
-static int findActorFromOtherRegistryAndSendMessageTest() {
+static void findActorFromOtherRegistryAndSendMessageTest() {
 	static const Command DUMMY_COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
 	static const std::string NAME1("name1");
 	static const std::string NAME2("name2");
@@ -339,21 +320,20 @@ static int findActorFromOtherRegistryAndSendMessageTest() {
 	ensureRegistryStarted(PORT1);
 	ensureRegistryStarted(PORT2);
 	const std::string name = registry1.addReference("localhost", PORT2);
-	if (NAME2.compare(name))
-		return 1;
+	assert_eq (NAME2, name);
 	const Actor a(ACTOR_NAME, CommandExecutor(commands) );
 
 	registry1.registerActor(link);
 	registry2.registerActor(a.getActorLinkRef());
 	const auto actor = registry1.getActor(ACTOR_NAME);
-	if (nullptr == actor.get())
-		return 1;
+	assert_true (nullptr != actor.get());
+
 	sleep(10); // ensure that the proxy server does not stop after a timeout when no command is sent.
 	actor->post(DUMMY_COMMAND, link);
-	return (OK_ANSWER == link->get().code) ? 0 : 1;
+	assert_eq(OK_ANSWER, link->get().code);
 }
 
-static int findActorFromOtherRegistryAndSendWithSenderForwardToAnotherActorMessageTest() {
+static void findActorFromOtherRegistryAndSendWithSenderForwardToAnotherActorMessageTest() {
 	static const Command DUMMY_COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
 	static const std::string NAME1("name1");
 	static const std::string NAME2("name2");
@@ -415,13 +395,13 @@ static int findActorFromOtherRegistryAndSendWithSenderForwardToAnotherActorMessa
 	registry2.registerActor(actor1.getActorLinkRef());
 	registry1.registerActor(link);
 	const auto actor = registry1.getActor(ACTOR_NAME1);
-	if (nullptr == actor.get())
-		return 1;
+	assert_false (nullptr == actor.get());
+
 	actor->post(DUMMY_COMMAND, link);
-	return (OK_ANSWER == link->get().code) ? 0 : 1;
+	assert_eq (OK_ANSWER, link->get().code);
 }
 
-static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
+static void findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	static const Command DUMMY_COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
 	static const std::string PARAM_VALUE("Hello World");
 	static const std::string NAME1("name1");
@@ -448,20 +428,19 @@ static int findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	ensureRegistryStarted(PORT1);
 	ensureRegistryStarted(PORT2);
 	const std::string name = registry1.addReference("localhost", PORT2);
-	if (NAME2.compare(name))
-		return 1;
+	assert_eq (NAME2, name);
+		
 	const Actor a(ACTOR_NAME, CommandExecutor(commands));
 	registry2.registerActor(a.getActorLinkRef());
 	registry1.registerActor(link);
 	const auto actor = registry1.getActor(ACTOR_NAME);
-	if (nullptr == actor.get())
-		return 1;
+	assert_false(nullptr == actor.get());
+
 	actor->post(DUMMY_COMMAND, PARAM_VALUE, link);
-	return OK_ANSWER == link->get().code ? 0 : 1;
+	assert_eq(OK_ANSWER, link->get().code);
 }
 
-
-static int findUnknownActorInMultipleRegistryTest() {
+static void findUnknownActorInMultipleRegistryTest() {
 	static const std::string NAME1("name1");
 	static const std::string NAME2("name2");
 	static const std::string ACTOR_NAME("my actor");
@@ -473,35 +452,31 @@ static int findUnknownActorInMultipleRegistryTest() {
 	ensureRegistryStarted(PORT1);
 	ensureRegistryStarted(PORT2);
 	const std::string name = registry1.addReference("localhost", PORT2);
-	if (NAME2.compare(name))
-		return 1;
+	assert_eq(NAME2, name);
+	
 	const Actor a(ACTOR_NAME, CommandExecutor());
 	registry2.registerActor(a.getActorLinkRef());
 	const auto actor = registry1.getActor("unknown actor");
-	return nullptr == actor.get() ? 0 : 1;
+	assert_eq(nullptr, actor.get());
 }
 
-static int initSupervisionTest() {
+static void initSupervisionTest() {
 	Actor supervisor("supervisor", CommandExecutor());
 	Actor supervised("supervised", CommandExecutor());
 	supervisor.registerActor(supervised);
 	supervisor.unregisterActor(supervised);
-	return 0;
 }
 
-
-static int unregisterToSupervisorWhenActorDestroyedTest() {
+static void unregisterToSupervisorWhenActorDestroyedTest() {
 	Actor supervisor("supervisor", CommandExecutor());
 	auto supervised = std::make_unique<Actor>("supervised", CommandExecutor());
 	supervisor.registerActor(*supervised.get());
 
 	supervised->post(CommandValue::SHUTDOWN);
 	supervised.reset();
-
-	return 0;
 }
 
-static int supervisorRestartsActorAfterExceptionTest() {
+static void supervisorRestartsActorAfterExceptionTest() {
 	static const Command RESTART_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static const Command OTHER_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	static const int OK_ANSWER = 0x99;
@@ -521,12 +496,13 @@ static int supervisorRestartsActorAfterExceptionTest() {
 	supervised.post(RESTART_COMMAND, link);
 	for(int i = 0; i < 5 && !restarted; i++) sleep(1);
 	supervised.post(OTHER_COMMAND, link);
-	if (OK_ANSWER != link->get().code)
-		return 1;
-	return (exceptionThrown && restarted) ? 0 : 1;
+	assert_eq(OK_ANSWER, link->get().code);
+		
+	assert_true(exceptionThrown);
+	assert_true(restarted);
 }
 
-static int supervisorRestartsActorAfterReturningErrorTest() {
+static void supervisorRestartsActorAfterReturningErrorTest() {
 	static const Command RESTART_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static const Command OTHER_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	static const int OK_ANSWER = 0x99;
@@ -545,12 +521,11 @@ static int supervisorRestartsActorAfterReturningErrorTest() {
 	supervised.post(RESTART_COMMAND, link);
 	for(int i = 0; i < 5 && !restarted; i++) sleep(1);
 	supervised.post(OTHER_COMMAND, link);
-	if (OK_ANSWER != link->get().code)
-		return 1;
-	return (restarted) ? 0 : 1;
+	assert_eq(OK_ANSWER, link->get().code);
+	assert_true(restarted);
 }
 
-static int supervisorStopActorTest() {
+static void supervisorStopActorTest() {
 	static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static bool exceptionThrown = false;
 	static bool actorStopped = false;
@@ -569,10 +544,11 @@ static int supervisorStopActorTest() {
 
 	for (int i = 0; i < 5 && !exceptionThrown; i++) sleep(1);
 	for (int i = 0; i < 5 && !actorStopped; i++) sleep(1);
-	return (exceptionThrown && actorStopped) ? 0 : 1;
+	assert_true(exceptionThrown);
+	assert_true(actorStopped);
 }
 
-static int supervisorStopAllActorsTest() {
+static void supervisorStopAllActorsTest() {
 	static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static bool exceptionThrown = false;
 	static int actorStopped = 0;
@@ -593,11 +569,12 @@ static int supervisorStopAllActorsTest() {
 
 	for (int i = 0; i < 5 && !exceptionThrown; i++) sleep(1);
 	for (int i = 0; i < 5 && actorStopped < 2; i++) sleep(1);
-	return (exceptionThrown && actorStopped) ? 0 : 1;
+	assert_true(exceptionThrown);
+	assert_true(actorStopped);
 }
 
 
-static int supervisorForwardErrorRestartTest() {
+static void supervisorForwardErrorRestartTest() {
 	static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static bool exceptionThrown = false;
 	static bool actorRestarted1 = false;
@@ -624,10 +601,13 @@ static int supervisorForwardErrorRestartTest() {
 
 	for (int i = 0; i < 5 && !exceptionThrown; i++) sleep(1);
 	for (int i = 0; i < 5 && (!actorRestarted2 || !actorRestarted3); i++) sleep(1);
-	return (exceptionThrown && !actorRestarted1 && actorRestarted2 && actorRestarted3) ? 0 : 1;
+	assert_true(exceptionThrown);
+	assert_false(actorRestarted1);
+	assert_true(actorRestarted2);
+	assert_true(actorRestarted3);
 }
 
-static int supervisorForwardErrorStopTest() {
+static void supervisorForwardErrorStopTest() {
 	static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static bool exceptionThrown = false;
 	static bool stopped = false;
@@ -645,10 +625,10 @@ static int supervisorForwardErrorStopTest() {
 	supervised.post(STOP_COMMAND, link);
 
 	for (int i = 0; i < 5 && !exceptionThrown && !stopped; i++) sleep(1);
-	return exceptionThrown ? 0 : 1;
+	assert_true(exceptionThrown);
 }
 
-static int actorNotifiesErrorToSupervisorTest() {
+static void actorNotifiesErrorToSupervisorTest() {
 	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	bool supervisorRestarted = false;
 	int supervised1Restarted = 0;
@@ -676,10 +656,10 @@ static int actorNotifiesErrorToSupervisorTest() {
 
 	for (int i = 0; i < 5 && 2 > supervised1Restarted; i++)
 		sleep(1);
-	return (supervisorRestarted || ! (2 == supervised1Restarted) || supervised2Restarted) ? 1 : 0;
+	assert_false(supervisorRestarted || ! (2 == supervised1Restarted) || supervised2Restarted);
 }
 
-static int noEffectIfErrorNotifiedAndNoSupervisorTest() {
+static void noEffectIfErrorNotifiedAndNoSupervisorTest() {
 	static int commandExecuted = 0;
 	static bool supervisedRestarted = false;
 	static bool supervisedStopped = false;
@@ -699,10 +679,12 @@ static int noEffectIfErrorNotifiedAndNoSupervisorTest() {
 	for (int i = 0; i < 5 && 1 > commandExecuted; i++)
 		sleep(1);
 
-	return ( commandExecuted == 1 && !supervisedRestarted && supervisedStopped) ? 0 : 1;
+	assert_eq(1, commandExecuted);
+	assert_false(supervisedRestarted);
+	assert_true(supervisedStopped);
 }
 
-static int noEffectIfActorCommandReturnsErrorAndNoSupervisorTest() {
+static void noEffectIfActorCommandReturnsErrorAndNoSupervisorTest() {
 	static int commandExecuted = 0;
 	static bool supervisedRestarted = false;
 	static bool supervisedStopped = false;
@@ -722,11 +704,12 @@ static int noEffectIfActorCommandReturnsErrorAndNoSupervisorTest() {
 	for (int i = 0; i < 5 && 1 > commandExecuted; i++)
 		sleep(1);
 
-	return ( commandExecuted == 1 && !supervisedRestarted && supervisedStopped) ? 0 : 1;
+	assert_eq(1, commandExecuted);
+	assert_false(supervisedRestarted);
+	assert_true(supervisedStopped);
 }
 
-
-static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
+static void actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	static bool supervisorRestarted = false;
 	static const ActorHooks hooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK,
@@ -741,10 +724,10 @@ static int actorDoesNothingIfNoSupervisorAndExceptionThrownTest() {
 	supervised->post(SOME_COMMAND);
 
 	supervised.reset();
-	return !supervisorRestarted ? 0 : 1;
+	assert_false(supervisorRestarted);
 }
 
-static int actorDoesNothingIfSupervisorUsesDoNothingErrorStrategyTest() {
+static void actorDoesNothingIfSupervisorUsesDoNothingErrorStrategyTest() {
 	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	static bool supervisedRestarted = false;
 	static int commandExecuted = 0;
@@ -764,10 +747,11 @@ static int actorDoesNothingIfSupervisorUsesDoNothingErrorStrategyTest() {
 	for (int i = 0; i < 5 && 2 > commandExecuted; i++)
 		sleep(1);
 
-	return (2 == commandExecuted  && !supervisedRestarted) ? 0 : 1;
+	assert_eq(2, commandExecuted);
+	assert_false(supervisedRestarted);
 }
 
-static int restartAllActorBySupervisorTest() {
+static void restartAllActorBySupervisorTest() {
 	static const Command SOME_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
 	bool supervisorRestarted = false;
 	bool supervised1Restarted = false;
@@ -796,10 +780,10 @@ static int restartAllActorBySupervisorTest() {
 	for (int i = 0; i < 5 && !supervised1Restarted && !supervised2Restarted; i++)
 		sleep(1);
 
-	return (supervisorRestarted || !supervised1Restarted || !supervised2Restarted) ? 1 : 0;
+	assert_false(supervisorRestarted || !supervised1Restarted || !supervised2Restarted);
 }
 
-static int stoppingSupervisorStopssupervisedTest() {
+static void stoppingSupervisorStopssupervisedTest() {
 	static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static bool supervisorStopped = false;
 	static bool supervisedStopped = false;
@@ -817,10 +801,11 @@ static int stoppingSupervisorStopssupervisedTest() {
 	supervisor.post(STOP_COMMAND);
 
 	for (int i = 0; i < 5 && !(supervisedStopped && supervisorStopped); i++) sleep(1);
-	return (supervisorStopped && supervisedStopped) ? 0 : 1;
+	assert_true(supervisorStopped);
+	assert_true(supervisedStopped);
 }
 
-static int supervisorHasDifferentStrategyDependingOnErrorTest() {
+static void supervisorHasDifferentStrategyDependingOnErrorTest() {
 	static const Command first_error = 0x11 | CommandValue::COMMAND_FLAG;
 	static const Command second_error = 0x22 | CommandValue::COMMAND_FLAG;
 	static const auto strategy = [](ErrorCode error) {
@@ -854,24 +839,23 @@ static int supervisorHasDifferentStrategyDependingOnErrorTest() {
 	for (int i = 0; i < 5 && !supervisedStopped; i++)
 		sleep(1);
 
-	return (supervisorRestarted ||  !supervisedRestarted || !supervisedStopped) ? 1 : 0;
+	assert_false(supervisorRestarted ||  !supervisedRestarted || !supervisedStopped);
 }
 
-static int executorTest() {
+static void executorTest() {
 	auto link = Link::create();
 	Executor executor([](MessageType, int, const RawData &, const SharedSenderLink &) { return StatusCode::SHUTDOWN; }, *link);
 	link->post(MessageType::COMMAND_MESSAGE, CommandValue::SHUTDOWN);
-	return 0;
 }
 
-static int serializationTest() {
+static void serializationTest() {
 	static const uint32_t EXPECTED_VALUE = 0x11223344;
 
 	const RawData s(EXPECTED_VALUE);
-	return (EXPECTED_VALUE == toId(s)) ? 0 : 1;
+	assert_eq(EXPECTED_VALUE, toId(s));
 }
 
-static int startActorFailureTest() {
+static void startActorFailureTest() {
 	bool exceptionThrown = false;
 	static const ActorHooks hooks([](const Context& ) { return StatusCode::ERROR; },
 			DEFAULT_STOP_HOOK, DEFAULT_RESTART_HOOK);
@@ -880,10 +864,10 @@ static int startActorFailureTest() {
 	} catch (ActorStartFailure &) {
 		exceptionThrown = true;
 	}
-	return exceptionThrown ? 0 : 1;
+	assert_true(exceptionThrown);
 }
 
-static int restartActorFailureTest() {
+static void restartActorFailureTest() {
 	static const Command COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
 	static int actorRestarted = 0;
 	static bool actorStoppedProperly = false;
@@ -903,11 +887,11 @@ static int restartActorFailureTest() {
 		for (int i = 0; i < 5 && 0 == actorRestarted; i++) sleep(1);
 
 	}
-	return (1 == actorRestarted && actorStoppedProperly) ? 0 : 1;
-
+	assert_eq(1, actorRestarted);
+	assert_true(actorStoppedProperly);
 }
 
-static int preAndPostActionCalledTest() {
+static void preAndPostActionCalledTest() {
 	static const Command COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
 	static bool preCalled = false;
 	static bool postCalled = false;
@@ -922,10 +906,11 @@ static int preAndPostActionCalledTest() {
 	Actor actor("actor", CommandExecutor(preCommand, postCommand, commands));
 	actor.post(COMMAND);
 	for (int i = 0; i < 5 && ! (preCalled && postCalled); i++) sleep(1);
-	return (preCalled && postCalled) ? 0 : 1;
+	assert_true(preCalled);
+	assert_true(postCalled);
 }
 
-static int preActionFailsTest() {
+static void preActionFailsTest() {
 	static const Command COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
 	static bool commandExecuted = false;
 	static bool preCalled = false;
@@ -940,10 +925,12 @@ static int preActionFailsTest() {
 	Actor actor("actor", CommandExecutor(preCommand, postCommand, commands));
 	actor.post(COMMAND);
 	for (int i = 0; i < 5 && ! preCalled; i++) sleep(1);
-	return (preCalled && !postCalled && !commandExecuted) ? 0 : 1;
+	assert_true(preCalled);
+	assert_false(postCalled); 
+	assert_false(commandExecuted);
 }
 
-static int commandFailsAndPostActionCalledTest() {
+static void commandFailsAndPostActionCalledTest() {
 	static const Command COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
 	static bool preCalled = false;
 	static bool postCalled = false;
@@ -958,10 +945,11 @@ static int commandFailsAndPostActionCalledTest() {
 	Actor actor("actor", CommandExecutor(preCommand, postCommand, commands));
 	actor.post(COMMAND);
 	for (int i = 0; i < 5 && ! (preCalled && postCalled); i++) sleep(1);
-	return (preCalled && postCalled) ? 0 : 1;
+	assert_true(preCalled);
+	assert_true(postCalled);
 }
 
-static int commandFailsWithExceptionAndPostActionCalledTest() {
+static void commandFailsWithExceptionAndPostActionCalledTest() {
 	static const Command COMMAND = 0x33 | CommandValue::COMMAND_FLAG;
 	static bool preCalled = false;
 	static bool postCalled = false;
@@ -977,7 +965,8 @@ static int commandFailsWithExceptionAndPostActionCalledTest() {
 	Actor actor("actor", CommandExecutor(preCommand, postCommand, commands));
 	actor.post(COMMAND);
 	for (int i = 0; i < 5 && ! (preCalled && postCalled); i++) sleep(1);
-	return (preCalled && postCalled) ? 0 : 1;
+	assert_true(preCalled);
+	assert_true(postCalled);
 }
 
 class DummyState : public State {
@@ -990,14 +979,14 @@ private:
 	int initCalled;
 };
 
-static int initStateDoneAtStart() {
+static void initStateDoneAtStart() {
 	DummyState *state = new DummyState();
 	Actor actor("actor", CommandExecutor(), std::unique_ptr<State>(state));
 	for (int i = 0; i < 5 && (0 == state->isInitCalled()); i++) sleep(1);
-	return (1 == state->isInitCalled()) ? 0 : 1;
+	assert_eq(1, state->isInitCalled());
 }
 
-static int initStateDoneAtRestart() {
+static void initStateDoneAtRestart() {
 	static const Command RESTART_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
 	static const commandMap commands[] = {
 		{RESTART_COMMAND, [](Context &, const RawData &, const SharedSenderLink &link) -> StatusCode { throw std::runtime_error("some error"); }},
@@ -1011,33 +1000,7 @@ static int initStateDoneAtRestart() {
 	supervised.post(RESTART_COMMAND);
 
 	for (int i = 0; i < 5 && (2 != state->isInitCalled()); i++) sleep(1);
-	return (2 == state->isInitCalled()) ? 0 : 1;
-}
-
-struct _test{
-	const char *name;
-	int (*test)(void);
-	_test(const char *name, int (*test)(void)) : name(name), test(test) { }
-};
-
-#define TEST(t) _test(#t, t)
-
-#define runTest(suite) _runTest(suite, sizeof(suite)/sizeof(_test))
-
-int _runTest(const _test *suite, size_t nbTests) {
-	int nbFailure = 0;
-
-	for (size_t i = 0; i < nbTests; i++) {
-		std::cout << suite[i].name << ": " << std::flush;
-		if (0 < suite[i].test()) {
-			nbFailure ++;
-			std::cout << "FAILURE" << std::endl;
-		}
-		else {
-			std::cout << "OK" << std::endl;
-		}
-	}
-	return nbFailure;
+	assert_eq(2, state->isInitCalled());
 }
 
 int main() {
