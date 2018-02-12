@@ -60,8 +60,6 @@ struct ActorHooks {
 									atStart(atStart), atStop(atStop), atRestart(atRestart) { }
 };
 
-class Executor;
-
 class Actor {
 public:
 	Actor(std::string name, CommandExecutor commandExecutor = CommandExecutor(), ErrorActionDispatcher errorDispatcher = DEFAULT_ERROR_DISPATCHER);
