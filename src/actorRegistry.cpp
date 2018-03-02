@@ -140,6 +140,7 @@ ActorRegistry::~ActorRegistry() { delete pImpl; }
 std::string ActorRegistry::addReference(const std::string &host, uint16_t port) { return pImpl->addReference(host, port); }
 void ActorRegistry::removeReference(const std::string &registryName) { pImpl->removeReference(registryName); }
 void ActorRegistry::registerActor(SharedSenderLink actor) { pImpl->registerActor(std::move(actor)); }
+void ActorRegistry::registerActor(const SharableSenderApi &actor) { registerActor(actor.getActorLinkRef()); } 
 void ActorRegistry::unregisterActor(const std::string &name) { pImpl->unregisterActor(name); }
 SharedSenderLink  ActorRegistry::getActor(const std::string &name) const { return pImpl->getActor(name); } 
 

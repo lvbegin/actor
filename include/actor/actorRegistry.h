@@ -42,6 +42,7 @@ public:
 	std::string addReference(const std::string &host, uint16_t port);
 	void removeReference(const std::string &registryName);
 	void registerActor(SharedSenderLink actor);
+	void registerActor(const SharableSenderApi &actor);
 	void unregisterActor(const std::string &name);
 	SharedSenderLink  getActor(const std::string &name) const;
 private:

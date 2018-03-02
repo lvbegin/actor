@@ -60,7 +60,7 @@ struct ActorHooks {
 									atStart(atStart), atStop(atStop), atRestart(atRestart) { }
 };
 
-class Actor {
+class Actor : public SharableSenderApi {
 public:
 	Actor(std::string name, CommandExecutor commandExecutor = CommandExecutor(), ErrorActionDispatcher errorDispatcher = DEFAULT_ERROR_DISPATCHER);
 	Actor(std::string name, CommandExecutor commandExecutor, ActorHooks hooks,
@@ -79,7 +79,7 @@ public:
 	void post(Command command, SharedSenderLink sender = SharedSenderLink()) const;
 	void post(Command command, const RawData &params, SharedSenderLink sender = SharedSenderLink()) const;
 
-	SharedSenderLink getActorLinkRef() const;
+	SharedSenderLink getActorLinkRef() const override;
 
 	void registerActor(Actor &monitored);
 	void unregisterActor(Actor &monitored);

@@ -37,6 +37,14 @@
 class SenderApi;
 using SharedSenderLink = std::shared_ptr<SenderApi>;
 
+class SharableSenderApi {
+public:
+	virtual SharedSenderLink getActorLinkRef() const = 0;
+	virtual ~SharableSenderApi() = default;
+protected:
+	SharableSenderApi() = default;
+};
+
 class SenderApi {
 public:
 	virtual void post(Command command, SharedSenderLink sender = SharedSenderLink()) = 0;
