@@ -33,13 +33,10 @@
 #include <actor/commandMap.h>
 #include <actor/actorRegistry.h>
 #include <actor/link.h>
-#include <private/proxyClient.h>
-#include <private/actorCommand.h>
-#include <private/proxyServer.h>
 #include <private/clientSocket.h>
 #include <private/commandValue.h>
-#include <private/serverSocket.h>
-#include <private/executor.h>
+//#include <private/serverSocket.h>
+//#include <private/executor.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -122,15 +119,6 @@ class testCommands {
 		StatusCode rc;
 };
 
-static void actorCommandHasReservedCodeTest(void) {
-	static const uint32_t wrongCommand = 0xaa;
-	static const commandMap commands[] = {
-			{wrongCommand, [](Context &, const RawData &, const SharedSenderLink &link) { return StatusCode::OK;}},
-			{ 0, NULL},
-	};
-	assert_exception(std::runtime_error, ActorCommand c(commands));
-}
-
 static void basicActorTest(void) {
 	const auto link = Link::create();
 	const Actor a(ACTOR_NAME, testCommands().commands);
@@ -164,52 +152,12 @@ static void actorSendUnknownCommandAndReceiveErrorCodeTest(void) {
 	const Actor a(ACTOR_NAME);
 	auto queue = Link::create();
 	a.post(OK_COMMAND, PARAM_VALUE, queue);
-	assert_eq(CommandValue::UNKNOWN_COMMAND, queue->get().code);
+	assert_eq(UNKNOWN_COMMAND, queue->get().code);
 }
 
 static void actorSendUnknownCommandCodeTest(void) {
 	const Actor a(ACTOR_NAME);
 	a.post(OK_COMMAND, PARAM_VALUE);
-}
-
-static void executeSeverProxy(uint16_t port, testCommands *commands) {
-	const Actor actor(ACTOR_NAME, commands->commands);
-	static const auto DO_NOTHING = []() { };
-	const auto DummyGetConnection = [] (std::string) { return SharedSenderLink(); };
-	const ProxyServer server(actor.getActorLinkRef(), ServerSocket::getConnection(port), DO_NOTHING, DummyGetConnection);
-}
-
-static Connection openOneConnection(uint16_t port) {
-	while (true) {
-		try {
-			return ClientSocket::openHostConnection("localhost", port);
-		} catch (std::exception &e) { }
-	}
-}
-
-static void waitCondition(std::function<bool()> condition)
-{
-	for (int i = 0; i < 10 && !condition(); i++)
-		sleep(1);
-	assert_true(condition());
-}
-
-static void proxyTest(void) {
-	static const uint16_t PORT = 4011;
-	int nbMessages { 0 };
-	testCommands commands;
-	std::thread t(executeSeverProxy, PORT, &commands);
-	ProxyClient client("client name", openOneConnection(PORT));
-	client.post(OK_COMMAND);
-	waitCondition([&commands]() { return 1 == commands.commandExecuted; } );
-	client.post(CommandValue::SHUTDOWN);
-	t.join();
-}
-
-static void registryConnectTest(void) {
-	static const uint16_t PORT = 4001;
-	const ActorRegistry registry(REGISTRY_NAME1, PORT);
-	const Connection c = openOneConnection(PORT);
 }
 
 static void registryAddActorTest(void) {
@@ -233,16 +181,12 @@ static void registryAddActorAndRemoveTest(void) {
 	registry.registerActor(anotherA.getActorLinkRef());
 }
 
-static void ensureRegistryStarted(uint16_t port) { openOneConnection(port); }
-
 static void registryAddReferenceTest(void) {
 	static const uint16_t PORT1 = 4001;
 	static const uint16_t port2 = 4002;
 	ActorRegistry registry1(REGISTRY_NAME1, PORT1);
 	ActorRegistry registry2(REGISTRY_NAME2, port2);
 
-	ensureRegistryStarted(PORT1);
-	ensureRegistryStarted(port2);
 	const std::string name = registry1.addReference("localhost", port2);
 	assert_eq(REGISTRY_NAME2, name);
 }
@@ -255,8 +199,6 @@ static void registryAddReferenceOverrideExistingOneTest(void) {
 	ActorRegistry registry2(REGISTRY_NAME2, PORT2);
 	ActorRegistry registry3(REGISTRY_NAME1, PORT3);
 
-	ensureRegistryStarted(PORT1);
-	ensureRegistryStarted(PORT2);
 	registry1.addReference("localhost", PORT2);
 	const std::string name = registry3.addReference("localhost", PORT2);
     assert_eq(REGISTRY_NAME2, name);
@@ -293,8 +235,6 @@ static void findActorFromOtherRegistryAndSendMessageTest() {
 	ActorRegistry registry1(REGISTRY_NAME1, PORT1);
 	ActorRegistry registry2(REGISTRY_NAME2, PORT2);
 	auto link = Link::create("link name needed because the actor is remote");
-	ensureRegistryStarted(PORT1);
-	ensureRegistryStarted(PORT2);
 	const std::string name = registry1.addReference("localhost", PORT2);
 	assert_eq (REGISTRY_NAME2, name);
 	const Actor a(ACTOR_NAME, CommandExecutor(testCommands().commands) );
@@ -335,10 +275,6 @@ static void findActorFromOtherRegistryAndSendWithSenderForwardToAnotherActorMess
 	};
 
 
-	ensureRegistryStarted(PORT1);
-	ensureRegistryStarted(PORT2);
-	ensureRegistryStarted(PORT3);
-
 	registry1.addReference("localhost", PORT2);
 	registry1.addReference("localhost", PORT3);
 	registry2.addReference("localhost", PORT3);
@@ -378,8 +314,6 @@ static void findActorFromOtherRegistryAndSendCommandWithParamsTest() {
 	ActorRegistry registry2(REGISTRY_NAME2, PORT2);
 	auto link = Link::create("link name needed because the actor is remote");
 
-	ensureRegistryStarted(PORT1);
-	ensureRegistryStarted(PORT2);
 	const std::string name = registry1.addReference("localhost", PORT2);
 	assert_eq (REGISTRY_NAME2, name);
 		
@@ -399,8 +333,6 @@ static void findUnknownActorInMultipleRegistryTest() {
 	ActorRegistry registry1(REGISTRY_NAME1, PORT1);
 	ActorRegistry registry2(REGISTRY_NAME2, PORT2);
 
-	ensureRegistryStarted(PORT1);
-	ensureRegistryStarted(PORT2);
 	const std::string name = registry1.addReference("localhost", PORT2);
 	assert_eq(REGISTRY_NAME2, name);
 	
@@ -425,7 +357,6 @@ static void unregisterToSupervisorWhenActorDestroyedTest() {
 	supervised->post(CommandValue::SHUTDOWN);
 	supervised.reset();
 }
-
 class TestHooks {
 	public:
 		TestHooks(StatusCode rcStart = StatusCode::OK, StatusCode rcRestart = StatusCode::OK) : 
@@ -641,19 +572,6 @@ static void supervisorHasDifferentStrategyDependingOnErrorTest() {
 	assert_false(supervisorHooks.actorRestarted);
 }
 
-static void executorTest() {
-	auto link = Link::create();
-	Executor executor([](MessageType, int, const RawData &, const SharedSenderLink &) { return StatusCode::SHUTDOWN; }, *link);
-	link->post(MessageType::COMMAND_MESSAGE, CommandValue::SHUTDOWN);
-}
-
-static void serializationTest() {
-	static const uint32_t EXPECTED_VALUE = 0x11223344;
-
-	const RawData s(EXPECTED_VALUE);
-	assert_eq(EXPECTED_VALUE, toId(s));
-}
-
 static void startActorFailureTest() {
 	TestHooks hooks(StatusCode::ERROR, StatusCode::OK);
 	try {
@@ -733,15 +651,12 @@ static void initStateDoneAtRestart() {
 
 int main() {
 	static const _test suite[] = {
-			TEST(actorCommandHasReservedCodeTest),
 			TEST(basicActorTest),
 			TEST(basicActorWithParamsTest),
-			TEST(proxyTest),
 			TEST(actorSendMessageAndReceiveAnAnswerTest),
 			TEST(actorSendMessageAndDoNptReceiveAnAnswerTest),
 			TEST(actorSendUnknownCommandAndReceiveErrorCodeTest),
 			TEST(actorSendUnknownCommandCodeTest),
-			TEST(registryConnectTest),
 			TEST(registryAddActorTest),
 			TEST(registryAddActorAndRemoveTest),
 			TEST(registryAddReferenceTest),
@@ -768,8 +683,6 @@ int main() {
 			TEST(restartAllActorBySupervisorTest),
 			TEST(stoppingSupervisorStopssupervisedTest),
 			TEST(supervisorHasDifferentStrategyDependingOnErrorTest),
-			TEST(executorTest),
-			TEST(serializationTest),
 			TEST(startActorFailureTest),
 			TEST(restartActorFailureTest),
 			TEST(preAndPostActionCalledTest),

@@ -1,6 +1,8 @@
 #include "test.h"
 
 #include <iostream>
+#include <sstream>
+#include <unistd.h>
 
 void _assert_true(bool e, std::string fileName, unsigned int line)
 {
@@ -8,7 +10,7 @@ void _assert_true(bool e, std::string fileName, unsigned int line)
     if (!e)
         throw std::runtime_error("assert failed at line " + std::to_string(line) + " in file " + fileName);
 }
-#include <sstream>
+
 void _assert_eq(int i, int j, std::string fileName, unsigned int line)
 {
 	
@@ -58,4 +60,11 @@ int _runTest(const _test *suite, size_t nbTests) {
 		}
 	}
 	return nbFailure;
+}
+
+void waitCondition(std::function<bool()> condition)
+{
+	for (int i = 0; i < 10 && !condition(); i++)
+		sleep(1);
+	assert_true(condition());
 }

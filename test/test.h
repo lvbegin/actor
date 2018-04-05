@@ -3,6 +3,9 @@
 
 #include <cstddef>
 #include <string>
+#include <exception>
+#include <sstream>
+#include <functional>
 
 struct _test{
 	const char *name;
@@ -41,9 +44,6 @@ void _assert_eq(std::string i, std::string j, std::string fileName, unsigned int
 										std::to_string(__LINE__) + " in file "  __FILE__);\
 								}
 
-#include <exception>
-#include <sstream>
-
 template<class T>
 void _assert_eq(T i, T j, std::string fileName, int line) {
 	if (i != j)
@@ -54,4 +54,7 @@ void _assert_eq(T i, T j, std::string fileName, int line) {
 	}
 
 }
+
+void waitCondition(std::function<bool()> condition);
+
 #endif

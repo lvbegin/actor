@@ -42,8 +42,13 @@ static void threadBody(uint16_t port, std::function<void(const ServerSocket &s)>
 class ActorRegistry::ActorRegistryImpl {
 	public:
 		ActorRegistryImpl(std::string name, uint16_t port) : name(std::move(name)), port(port),
-		findActorCallback([this](auto &name) { return this->getRemoteActor(name); }), terminated(false),
-		t([this]() {  threadBody(this->port, [this](const ServerSocket &s) { registryBody(s); }); }) { }
+		findActorCallback([this](auto &name) { return this->getRemoteActor(name); }), terminated(false), started(false),
+		t([this]() {  threadBody(this->port, 
+			[this](const ServerSocket &s) { notifyStarted(); registryBody(s); }); }) 
+			{ 
+				std::unique_lock<std::mutex> l(m);
+				cond_started.wait(l, [this]() { return this->started; });
+			}
 
 		~ActorRegistryImpl() {
 			terminated = true;
@@ -83,6 +88,9 @@ class ActorRegistry::ActorRegistryImpl {
 		SharedMap<const std::string, const struct NetAddr> registryAddresses;
 		SharedVector<SharedSenderLink> actors;
 		ProxyContainer proxies;
+		std::mutex m;
+		bool started;
+		std::condition_variable cond_started;
 		std::thread t;
 
 	void registryBody(const ServerSocket &s) {
@@ -115,6 +123,12 @@ class ActorRegistry::ActorRegistryImpl {
 		}
 	}
 
+	void notifyStarted() {
+			std::unique_lock<std::mutex> l(m);
+			this->started = true;
+			cond_started.notify_one();
+	}
+
 	SharedSenderLink getLocalActor(const std::string &name) const {
 		return actors.find_if(SenderApi::nameComparator(name));
 	}
@@ -143,7 +157,6 @@ void ActorRegistry::registerActor(SharedSenderLink actor) { pImpl->registerActor
 void ActorRegistry::registerActor(const SharableSenderApi &actor) { registerActor(actor.getActorLinkRef()); } 
 void ActorRegistry::unregisterActor(const std::string &name) { pImpl->unregisterActor(name); }
 SharedSenderLink  ActorRegistry::getActor(const std::string &name) const { return pImpl->getActor(name); } 
-
 
 static void threadBody(uint16_t port, std::function<void(const ServerSocket &s)> body) {
 	body(*std::make_unique<ServerSocket>(port));

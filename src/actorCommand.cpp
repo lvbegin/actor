@@ -27,10 +27,10 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <actor/commandMap.h>
 #include <private/actorCommand.h>
 #include <private/commandValue.h>
 #include <private/exception.h>
-
 
 static std::map<Command, CommandFunction> buildMap(const commandMap array[]);
 static StatusCode shutdownCase(Context &, const RawData &, const SharedSenderLink &);
@@ -47,7 +47,7 @@ StatusCode ActorCommand::execute(Context &context, Command commandCode, const Ra
 		f = commands.at(commandCode);
 	} catch (std::out_of_range &e) {
 		if (nullptr != actorLink)
-			actorLink->post(CommandValue::UNKNOWN_COMMAND);
+			actorLink->post(UNKNOWN_COMMAND);
 		return StatusCode::OK;
 	}
 	return f(context, data, actorLink);

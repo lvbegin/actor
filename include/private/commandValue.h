@@ -39,7 +39,6 @@ public:
 	static const uint32_t SHUTDOWN = 0;
 	static const uint32_t RESTART = 1;
 	static const uint32_t UNREGISTER_ACTOR = 2;
-	static const uint32_t UNKNOWN_COMMAND = 3;
 
 	static bool isInternalCommand(uint32_t code) { return (0 == (code & CommandValue::COMMAND_FLAG)); }
 };

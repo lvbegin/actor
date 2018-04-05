@@ -42,4 +42,6 @@ struct commandMap {
 	CommandFunction command;
 };
 
+static const uint32_t UNKNOWN_COMMAND = 0x00000003;
+
 #endif
