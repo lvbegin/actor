@@ -33,10 +33,7 @@
 #include <actor/commandMap.h>
 #include <actor/actorRegistry.h>
 #include <actor/link.h>
-#include <private/clientSocket.h>
 #include <private/commandValue.h>
-//#include <private/serverSocket.h>
-//#include <private/executor.h>
 
 #include <cstdlib>
 #include <iostream>
