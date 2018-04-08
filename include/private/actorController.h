@@ -51,10 +51,8 @@ public:
 private:
 	SharedVector<SharedLink> actors;
 
-	void doOperationOneActor(const std::string &name, LinkRefOperation op) const;
-	void doOperationAllActors(LinkRefOperation op) const;
-	static void restart(const SharedLink &link);
-	static void stop(const SharedLink &link);
+	void send(const std::string &name, uint32_t commandValue) const;
+	void sendAll(uint32_t commandValue) const;
 	static void sendMessage(const SharedLink &link, Command command);
 };
 

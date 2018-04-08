@@ -37,26 +37,22 @@ void ActorController::add(SharedLink actorLink) { actors.push_back(std::move(act
 
 void ActorController::remove(const std::string &name) { actors.erase(SenderApi::nameComparator(name)); }
 
-void ActorController::restartOne(const std::string &name) const { doOperationOneActor(name, restart); }
+void ActorController::restartOne(const std::string &name) const { send(name, CommandValue::RESTART); }
 
-void ActorController::stopOne(const std::string &name) const { doOperationOneActor(name, stop); }
+void ActorController::stopOne(const std::string &name) const { send(name, CommandValue::SHUTDOWN); }
 
-void ActorController::stopAll(void) const { doOperationAllActors(stop); }
+void ActorController::stopAll(void) const { sendAll(CommandValue::SHUTDOWN); }
 
-void ActorController::restartAll(void) const { doOperationAllActors(restart); }
-
-void ActorController::restart(const SharedLink &link) { sendMessage(link, CommandValue::RESTART); }
-
-void ActorController::stop(const SharedLink &link) { sendMessage(link, CommandValue::SHUTDOWN); }
+void ActorController::restartAll(void) const { sendAll(CommandValue::RESTART); }
 
 void ActorController::sendMessage(const SharedLink &link, Command command) {
 	link->post(MessageType::MANAGEMENT_MESSAGE, command);
 }
 
-void ActorController::doOperationOneActor(const std::string &name, LinkRefOperation op) const {
+void ActorController::send(const std::string &name, uint32_t commandValue) const {
 	try {
-		op(actors.find_if(SenderApi::nameComparator(name)));
+		sendMessage(actors.find_if(SenderApi::nameComparator(name)), commandValue);
 	} catch (const std::out_of_range &) { }
 }
 
-void ActorController::doOperationAllActors(LinkRefOperation op) const { actors.for_each([&op](auto &e) { op(e);} ); }
+void ActorController::sendAll(uint32_t commandValue) const { actors.for_each([commandValue](auto &e) { sendMessage(e, commandValue); } ); }
