@@ -47,21 +47,10 @@
 
 static const std::string PARAM_VALUE("Hello World");
 static const int OK_ANSWER = 0x22;
-static const int NOK_ANSWER = 0x73;
 
 static const Command OK_COMMAND = 0xaa | COMMAND_FLAG;
-static const Command OK_COMMAND_NO_ANSWER = 0x01 | COMMAND_FLAG;
-static const Command OK_COMMAND_CHECK_DATA = 0x33 | COMMAND_FLAG;
-static const Command OK_COMMAND_CHECK_NO_DATA = 0xF3 | COMMAND_FLAG;
-static const Command STOP_COMMAND = 0x99 | COMMAND_FLAG;
-static const Command EXCEPTION_THROWN_COMMAND = 0x13 | COMMAND_FLAG;
-static const Command ERROR_NOTIFIED_COMMAND = 0xB3 | COMMAND_FLAG;
-static const Command ERROR_NOTIFIED_2_COMMAND = 0xE5 | COMMAND_FLAG;
-static const Command ERROR_RETURNED_COMMAND = 0xca | COMMAND_FLAG;
 
 static const std::string REGISTRY_NAME1("registry name1");
-static const std::string REGISTRY_NAME2("registry name2");
-static const std::string REGISTRY_NAME3("registry name3");
 
 static const std::string ACTOR_NAME("my actor");
 
@@ -69,41 +58,14 @@ class testCommands {
 	public:
 		testCommands(StatusCode rc = StatusCode::OK) : exceptionThrown(false), commandExecuted(0), preCalled(false), postCalled(false), rc(rc) {
 			commandMap c[] = {
-	{OK_COMMAND, [this](Context &, const RawData &, const SharedSenderLink &link) {
-		this->commandExecuted++; 
-		if (nullptr != link.get())
-			link->post(OK_ANSWER);
-		return StatusCode::OK;
-	}},
-	{OK_COMMAND_NO_ANSWER, [](Context &, const RawData &, const SharedSenderLink &link) { 
-		return StatusCode::OK;
-	}},
-	{OK_COMMAND_CHECK_DATA, [](Context &, const RawData &params, const SharedSenderLink &link) {
-		if (0 == PARAM_VALUE.compare(params.toString()))
-			link->post(OK_ANSWER);
-		else
-			link->post(NOK_ANSWER);
-		return StatusCode::OK;
-	}},
-	{OK_COMMAND_CHECK_NO_DATA, [](Context &, const RawData &params, const SharedSenderLink &link) {
-		if (0 == params.size())
-			link->post(OK_ANSWER);
-		else
-			link->post(NOK_ANSWER);
-		return StatusCode::OK;
-	}},
-
-	{ERROR_RETURNED_COMMAND, [this](Context &, const RawData &, const SharedSenderLink &link) { this->commandExecuted++; return StatusCode::ERROR; }},
-	{ EXCEPTION_THROWN_COMMAND, [this](Context &, const RawData &, const SharedSenderLink &) {
-					this->exceptionThrown++; 
-					throw std::runtime_error("some problem"); 
-					return StatusCode::OK; 
-	}},
-	{STOP_COMMAND, [](Context &, const RawData &, const SharedSenderLink &link) { return StatusCode::SHUTDOWN; }},
-	{ERROR_NOTIFIED_COMMAND, [this](Context &, const RawData &, const SharedSenderLink &) { this->commandExecuted++; return (Actor::notifyError(ERROR_NOTIFIED_COMMAND), StatusCode::OK); }},
-	{ERROR_NOTIFIED_2_COMMAND, [](Context &, const RawData &, const SharedSenderLink &) { return (Actor::notifyError(ERROR_NOTIFIED_2_COMMAND), StatusCode::OK); }},
-
-				{ 0, NULL},
+			{OK_COMMAND, [this](Context &, const RawData &, const SharedSenderLink &link) {
+				this->commandExecuted++; 
+				if (nullptr != link.get())
+					link->post(OK_ANSWER);
+				return StatusCode::OK;
+			}},
+	
+			{ 0, NULL},
 			};
 			for (int i = 0; i < sizeof(c) / sizeof(commandMap); i++)
 				commands[i] = c[i];
