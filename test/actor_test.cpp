@@ -33,7 +33,6 @@
 #include <actor/commandMap.h>
 #include <actor/actorRegistry.h>
 #include <actor/link.h>
-#include <private/commandValue.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -43,15 +42,15 @@ static const std::string PARAM_VALUE("Hello World");
 static const int OK_ANSWER = 0x22;
 static const int NOK_ANSWER = 0x73;
 
-static const Command OK_COMMAND = 0xaa | CommandValue::COMMAND_FLAG;
-static const Command OK_COMMAND_NO_ANSWER = 0x01 | CommandValue::COMMAND_FLAG;
-static const Command OK_COMMAND_CHECK_DATA = 0x33 | CommandValue::COMMAND_FLAG;
-static const Command OK_COMMAND_CHECK_NO_DATA = 0xF3 | CommandValue::COMMAND_FLAG;
-static const Command STOP_COMMAND = 0x99 | CommandValue::COMMAND_FLAG;
-static const Command EXCEPTION_THROWN_COMMAND = 0x13 | CommandValue::COMMAND_FLAG;
-static const Command ERROR_NOTIFIED_COMMAND = 0xB3 | CommandValue::COMMAND_FLAG;
-static const Command ERROR_NOTIFIED_2_COMMAND = 0xE5 | CommandValue::COMMAND_FLAG;
-static const Command ERROR_RETURNED_COMMAND = 0xca | CommandValue::COMMAND_FLAG;
+static const Command OK_COMMAND = 0xaa | COMMAND_FLAG;
+static const Command OK_COMMAND_NO_ANSWER = 0x01 | COMMAND_FLAG;
+static const Command OK_COMMAND_CHECK_DATA = 0x33 | COMMAND_FLAG;
+static const Command OK_COMMAND_CHECK_NO_DATA = 0xF3 | COMMAND_FLAG;
+static const Command STOP_COMMAND = 0x99 | COMMAND_FLAG;
+static const Command EXCEPTION_THROWN_COMMAND = 0x13 | COMMAND_FLAG;
+static const Command ERROR_NOTIFIED_COMMAND = 0xB3 | COMMAND_FLAG;
+static const Command ERROR_NOTIFIED_2_COMMAND = 0xE5 | COMMAND_FLAG;
+static const Command ERROR_RETURNED_COMMAND = 0xca | COMMAND_FLAG;
 
 static const std::string REGISTRY_NAME1("registry name1");
 static const std::string REGISTRY_NAME2("registry name2");
@@ -252,7 +251,7 @@ static void findActorFromOtherRegistryAndSendWithSenderForwardToAnotherActorMess
 	static const uint16_t PORT1 = 4001;
 	static const uint16_t PORT2 = 4002;
 	static const uint16_t PORT3 = 4003;
-	static const Command INTERMEDIATE_COMMAND = 0x44 | CommandValue::COMMAND_FLAG;
+	static const Command INTERMEDIATE_COMMAND = 0x44 | COMMAND_FLAG;
 	ActorRegistry registry1(REGISTRY_NAME1, PORT1);
 	ActorRegistry registry2(REGISTRY_NAME2, PORT2);
 	ActorRegistry registry3(REGISTRY_NAME3, PORT3);
@@ -348,12 +347,12 @@ static void initSupervisionTest() {
 
 static void unregisterToSupervisorWhenActorDestroyedTest() {
 	Actor supervisor("supervisor");
-	auto supervised = std::make_unique<Actor>("supervised");
-	supervisor.registerActor(*supervised.get());
-
-	supervised->post(CommandValue::SHUTDOWN);
-	supervised.reset();
+	{
+		auto supervised = std::make_unique<Actor>("supervised");
+		supervisor.registerActor(*supervised.get());
+	}
 }
+
 class TestHooks {
 	public:
 		TestHooks(StatusCode rcStart = StatusCode::OK, StatusCode rcRestart = StatusCode::OK) : 

@@ -54,9 +54,9 @@ bool Supervisor::postSupervisor(MessageType type, Command command, const RawData
 
 void Supervisor::removeActor(const std::string &name) { doOperation([&name, this](){ supervisedRefs.remove(name); } ); }
 
-void Supervisor::restartActors() const { doOperation([this]() { supervisedRefs.restartAll(); }); }
+void Supervisor::restartActors() const { doOperation([this]() { supervisedRefs.sendAll(CommandValue::RESTART); }); }
 
-void Supervisor::stopActors() const { doOperation([this]() { supervisedRefs.stopAll(); }); }
+void Supervisor::stopActors() const { doOperation([this]() { supervisedRefs.sendAll(CommandValue::SHUTDOWN); }); }
 
 void Supervisor::doOperation(std::function<void(void)> op) const { 
 	doOperationWithReturn([&op]() { op(); return true; }); 

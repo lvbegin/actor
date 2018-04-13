@@ -43,5 +43,6 @@ struct commandMap {
 };
 
 static const uint32_t UNKNOWN_COMMAND = 0x00000003;
+static const uint32_t COMMAND_FLAG = 0x80000000;
 
 #endif

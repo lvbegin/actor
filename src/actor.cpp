@@ -42,6 +42,7 @@
 #include <iostream>
 #include <exception>
 
+static const uint32_t UNREGISTER_ACTOR = 2;
 
 class ActorException : public std::runtime_error {
 	public:
@@ -66,7 +67,7 @@ public:
 				{ checkActorInitialization(); }
 	~ActorImpl() {
 		stateMachine.moveTo(ActorStateMachine::State::STOPPED);
-		context.getConstSupervisor().notifySupervisor(CommandValue::UNREGISTER_ACTOR);
+		context.getConstSupervisor().notifySupervisor(UNREGISTER_ACTOR);
 		executorQueue->post(CommandValue::SHUTDOWN);
 	}
 
@@ -131,7 +132,7 @@ public:
 		switch (command) {
 			case CommandValue::RESTART:
 				return (StatusCode::OK == restartSateMachine()) ? StatusCode::SHUTDOWN : StatusCode::ERROR;
-			case CommandValue::UNREGISTER_ACTOR:
+			case UNREGISTER_ACTOR:
 				context.getSupervisor().removeActor(params.toString());
 				return StatusCode::OK;
 			case CommandValue::SHUTDOWN:
@@ -200,7 +201,6 @@ const AtRestartHook DEFAULT_RESTART_HOOK = [](const Context& c) {
 };
 const ErrorActionDispatcher DEFAULT_ERROR_DISPATCHER = [](ErrorCode) { return ErrorReactionFactory::restartActor(); };
 static const ActorHooks DEFAULT_HOOKS = ActorHooks(DEFAULT_START_HOOK, DEFAULT_STOP_HOOK, DEFAULT_RESTART_HOOK);
-
 
 Actor::Actor(std::string name, CommandExecutor commandExecutor, ErrorActionDispatcher errorDispatcher) :
 				Actor(std::move(name), std::move(commandExecutor), DEFAULT_HOOKS, std::make_unique<NoState>(),errorDispatcher) { }

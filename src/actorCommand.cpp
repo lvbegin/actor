@@ -53,6 +53,8 @@ StatusCode ActorCommand::execute(Context &context, Command commandCode, const Ra
 	return f(context, data, actorLink);
 }
 
+static bool isInternalCommand(uint32_t code) { return (0 == (code & COMMAND_FLAG)); }
+
 static std::map<Command, CommandFunction> buildMap(const commandMap array[]) {
 	std::map<Command, CommandFunction> map;
 
@@ -62,7 +64,7 @@ static std::map<Command, CommandFunction> buildMap(const commandMap array[]) {
 	for (const commandMap * ptr = array; !(0 == ptr->commandCode && nullptr == ptr->command) ; ptr ++) {
 		if (0 == ptr->commandCode && nullptr == ptr->command)
 			break;
-		if (CommandValue::isInternalCommand(ptr->commandCode))
+		if (isInternalCommand(ptr->commandCode))
 			THROW(std::runtime_error, "command reserved for internal use.");
 		map[ptr->commandCode] = ptr->command;
 	}

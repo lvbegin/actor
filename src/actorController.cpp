@@ -37,14 +37,6 @@ void ActorController::add(SharedLink actorLink) { actors.push_back(std::move(act
 
 void ActorController::remove(const std::string &name) { actors.erase(SenderApi::nameComparator(name)); }
 
-void ActorController::restartOne(const std::string &name) const { send(name, CommandValue::RESTART); }
-
-void ActorController::stopOne(const std::string &name) const { send(name, CommandValue::SHUTDOWN); }
-
-void ActorController::stopAll(void) const { sendAll(CommandValue::SHUTDOWN); }
-
-void ActorController::restartAll(void) const { sendAll(CommandValue::RESTART); }
-
 void ActorController::sendMessage(const SharedLink &link, Command command) {
 	link->post(MessageType::MANAGEMENT_MESSAGE, command);
 }

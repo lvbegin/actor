@@ -36,10 +36,8 @@ class ControllerApi {
 public:
 	virtual ~ControllerApi() = default;
 
-	virtual void stopOne(const std::string &name) const = 0;
-	virtual void stopAll(void) const = 0;
-	virtual void restartOne(const std::string &name) const = 0;
-	virtual void restartAll(void) const = 0;
+	virtual void send(const std::string &name, uint32_t commandValue) const = 0;
+	virtual void sendAll(uint32_t commandValue) const = 0;
 protected:
 	ControllerApi() = default;
 };

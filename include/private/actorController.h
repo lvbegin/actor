@@ -44,15 +44,11 @@ public:
 
 	void add(SharedLink actorLink);
 	void remove(const std::string &name);
-	void stopOne(const std::string &name) const override;
-	void stopAll(void) const override;
-	void restartOne(const std::string &name) const override;
-	void restartAll(void) const override;
+	void send(const std::string &name, uint32_t commandValue) const override;
+	void sendAll(uint32_t commandValue) const override;
 private:
 	SharedVector<SharedLink> actors;
 
-	void send(const std::string &name, uint32_t commandValue) const;
-	void sendAll(uint32_t commandValue) const;
 	static void sendMessage(const SharedLink &link, Command command);
 };
 
