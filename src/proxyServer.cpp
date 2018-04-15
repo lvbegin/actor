@@ -30,7 +30,7 @@
 #include <private/proxyServer.h>
 #include <private/serverSocket.h>
 #include <private/proxyContainer.h>
-#include <private/commandValue.h>
+#include <private/internalCommands.h>
 
 #include <arpa/inet.h>
 
@@ -56,7 +56,7 @@ void ProxyServer::serverBody(SharedSenderLink actor, Connection connection, std:
 		const auto sender = (name.size() > 0) ? findActor(name) : SharedSenderLink();
 		const auto command = connection.readInt<uint32_t>();
 		actor->post(command, connection.readRawData(), std::move(sender));
-		if (CommandValue::SHUTDOWN == command) {
+		if (InternalCommands::SHUTDOWN == command) {
 			notifyTerminate();
 			return;
 		}

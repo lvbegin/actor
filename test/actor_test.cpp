@@ -115,6 +115,11 @@ class testCommands {
 		StatusCode rc;
 };
 
+static void actorStoppedAtDeleteTest(void) {
+	const auto link = Link::create();
+	const Actor a(ACTOR_NAME, testCommands().commands);
+}
+
 static void basicActorTest(void) {
 	const auto link = Link::create();
 	const Actor a(ACTOR_NAME, testCommands().commands);
@@ -647,6 +652,7 @@ static void initStateDoneAtRestart() {
 
 int main() {
 	static const _test suite[] = {
+			TEST(actorStoppedAtDeleteTest),
 			TEST(basicActorTest),
 			TEST(basicActorWithParamsTest),
 			TEST(actorSendMessageAndReceiveAnAnswerTest),

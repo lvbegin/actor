@@ -28,14 +28,14 @@
  */
 
 #include <private/errorReaction.h>
-#include <private/commandValue.h>
+#include <private/internalCommands.h>
 
 RestartActor::RestartActor() = default;
 RestartActor::~RestartActor() = default;
 void RestartActor::executeAction(const ControllerApi &supervisedRefs, 
 	NotifySupervisor notifySupervisor,			
 	ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const {
-    supervisedRefs.send(params.toString(), CommandValue::RESTART);
+    supervisedRefs.send(params.toString(), InternalCommands::RESTART);
 }
 const ErrorReaction *RestartActor::create() { return &singletonElement; }
 
@@ -46,7 +46,7 @@ StopActor::~StopActor() = default;
 void StopActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const {
-    supervisedRefs.send(params.toString(), CommandValue::SHUTDOWN);
+    supervisedRefs.send(params.toString(), InternalCommands::SHUTDOWN);
 }
 const ErrorReaction *StopActor::create() { return &singletonElement; }
 
@@ -57,7 +57,7 @@ StopAllActor::~StopAllActor() = default;
 void StopAllActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const {
-    supervisedRefs.sendAll(CommandValue::SHUTDOWN); 
+    supervisedRefs.sendAll(InternalCommands::SHUTDOWN); 
 }
 const ErrorReaction *StopAllActor::create() { return &singletonElement; }
 
@@ -68,7 +68,7 @@ RestartAllActor::~RestartAllActor() = default;
 void RestartAllActor::executeAction(const ControllerApi &supervisedRefs, 
 		NotifySupervisor notifySupervisor,
 		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const { 
-    supervisedRefs.sendAll(CommandValue::RESTART); 
+    supervisedRefs.sendAll(InternalCommands::RESTART); 
 }
 const ErrorReaction *RestartAllActor::create() { return &singletonElement; }
 

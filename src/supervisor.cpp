@@ -30,6 +30,7 @@
 #include <private/supervisor.h>
 #include <private/errorReaction.h>
 #include <private/uniqueId.h>
+#include <private/internalCommands.h>
 
 #include <iostream>
 
@@ -54,9 +55,9 @@ bool Supervisor::postSupervisor(MessageType type, Command command, const RawData
 
 void Supervisor::removeActor(const std::string &name) { doOperation([&name, this](){ supervisedRefs.remove(name); } ); }
 
-void Supervisor::restartActors() const { doOperation([this]() { supervisedRefs.sendAll(CommandValue::RESTART); }); }
+void Supervisor::restartActors() const { doOperation([this]() { supervisedRefs.sendAll(InternalCommands::RESTART); }); }
 
-void Supervisor::stopActors() const { doOperation([this]() { supervisedRefs.sendAll(CommandValue::SHUTDOWN); }); }
+void Supervisor::stopActors() const { doOperation([this]() { supervisedRefs.sendAll(InternalCommands::SHUTDOWN); }); }
 
 void Supervisor::doOperation(std::function<void(void)> op) const { 
 	doOperationWithReturn([&op]() { op(); return true; }); 

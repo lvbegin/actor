@@ -33,7 +33,6 @@
 #include <actor/link.h>
 #include <private/controllerApi.h>
 #include <private/sharedVector.h>
-#include <private/commandValue.h>
 
 using LinkRefOperation = std::function<void(const SharedLink &)>;
 

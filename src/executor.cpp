@@ -29,7 +29,7 @@
 
 #include <private/executor.h>
 #include <private/exception.h>
-#include <private/commandValue.h>
+#include <private/internalCommands.h>
 
 Executor::Executor(ExecutorBody body, Link &queue, ExecutorAtStart atStart, ExecutorHook atStop) :
 				messageQueue(queue), thread([this, body, atStart, atStop]() { run(body, atStart, atStop); }) { }

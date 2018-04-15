@@ -32,11 +32,12 @@
 
 #include <cstdint>
 
-class CommandValue {
+class InternalCommands {
 public:
-	CommandValue() = delete;
+	InternalCommands() = delete;
 	static const uint32_t SHUTDOWN = 0;
 	static const uint32_t RESTART = 1;
+	static const uint32_t UNREGISTER_ACTOR = 2;
 };
 
 #endif

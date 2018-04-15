@@ -33,7 +33,6 @@
 #include <actor/link.h>
 #include <actor/errorActionDispatcher.h>
 #include <private/actorController.h>
-#include <private/commandValue.h>
 
 class Supervisor {
 public:

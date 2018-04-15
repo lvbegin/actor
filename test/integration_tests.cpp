@@ -37,7 +37,7 @@
 #include <private/actorCommand.h>
 #include <private/proxyServer.h>
 #include <private/clientSocket.h>
-#include <private/commandValue.h>
+#include <private/internalCommands.h>
 #include <private/serverSocket.h>
 #include <private/executor.h>
 
@@ -116,10 +116,9 @@ static void proxyTest(void) {
 	ProxyClient client("client name", openOneConnection(PORT));
 	client.post(OK_COMMAND);
 	waitCondition([&commands]() { return 1 == commands.commandExecuted; } );
-	client.post(CommandValue::SHUTDOWN);
+	client.post(InternalCommands::SHUTDOWN);
 	t.join();
 }
-
 
 static void registryConnectTest(void) {
 	static const uint16_t PORT = 4001;
@@ -131,7 +130,7 @@ static void registryConnectTest(void) {
 static void executorTest() {
 	auto link = Link::create();
 	Executor executor([](MessageType, int, const RawData &, const SharedSenderLink &) { return StatusCode::SHUTDOWN; }, *link);
-	link->post(MessageType::COMMAND_MESSAGE, CommandValue::SHUTDOWN);
+	link->post(MessageType::COMMAND_MESSAGE, InternalCommands::SHUTDOWN);
 }
 
 static void serializationTest() {

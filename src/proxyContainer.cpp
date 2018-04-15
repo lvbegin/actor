@@ -28,7 +28,7 @@
  */
 
 #include <private/proxyContainer.h>
-#include <private/commandValue.h>
+#include <private/internalCommands.h>
 #include <private/uniqueId.h>
 
 #include <tuple>
@@ -39,7 +39,7 @@ ProxyContainer::ProxyContainer() :
 	[this](MessageType, Command command, const RawData &id, const SharedSenderLink &) { return executeCommand(command, id); },
 	*executorQueue) { }
 
-ProxyContainer::~ProxyContainer() { executorQueue->post(CommandValue::SHUTDOWN); }
+ProxyContainer::~ProxyContainer() { executorQueue->post(InternalCommands::SHUTDOWN); }
 
 void ProxyContainer::createNewProxy(SharedSenderLink actor, Connection connection, FindActor findActor) {
 	static const uint32_t USELESS_CODE = 0;
@@ -52,7 +52,7 @@ void ProxyContainer::createNewProxy(SharedSenderLink actor, Connection connectio
 }
 
 StatusCode ProxyContainer::executeCommand(Command command, const RawData &id) {
-	if (CommandValue::SHUTDOWN == command)
+	if (InternalCommands::SHUTDOWN == command)
 		return StatusCode::SHUTDOWN;
 	return (proxies.erase(toId(id)), StatusCode::OK);
 }

@@ -29,7 +29,7 @@
 
 #include <actor/actor.h>
 
-#include <private/commandValue.h>
+#include <private/internalCommands.h>
 #include <private/exception.h>
 #include <private/actorController.h>
 #include <private/executor.h>
@@ -41,8 +41,6 @@
 #include <memory>
 #include <iostream>
 #include <exception>
-
-static const uint32_t UNREGISTER_ACTOR = 2;
 
 class ActorException : public std::runtime_error {
 	public:
@@ -67,8 +65,8 @@ public:
 				{ checkActorInitialization(); }
 	~ActorImpl() {
 		stateMachine.moveTo(ActorStateMachine::State::STOPPED);
-		context.getConstSupervisor().notifySupervisor(UNREGISTER_ACTOR);
-		executorQueue->post(CommandValue::SHUTDOWN);
+		context.getConstSupervisor().notifySupervisor(InternalCommands::UNREGISTER_ACTOR);
+		executorQueue->post(InternalCommands::SHUTDOWN);
 	}
 
 	std::unique_ptr<Executor> createAtStartExecutor() {
@@ -130,12 +128,12 @@ public:
 
 	StatusCode executeActorManagement(Command command, const RawData &params) {
 		switch (command) {
-			case CommandValue::RESTART:
+			case InternalCommands::RESTART:
 				return (StatusCode::OK == restartSateMachine()) ? StatusCode::SHUTDOWN : StatusCode::ERROR;
-			case UNREGISTER_ACTOR:
+			case InternalCommands::UNREGISTER_ACTOR:
 				context.getSupervisor().removeActor(params.toString());
 				return StatusCode::OK;
-			case CommandValue::SHUTDOWN:
+			case InternalCommands::SHUTDOWN:
 				stateMachine.moveTo(ActorStateMachine::State::STOPPED);
 				return StatusCode::SHUTDOWN;
 			default:

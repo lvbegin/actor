@@ -29,7 +29,7 @@
 
 #include <actor/commandMap.h>
 #include <private/actorCommand.h>
-#include <private/commandValue.h>
+#include <private/internalCommands.h>
 #include <private/exception.h>
 
 static std::map<Command, CommandFunction> buildMap(const commandMap array[]);
@@ -58,7 +58,7 @@ static bool isInternalCommand(uint32_t code) { return (0 == (code & COMMAND_FLAG
 static std::map<Command, CommandFunction> buildMap(const commandMap array[]) {
 	std::map<Command, CommandFunction> map;
 
-	map[static_cast<Command>(CommandValue::SHUTDOWN)] = shutdownCase;
+	map[static_cast<Command>(InternalCommands::SHUTDOWN)] = shutdownCase;
 	if (nullptr == array)
 		return map;
 	for (const commandMap * ptr = array; !(0 == ptr->commandCode && nullptr == ptr->command) ; ptr ++) {
