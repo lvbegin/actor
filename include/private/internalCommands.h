@@ -27,17 +27,15 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef COMMAND_VALUE_H__
-#define COMMAND_VALUE_H__
+#ifndef INTERNAL_COMMANDS_H__
+#define INTERNAL_COMMANDS_H__
 
 #include <cstdint>
 
-class InternalCommands {
-public:
-	InternalCommands() = delete;
-	static const uint32_t SHUTDOWN = 0;
-	static const uint32_t RESTART = 1;
-	static const uint32_t UNREGISTER_ACTOR = 2;
+enum InternalCommands : uint32_t {
+	SHUTDOWN = 0,
+	RESTART = 1,
+	UNREGISTER_ACTOR = 2,
 };
 
 #endif
