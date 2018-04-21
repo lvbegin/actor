@@ -59,6 +59,10 @@ void Supervisor::restartActors() const { doOperation([this]() { supervisedRefs.s
 
 void Supervisor::stopActors() const { doOperation([this]() { supervisedRefs.sendAll(InternalCommands::SHUTDOWN); }); }
 
+void Supervisor::restartActor(std::string name) const { doOperation([this, &name]() { supervisedRefs.send(name, InternalCommands::RESTART); }) ; }
+void Supervisor::stopActor(std::string name) const { doOperation([this, &name]() { supervisedRefs.send(name, InternalCommands::SHUTDOWN); } ); }
+
+
 void Supervisor::doOperation(std::function<void(void)> op) const { 
 	doOperationWithReturn([&op]() { op(); return true; }); 
 }
@@ -70,13 +74,14 @@ bool Supervisor::doOperationWithReturn(std::function<bool(void)> op) const {
 }
 
 void Supervisor::manageErrorFromSupervised(ErrorCode error, const RawData &params) const {
-	std::unique_lock<std::mutex> l(monitorMutex);
+// to verify!!
+//	std::unique_lock<std::mutex> l(monitorMutex);
 	auto notifySupervisor([this](const std::string &actorName, ErrorCode error) {
 		const auto ref = supervisorRef.lock();
 		if (nullptr != ref.get())
 			ref->post(MessageType::ERROR_MESSAGE, error, actorName);
 	});
-	actionDispatcher(error)->executeAction(supervisedRefs, notifySupervisor, error, params, self);
+	actionDispatcher(error)->executeAction(error, params, *this);
 }
 
 void Supervisor::registerMonitored(Supervisor &monitored) {

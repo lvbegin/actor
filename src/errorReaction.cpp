@@ -32,10 +32,9 @@
 
 RestartActor::RestartActor() = default;
 RestartActor::~RestartActor() = default;
-void RestartActor::executeAction(const ControllerApi &supervisedRefs, 
-	NotifySupervisor notifySupervisor,			
-	ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const {
-    supervisedRefs.send(params.toString(), InternalCommands::RESTART);
+void RestartActor::executeAction(			
+	ErrorCode error, const RawData &params, const Supervisor &supervisor)  const {
+	supervisor.restartActor(params.toString());
 }
 const ErrorReaction *RestartActor::create() { return &singletonElement; }
 
@@ -43,10 +42,10 @@ const RestartActor RestartActor::singletonElement;
 
 StopActor::StopActor() = default;
 StopActor::~StopActor() = default;
-void StopActor::executeAction(const ControllerApi &supervisedRefs, 
-		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const {
-    supervisedRefs.send(params.toString(), InternalCommands::SHUTDOWN);
+
+void StopActor::executeAction(
+		ErrorCode error, const RawData &params, const Supervisor &supervisor)  const {
+	supervisor.stopActor(params.toString());
 }
 const ErrorReaction *StopActor::create() { return &singletonElement; }
 
@@ -54,10 +53,9 @@ const StopActor StopActor::singletonElement;
 
 StopAllActor::StopAllActor() = default;
 StopAllActor::~StopAllActor() = default;
-void StopAllActor::executeAction(const ControllerApi &supervisedRefs, 
-		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const {
-    supervisedRefs.sendAll(InternalCommands::SHUTDOWN); 
+void StopAllActor::executeAction(
+		ErrorCode error, const RawData &params, const Supervisor &supervisor)  const {
+	supervisor.stopActors();
 }
 const ErrorReaction *StopAllActor::create() { return &singletonElement; }
 
@@ -65,10 +63,9 @@ const StopAllActor StopAllActor::singletonElement;
 
 RestartAllActor::RestartAllActor() = default;
 RestartAllActor::~RestartAllActor() = default;
-void RestartAllActor::executeAction(const ControllerApi &supervisedRefs, 
-		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const { 
-    supervisedRefs.sendAll(InternalCommands::RESTART); 
+void RestartAllActor::executeAction(
+		ErrorCode error, const RawData &params, const Supervisor &supervisor)  const { 
+	supervisor.restartActors();
 }
 const ErrorReaction *RestartAllActor::create() { return &singletonElement; }
 
@@ -76,10 +73,9 @@ const RestartAllActor RestartAllActor::singletonElement;
 
 EscalateError::EscalateError() = default;
 EscalateError::~EscalateError() = default;
-void EscalateError::executeAction(const ControllerApi &supervisedRefs, 
-		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const {
-    notifySupervisor(actor->getName(), error);
+void EscalateError::executeAction(
+		ErrorCode error, const RawData &params, const Supervisor &supervisor)  const {
+	supervisor.sendErrorToSupervisor(error);
 }
 const ErrorReaction *EscalateError::create() { return &singletonElement; }
 
@@ -88,9 +84,8 @@ const EscalateError EscalateError::singletonElement;
 
 DoNothingError::DoNothingError() = default;
 DoNothingError::~DoNothingError() = default;
-void DoNothingError::executeAction(const ControllerApi &supervisedRefs, 
-		NotifySupervisor notifySupervisor,
-		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const { }
+void DoNothingError::executeAction(
+		ErrorCode error, const RawData &params, const Supervisor &supervisor)  const { }
 const ErrorReaction *DoNothingError::create() { return &singletonElement; }
 
 const DoNothingError DoNothingError::singletonElement;

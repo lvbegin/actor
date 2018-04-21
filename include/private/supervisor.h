@@ -42,6 +42,9 @@ public:
 	bool notifySupervisor(Command command) const;
 	bool sendErrorToSupervisor(Command command) const;
 	void manageErrorFromSupervised(ErrorCode error, const RawData &params) const;
+
+	void restartActor(std::string name) const;
+	void stopActor(std::string name) const;
 	void restartActors() const;
 	void stopActors() const;
 

@@ -33,15 +33,14 @@
 #include <actor/senderApi.h>
 #include <actor/types.h>
 #include <private/controllerApi.h>
+#include <private/supervisor.h>
 
 
 using NotifySupervisor = std::function<void(const std::string &actorName, ErrorCode error)>; 
 
 class ErrorReaction {
 public:
-		virtual void executeAction(const ControllerApi &supervisedRefs,
-				NotifySupervisor notifySupervisor, ErrorCode error, const RawData &params,
-				const SharedSenderLink &actor) const = 0;
+		virtual void executeAction(ErrorCode error, const RawData &params, const Supervisor &supervisor) const = 0;
 protected:
 	ErrorReaction() = default;
 	virtual ~ErrorReaction() = default;
@@ -51,9 +50,7 @@ class RestartActor : public ErrorReaction {
 public: 
 	static const ErrorReaction *create();
 	virtual ~RestartActor();
-	void executeAction(const ControllerApi &supervisedRefs, 
-		NotifySupervisor notifySupervisor,			
-		ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const override;
+	void executeAction(ErrorCode error, const RawData &params, const Supervisor &supervisor)  const override;
 private:
 	RestartActor();
 	static const RestartActor singletonElement;
@@ -64,9 +61,7 @@ class StopActor : public ErrorReaction {
 public:
 	static const ErrorReaction *create();
 	virtual ~StopActor();
-	void executeAction(const ControllerApi &supervisedRefs, 
-			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const override;
+	void executeAction(ErrorCode error, const RawData &params, const Supervisor &supervisor)  const override;
 private:
 	StopActor();
 	static const StopActor singletonElement;
@@ -76,9 +71,7 @@ class StopAllActor : public ErrorReaction {
 public:
 	static const ErrorReaction *create();
 	virtual ~StopAllActor();
-	void executeAction(const ControllerApi &supervisedRefs, 
-			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const override;
+	void executeAction(ErrorCode error, const RawData &params, const Supervisor &supervisor)  const override;
 private:
 	StopAllActor();
 	static const StopAllActor singletonElement;
@@ -88,9 +81,7 @@ class RestartAllActor : public ErrorReaction {
 public:
 	static const ErrorReaction *create();
 	virtual ~RestartAllActor();
-	void executeAction(const ControllerApi &supervisedRefs, 
-			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const override;
+	void executeAction(ErrorCode error, const RawData &params, const Supervisor &supervisor)  const override;
 private:
 	RestartAllActor();
 	static const RestartAllActor singletonElement;
@@ -100,9 +91,7 @@ class EscalateError : public ErrorReaction {
 public:
 	static const ErrorReaction *create();
 	virtual~EscalateError();
-	void executeAction(const ControllerApi &supervisedRefs, 
-			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const override;
+	void executeAction(ErrorCode error, const RawData &params, const Supervisor &supervisor)  const override;
 
 private:
 	EscalateError();
@@ -113,9 +102,7 @@ class DoNothingError : public ErrorReaction {
 public:
 	static const ErrorReaction *create();
 	virtual~DoNothingError();
-	void executeAction(const ControllerApi &supervisedRefs, 
-			NotifySupervisor notifySupervisor,
-			ErrorCode error, const RawData &params, const SharedSenderLink &actor)  const override;
+	void executeAction(ErrorCode error, const RawData &params, const Supervisor &supervisor)  const override;
 private:
 	DoNothingError();
 	static const DoNothingError singletonElement;
