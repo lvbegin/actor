@@ -42,13 +42,9 @@ void ActorContext::sendErrorToSupervisor(Command command) const  {
 	getConstSupervisor().sendErrorToSupervisor(command);
 }
 
-void ActorContext::restartActors() const {
-	getConstSupervisor().restartActors();
-}
+void ActorContext::restartActors() const { getConstSupervisor().restartActors(); }
 
-void ActorContext::stopActors() const {
-	getConstSupervisor().stopActors();
-}
+void ActorContext::stopActors() const { getConstSupervisor().stopActors(); }
 
 State &ActorContext::getState() { return *state; }
 

@@ -47,4 +47,6 @@ void ActorController::send(const std::string &name, uint32_t commandValue) const
 	} catch (const std::out_of_range &) { }
 }
 
-void ActorController::sendAll(uint32_t commandValue) const { actors.for_each([commandValue](auto &e) { sendMessage(e, commandValue); } ); }
+void ActorController::sendAll(uint32_t commandValue) const { 
+	actors.for_each([commandValue](auto &e) { sendMessage(e, commandValue); } ); 
+}
