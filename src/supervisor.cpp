@@ -74,13 +74,6 @@ bool Supervisor::doOperationWithReturn(std::function<bool(void)> op) const {
 }
 
 void Supervisor::manageErrorFromSupervised(ErrorCode error, const RawData &params) const {
-// to verify!!
-//	std::unique_lock<std::mutex> l(monitorMutex);
-	auto notifySupervisor([this](const std::string &actorName, ErrorCode error) {
-		const auto ref = supervisorRef.lock();
-		if (nullptr != ref.get())
-			ref->post(MessageType::ERROR_MESSAGE, error, actorName);
-	});
 	actionDispatcher(error)->executeAction(error, params, *this);
 }
 
