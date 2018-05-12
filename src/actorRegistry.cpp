@@ -36,6 +36,8 @@
 #include <private/proxyClient.h>
 
 #include <iostream>
+#include <netinet/in.h>
+
 
 static void threadBody(uint16_t port, std::function<void(const ServerSocket &s)> body);
 

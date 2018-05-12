@@ -30,7 +30,7 @@
 #ifndef NET_ADDR_H__
 #define NET_ADDR_H__
 
-#include <arpa/inet.h>
+#include <sys/socket.h>
 
 struct NetAddr{
 	  struct sockaddr ai_addr;

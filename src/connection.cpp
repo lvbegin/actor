@@ -30,6 +30,7 @@
 #include <private/connection.h>
 #include <private/descriptorWait.h>
 #include <private/exception.h>
+#include <errno.h>
 
 Connection::Connection() : fd(-1) { }
 
