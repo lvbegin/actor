@@ -75,12 +75,27 @@ const Connection &Connection::writeString(const std::string &hostValue) const {
 
 std::string Connection::readString(void) const { return readRawData().toString(); }
 
+static int opWithRetry(std::function<int(void)> op)
+{
+	while (true)
+	{
+		errno = 0;
+		const int nbRead = op();
+		if (nbRead >= 0 || EINTR != errno)
+			return nbRead;
+	}	
+}
+static int writeWithRetry(int fd, const void *buffer, size_t nbBytes)
+{
+	return opWithRetry([fd, buffer, nbBytes](){ return write(fd, buffer, nbBytes); });
+}
+
 const Connection &Connection::writeBytes(const void *buffer, size_t count) const {
 	if (-1 == fd)
 		THROW(std::runtime_error, "invalid writeByte");
 	const auto ptr = static_cast<const char *>(buffer);
 	for (size_t nbTotalWritten = 0; nbTotalWritten < count; ) {
-		const auto nbWritten = write(fd, ptr + nbTotalWritten, count - nbTotalWritten);
+		const auto nbWritten = writeWithRetry(fd, ptr + nbTotalWritten, count - nbTotalWritten);
 		if (-1 == nbWritten && EINTR != errno)
 			THROW(std::runtime_error, "send bytes failed");
 		nbTotalWritten += nbWritten;
@@ -93,6 +108,11 @@ void Connection::readBytes(void *buffer, size_t count, int timeoutInSeconds) con
 	readBytesNonBlocking(buffer, count);
 }
 
+static int readWithRetry(int fd, void *ptr, size_t nbBytes)
+{
+	return opWithRetry([fd, ptr, nbBytes]() { return read(fd, ptr, nbBytes); } );
+}
+
 void Connection::readBytesNonBlocking(void *buffer, size_t count) const {
 	static const int TIMEOUT_ON_READ = 60;
 	if (-1 == fd)
@@ -101,7 +121,7 @@ void Connection::readBytesNonBlocking(void *buffer, size_t count) const {
 	struct timeval timeout { TIMEOUT_ON_READ, 0 };
 	for (size_t nbTotalRead = 0; nbTotalRead < count; ) {
 		waitForRead<std::runtime_error, std::runtime_error>(fd, set, &timeout);
-		const auto nbRead = read(fd, ptr + nbTotalRead, count - nbTotalRead);
+		const auto nbRead = readWithRetry(fd, ptr + nbTotalRead, count - nbTotalRead);
 		if (0 >= nbRead)
 			THROW(std::runtime_error, "read bytes failed");
 		nbTotalRead += nbRead;
