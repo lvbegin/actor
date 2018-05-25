@@ -36,9 +36,6 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-#include <memory.h>
-
-
 Connection ClientSocket::openHostConnection(const std::string &host, uint16_t port) {
 	return openHostConnection(toNetAddr(host, port));
 }
