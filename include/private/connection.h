@@ -35,14 +35,7 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
-#include <stdexcept>
 #include <arpa/inet.h>
-
-
-class ConnectionTimeout : public std::runtime_error {
-public:
-	ConnectionTimeout(std::string s) : std::runtime_error(s) {}
-};
 
 class Connection {
 public:

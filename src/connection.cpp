@@ -104,7 +104,7 @@ const Connection &Connection::writeBytes(const void *buffer, size_t count) const
 }
 
 void Connection::readBytes(void *buffer, size_t count, int timeoutInSeconds) const {
-	waitForRead<ConnectionTimeout, std::runtime_error>(fd, set, timeoutInSeconds);
+	waitForRead(fd, set, timeoutInSeconds);
 	readBytesNonBlocking(buffer, count);
 }
 
@@ -120,7 +120,7 @@ void Connection::readBytesNonBlocking(void *buffer, size_t count) const {
 	auto ptr = static_cast<char *>(buffer);
 	struct timeval timeout { TIMEOUT_ON_READ, 0 };
 	for (size_t nbTotalRead = 0; nbTotalRead < count; ) {
-		waitForRead<std::runtime_error, std::runtime_error>(fd, set, &timeout);
+		waitForRead(fd, set, &timeout);
 		const auto nbRead = readWithRetry(fd, ptr + nbTotalRead, count - nbTotalRead);
 		if (0 >= nbRead)
 			THROW(std::runtime_error, "read bytes failed");

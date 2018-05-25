@@ -1,4 +1,4 @@
-/* Copyright 2016 Laurent Van Begin
+/* Copyright 2018 Laurent Van Begin
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,17 +27,25 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef EXCEPTION_H__
-#define EXCEPTION_H__
+#include <private/descriptorWait.h>
+#include <private/exception.h>
 
-#include <string>
-#include <stdexcept>
+void waitForRead(int fd, fd_set set, struct timeval *timeout) {
+	if (-1 == fd)
+		THROW(std::runtime_error, "invalid fd.");
+	switch(select(fd + 1, &set, NULL, NULL, timeout)) {
+		case 0:
+			THROW(ConnectionTimeout, "timeout on read.");
+		case -1:
+			THROW(std::runtime_error, "error while waiting for read.");
+		default:
+			return ;
+	}
+}
 
-class ConnectionTimeout : public std::runtime_error {
-public:
-	ConnectionTimeout(std::string s) : std::runtime_error(s) {}
-};
-
-#define THROW(E, message) throw E(std::string(__func__) + std::string(": ") + std::string(message))
-
-#endif
+void waitForRead(int fd, const fd_set &set, int timeoutInSeconds) {
+	if (-1 == fd)
+		THROW(std::runtime_error, "invalid fd.");
+	struct timeval timeout { .tv_sec = timeoutInSeconds, .tv_usec = 0, };
+	waitForRead(fd, set, &timeout);
+}
