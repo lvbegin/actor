@@ -29,18 +29,26 @@
 
 #include <private/descriptorWait.h>
 #include <private/exception.h>
+#include <errno.h>
 
 void waitForRead(int fd, fd_set set, struct timeval *timeout) {
 	if (-1 == fd)
 		THROW(std::runtime_error, "invalid fd.");
-	switch(select(fd + 1, &set, NULL, NULL, timeout)) {
-		case 0:
-			THROW(ConnectionTimeout, "timeout on read.");
-		case -1:
-			THROW(std::runtime_error, "error while waiting for read.");
-		default:
-			return ;
-	}
+	int ret;
+	do {
+		ret = select(fd + 1, &set, NULL, NULL, timeout);
+		switch (ret)
+		{
+			case 0:
+				THROW(ConnectionTimeout, "timeout on read.");
+			case -1:
+				if (EINTR != errno)
+					THROW(std::runtime_error, "error while waiting for read.");
+				break;
+			default:
+			;
+		}
+	} while (0 >= ret);
 }
 
 void waitForRead(int fd, const fd_set &set, int timeoutInSeconds) {
