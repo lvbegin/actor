@@ -36,6 +36,19 @@
 class ConnectionTimeout : public std::runtime_error {
 public:
 	ConnectionTimeout(std::string s) : std::runtime_error(s) {}
+	virtual ~ConnectionTimeout() = default;
+};
+
+class ConnectionClosed : public std::runtime_error {
+public:
+	ConnectionClosed(std::string s) : std::runtime_error(s) {}
+	virtual ~ConnectionClosed() = default;
+};
+
+class InvalidConnection : public std::runtime_error {
+public:
+	InvalidConnection(std::string s) : std::runtime_error(s) {}
+	virtual ~InvalidConnection() = default;
 };
 
 #define THROW(E, message) throw E(std::string(__func__) + std::string(": ") + std::string(message))

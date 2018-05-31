@@ -40,6 +40,7 @@
 #include <private/internalCommands.h>
 #include <private/serverSocket.h>
 #include <private/executor.h>
+#include <private/exception.h>
 
 #include <cstdlib>
 #include <iostream>
@@ -140,6 +141,119 @@ static void serializationTest() {
 	assert_eq(EXPECTED_VALUE, toId(s));
 }
 
+static void readerThread(uint32_t port)
+{
+	Connection clientConnection = ClientSocket::openHostConnection("127.0.0.1", port);
+}
+
+static void connectionClosedByWriterTest() {
+	static const uint32_t PORT = 4000;
+	bool res = false;
+	std::thread t(readerThread, PORT);
+	Connection serverConnection = ServerSocket::getConnection(PORT);
+	t.join();
+	try {
+		serverConnection.writeString("Hello world");
+	} catch (ConnectionClosed  &e) { 
+		res = true;
+	}
+	assert_true(res);
+}
+
+static void connectionClosedByWriterMultipleTimesTest() {
+	for (int i = 0; i < 10; i++)
+		connectionClosedByWriterTest();
+}
+
+static void invalidConnectionWhenWritingTest() {
+	static const uint32_t PORT = 4000;
+	bool res = false;
+	Connection c;
+	try {
+		c.writeString("Hello world");
+	} catch (InvalidConnection &e) { 
+		res = true;
+	}
+	assert_true(res);
+}
+
+static void invalidConnectionWhenWritingMultipleTimesTest() {
+	for (int i = 0; i < 10; i++)
+		invalidConnectionWhenWritingTest();
+}
+
+#include <signal.h>
+static void actor_init()
+{
+	struct sigaction already_installed_action { };
+	struct sigaction action { };
+	action.sa_handler = SIG_IGN;
+	sigemptyset(&action.sa_mask);
+
+	sigaction(SIGPIPE, NULL, &already_installed_action);
+	if (SIG_DFL == already_installed_action.sa_handler)
+		sigaction(SIGPIPE, &action, NULL);
+
+}
+
+static void serverThread(uint32_t port)
+{
+
+	for (int i = 0; i < 5; i++)
+	{
+		try {
+			Connection serverConnection = ServerSocket::getConnection(port);
+			return ;
+		} catch (std::exception &e) { }
+		sleep(1);
+	}
+}
+
+static void connectionClosedByReaderTest() {
+	static const uint32_t PORT = 4000;
+	bool res = false;
+	std::thread t(serverThread, PORT);
+	bool connectionEstablished = false;
+	Connection clientConnection;
+	for (int i = 0; i < 5 && !connectionEstablished; i++)
+	{
+		try {
+			clientConnection = ClientSocket::openHostConnection("127.0.0.1", PORT);
+			connectionEstablished = true;
+		} catch (std::exception &e) { }
+		sleep(1);
+	}
+	assert_true(connectionEstablished);
+	t.join();
+	try {
+		std::string s = clientConnection.readString();
+	} catch (ConnectionClosed &e) { 
+		res = true;
+	}
+	assert_true(res);
+}
+
+static void connectionClosedByReaderMulitpleTimesTest() {
+	for (int i = 0; i < 1; i++)
+		connectionClosedByReaderTest();
+}
+
+static void invalidConnectionWhenReadingTest() {
+	static const uint32_t PORT = 4000;
+	bool res = false;
+	Connection c;
+	try {
+		std::string s = c.readString();
+	} catch (InvalidConnection &e) { 
+		res = true;
+	}
+	assert_true(res);
+}
+
+static void invalidConnectionWhenReadingMultipleTimesTest() {
+	for (int i = 0; i < 10; i++)
+		invalidConnectionWhenReadingTest();
+}
 
 int main() {
 	static const _test suite[] = {
@@ -148,8 +262,16 @@ int main() {
 		TEST(registryConnectTest),
 		TEST(executorTest),
 		TEST(serializationTest),
+		TEST(connectionClosedByWriterTest),
+		TEST(connectionClosedByWriterMultipleTimesTest),
+		TEST(invalidConnectionWhenWritingTest),
+		TEST(invalidConnectionWhenWritingMultipleTimesTest),
+		TEST(connectionClosedByReaderTest),
+		TEST(connectionClosedByReaderMulitpleTimesTest),
+		TEST(invalidConnectionWhenReadingTest),
+		TEST(invalidConnectionWhenReadingMultipleTimesTest),
 	};
-
+	actor_init();
 	const auto nbFailure = runTest(suite);
 	if (nbFailure > 0)
 		return (std::cout << nbFailure << " tests failed." << std::endl, EXIT_FAILURE);

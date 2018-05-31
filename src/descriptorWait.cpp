@@ -33,7 +33,7 @@
 
 void waitForRead(int fd, fd_set set, struct timeval *timeout) {
 	if (-1 == fd)
-		THROW(std::runtime_error, "invalid fd.");
+		THROW(InvalidConnection, "invalid fd.");
 	int ret;
 	do {
 		ret = select(fd + 1, &set, NULL, NULL, timeout);
@@ -53,7 +53,7 @@ void waitForRead(int fd, fd_set set, struct timeval *timeout) {
 
 void waitForRead(int fd, const fd_set &set, int timeoutInSeconds) {
 	if (-1 == fd)
-		THROW(std::runtime_error, "invalid fd.");
+		THROW(InvalidConnection, "invalid fd.");
 	struct timeval timeout { .tv_sec = timeoutInSeconds, .tv_usec = 0, };
 	waitForRead(fd, set, &timeout);
 }

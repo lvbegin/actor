@@ -92,12 +92,15 @@ static int writeWithRetry(int fd, const void *buffer, size_t nbBytes)
 
 const Connection &Connection::writeBytes(const void *buffer, size_t count) const {
 	if (-1 == fd)
-		THROW(std::runtime_error, "invalid writeByte");
+		THROW(InvalidConnection, "invalid writeByte");
 	const auto ptr = static_cast<const char *>(buffer);
 	for (size_t nbTotalWritten = 0; nbTotalWritten < count; ) {
 		const auto nbWritten = writeWithRetry(fd, ptr + nbTotalWritten, count - nbTotalWritten);
 		if (-1 == nbWritten && EINTR != errno)
-			THROW(std::runtime_error, "send bytes failed");
+		{
+			close(fd);
+			THROW(ConnectionClosed, "send bytes failed");
+		}
 		nbTotalWritten += nbWritten;
 	}
 	return *this;
@@ -123,7 +126,10 @@ void Connection::readBytesNonBlocking(void *buffer, size_t count) const {
 		waitForRead(fd, set, &timeout);
 		const auto nbRead = readWithRetry(fd, ptr + nbTotalRead, count - nbTotalRead);
 		if (0 >= nbRead)
-			THROW(std::runtime_error, "read bytes failed");
+		{
+			close(fd);
+			THROW(ConnectionClosed, "read bytes failed");
+		}
 		nbTotalRead += nbRead;
 	}
 }
