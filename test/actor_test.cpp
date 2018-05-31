@@ -486,7 +486,7 @@ static void noEffectIfErrorNotifiedAndNoSupervisorTest() {
 
 	supervised.post(ERROR_NOTIFIED_COMMAND);
 
-	waitCondition([&commands]() { return 1 == commands.commandExecuted; });
+	waitCondition([&commands, &hooks]() { return 1 == commands.commandExecuted && hooks.actorStopped; });
 	assert_false(hooks.actorRestarted);
 	assert_true(hooks.actorStopped);
 }
@@ -496,7 +496,7 @@ static void noEffectIfActorCommandReturnsErrorAndNoSupervisorTest() {
 	testCommands commands;
 	Actor supervised("supervised", commands.commands, hooks.hooks);
 	supervised.post(ERROR_RETURNED_COMMAND);
-	waitCondition([&commands]() { return 1 == commands.commandExecuted; });
+	waitCondition([&commands, &hooks]() { return 1 == commands.commandExecuted && hooks.actorStopped; });
 	assert_false(hooks.actorRestarted);
 	assert_true(hooks.actorStopped);
 }
