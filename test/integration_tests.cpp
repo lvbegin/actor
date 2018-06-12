@@ -89,7 +89,15 @@ static void executeServerProxy(uint16_t port, testCommands *commands) {
 	const Actor actor(ACTOR_NAME, commands->commands);
 	static const auto DO_NOTHING = []() { };
 	const auto DummyGetConnection = [] (std::string) { return SharedSenderLink(); };
-	const ProxyServer server(actor.getActorLinkRef(), ServerSocket::getConnection(port), DO_NOTHING, DummyGetConnection);
+	bool connectionNotEstablished=true;
+	Connection connection;
+	while (connectionNotEstablished) {
+		try {
+			connection = ServerSocket::getConnection(port);
+			connectionNotEstablished = false;
+		} catch (ConnectionTimeout &e) {  }
+	}
+	const ProxyServer server(actor.getActorLinkRef(), std::move(connection), DO_NOTHING, DummyGetConnection);
 }
 
 static Connection openOneConnection(uint16_t port) {
