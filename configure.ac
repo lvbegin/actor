@@ -33,5 +33,5 @@ AC_FUNC_ERROR_AT_LINE
 AC_CHECK_FUNCS([select socket])
 AC_CHECK_LIB(pthread, pthread_create)
 AC_CONFIG_FILES([Makefile])
-AX_CHECK_COMPILE_FLAG([-std=c++14])
+AX_CXX_COMPILE_STDCXX_14([noext],[mandatory])
 AC_OUTPUT
